@@ -33,6 +33,8 @@ These dependencies are required:
  ------------|------------------|----------------------
  libssl      | SSL Support      | Secure communications
  libboost    | Boost            | C++ Library
+ gmp         | mpz, mpq         | Multi-precision integer and rational types
+ mpfr        | mpfr             | Multi-precision, deterministic floating point
 
 Optional dependencies:
 

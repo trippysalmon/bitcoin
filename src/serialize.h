@@ -429,6 +429,18 @@ CVarInt<I> WrapVarInt(I& n) { return CVarInt<I>(n); }
  * Forward declarations
  */
 
+#include <gmpxx.h>
+/** mpz */
+typedef mpz_class mpz;
+unsigned int GetSerializeSize(const mpz& str, int, int=0);
+template<typename Stream> void Serialize(Stream& os, const mpz& str, int, int=0);
+template<typename Stream> void Unserialize(Stream& is, mpz& str, int, int=0);
+/** mpq */
+typedef mpq_class mpq;
+unsigned int GetSerializeSize(const mpq& str, int, int=0);
+template<typename Stream> void Serialize(Stream& os, const mpq& str, int, int=0);
+template<typename Stream> void Unserialize(Stream& is, mpq& str, int, int=0);
+
 /**
  *  string
  */
