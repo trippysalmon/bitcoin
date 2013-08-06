@@ -7,16 +7,19 @@
 
 #include "arith_uint256.h"
 #include "chain.h"
+#include "consensus/consensus.h"
 #include "primitives/block.h"
 #include "uint256.h"
+#include "versionbits.h"
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, VersionBitsCache& cache)
 {
     assert(pindexLast != NULL);
+    int nHeight = pindexLast->nHeight + 1;
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     // Only change once per difficulty adjustment interval
-    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
+    if (nHeight % params.DifficultyAdjustmentInterval() != 0)
     {
         if (params.fPowAllowMinDifficultyBlocks)
         {
@@ -37,8 +40,17 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
+    // This fixes an issue where a 51% attack can change difficulty at will.
+    // Go back the full period unless it's the first retarget after genesis.
+    // Code courtesy of Art Forz (modified)
+    bool fBIP99Hardfork = VersionBitsState(pindexLast->pprev, params, Consensus::DEPLOYMENT_TIMEWARP, cache);
+    int nInterval = params.DifficultyAdjustmentInterval();
+    int blockstogoback = nInterval;
+    if (fBIP99Hardfork && nHeight != nInterval)
+        blockstogoback = nInterval + 1;
+
     // Go back by what we want to be 14 days worth of blocks
-    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
+    int nHeightFirst = nHeight - blockstogoback;
     assert(nHeightFirst >= 0);
     const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
     assert(pindexFirst);

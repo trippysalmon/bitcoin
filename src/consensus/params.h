@@ -7,8 +7,6 @@
 #define BITCOIN_CONSENSUS_PARAMS_H
 
 #include "uint256.h"
-#include <map>
-#include <string>
 
 namespace Consensus {
 
@@ -17,6 +15,7 @@ enum DeploymentPos
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
     DEPLOYMENT_SEGWIT, // Deployment of BIP141, BIP143, and BIP147.
+    DEPLOYMENT_TIMEWARP, // Deployment of the fix to the timewarp attack (BIP99)
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
