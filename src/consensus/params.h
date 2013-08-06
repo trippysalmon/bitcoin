@@ -25,6 +25,9 @@ struct Params {
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    /** Consensus rule changes thresholds: */
+    /** Block height at which BIP99 starts being confirmed/voted by miners */
+    int nBIP99Height;
 };
 } // namespace Consensus
 
