@@ -1727,9 +1727,8 @@ static CScript PushAll(const vector<valtype>& values)
     return result;
 }
 
-static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& txTo, unsigned int nIn,
-                               const vector<valtype>& vSolutions,
-                               vector<valtype>& sigs1, vector<valtype>& sigs2)
+template <typename T>
+static CScript CombineMultisig(CScript scriptPubKey, const T& tx, const vector<valtype>& vSolutions, vector<valtype>& sigs1, vector<valtype>& sigs2)
 {
     // Combine all the signatures we've got:
     set<valtype> allsigs;
@@ -1757,7 +1756,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
 
-            if (CheckSig(sig, pubkey, scriptPubKey, txTo, nIn, 0, 0))
+            if (CheckSig(sig, pubkey, scriptPubKey, tx, 0, 0))
             {
                 sigs[pubkey] = sig;
                 break;
@@ -1782,9 +1781,8 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     return result;
 }
 
-static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
-                                 const txnouttype txType, const vector<valtype>& vSolutions,
-                                 vector<valtype>& sigs1, vector<valtype>& sigs2)
+template <typename T>
+static CScript CombineSignatures(CScript scriptPubKey, const T& tx, const txnouttype txType, const vector<valtype>& vSolutions, vector<valtype>& sigs1, vector<valtype>& sigs2)
 {
     switch (txType)
     {
@@ -1816,30 +1814,38 @@ static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo,
             Solver(pubKey2, txType2, vSolutions2);
             sigs1.pop_back();
             sigs2.pop_back();
-            CScript result = CombineSignatures(pubKey2, txTo, nIn, txType2, vSolutions2, sigs1, sigs2);
+            CScript result = CombineSignatures(pubKey2, tx, txType2, vSolutions2, sigs1, sigs2);
             result << spk;
             return result;
         }
     case TX_MULTISIG:
-        return CombineMultisig(scriptPubKey, txTo, nIn, vSolutions, sigs1, sigs2);
+        return CombineMultisig(scriptPubKey, tx, vSolutions, sigs1, sigs2);
     }
 
     return CScript();
 }
 
-CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
-                          const CScript& scriptSig1, const CScript& scriptSig2)
+template <typename T>
+CScript CombineSignatures(CScript scriptPubKey, const T& tx, const T& emptyTx, const CScript& scriptSig1, const CScript& scriptSig2)
 {
     txnouttype txType;
     vector<vector<unsigned char> > vSolutions;
     Solver(scriptPubKey, txType, vSolutions);
 
     vector<valtype> stack1;
-    EvalScript(stack1, scriptSig1, CTransaction(), 0, SCRIPT_VERIFY_STRICTENC, 0);
+    EvalScript(stack1, scriptSig1, emptyTx, SCRIPT_VERIFY_STRICTENC, 0);
     vector<valtype> stack2;
-    EvalScript(stack2, scriptSig2, CTransaction(), 0, SCRIPT_VERIFY_STRICTENC, 0);
+    EvalScript(stack2, scriptSig2, emptyTx, SCRIPT_VERIFY_STRICTENC, 0);
 
-    return CombineSignatures(scriptPubKey, txTo, nIn, txType, vSolutions, stack1, stack2);
+    return CombineSignatures(scriptPubKey, tx, txType, vSolutions, stack1, stack2);
+}
+
+CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn, const CScript& scriptSig1, const CScript& scriptSig2)
+{
+    CScriptTx tx(txTo, nIn);
+    CTransaction txAux;
+    CScriptTx emptyTx(txAux, 0);
+    return CombineSignatures(scriptPubKey, tx, emptyTx, scriptSig1, scriptSig2);
 }
 
 unsigned int CScript::GetSigOpCount(bool fAccurate) const
