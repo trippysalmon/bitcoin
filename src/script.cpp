@@ -1071,7 +1071,18 @@ public:
 
 } // anon namespace
 
-uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+class CScriptTx {
+private:
+    const CTransaction txTo;  // reference to the spending transaction (the one being serialized)
+    const unsigned int nIn;    // input index of txTo being signed
+public:
+    CScriptTx(const CTransaction& txToIn, unsigned int nInIn) :
+        txTo(txToIn), nIn(nInIn) {}
+
+    uint256 SignatureHash(const CScript& scriptCode, int nHashType) const;
+};
+
+uint256 CScriptTx::SignatureHash(const CScript& scriptCode, int nHashType) const
 {
     if (nIn >= txTo.vin.size()) {
         LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
@@ -1093,6 +1104,12 @@ uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsig
     CHashWriter ss(SER_GETHASH, 0);
     ss << txTmp << nHashType;
     return ss.GetHash();
+}
+
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+{
+    CScriptTx tx(txTo, nIn);
+    return tx.SignatureHash(scriptCode, nHashType);
 }
 
 // Valid signature cache, to avoid doing expensive ECDSA signature checking
