@@ -1167,8 +1167,8 @@ public:
     }
 };
 
-bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode,
-              const CTransaction& txTo, unsigned int nIn, int nHashType, int flags)
+template <typename T>
+bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char>& vchPubKey, const CScript& scriptCode, const T& tx, int nHashType, int flags)
 {
     static CSignatureCache signatureCache;
 
@@ -1185,7 +1185,7 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubK
         return false;
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
+    uint256 sighash = tx.SignatureHash(scriptCode, nHashType);
 
     if (signatureCache.Get(sighash, vchSig, pubkey))
         return true;
@@ -1199,13 +1199,11 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubK
     return true;
 }
 
-
-
-
-
-
-
-
+bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char>& vchPubKey, const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, int flags)
+{
+    CScriptTx tx(txTo, nIn);
+    return CheckSig(vchSig, vchPubKey, scriptCode, tx, nHashType, flags);
+}
 
 //
 // Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
