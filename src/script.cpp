@@ -33,8 +33,6 @@ static const CScriptNum bnOne(1);
 static const CScriptNum bnFalse(0);
 static const CScriptNum bnTrue(1);
 
-bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, int flags);
-
 bool CastToBool(const valtype& vch)
 {
     for (unsigned int i = 0; i < vch.size(); i++)
@@ -300,7 +298,11 @@ bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
     return true;
 }
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
+template <typename T>
+bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode, const T& tx, int nHashType, int flags);
+
+template <typename T>
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const T& tx, unsigned int flags, int nHashType)
 {
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
@@ -843,7 +845,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     scriptCode.FindAndDelete(CScript(vchSig));
 
                     bool fSuccess = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                        CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
+                        CheckSig(vchSig, vchPubKey, scriptCode, tx, nHashType, flags);
 
                     popstack(stack);
                     popstack(stack);
@@ -904,7 +906,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
                         // Check signature
                         bool fOk = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                            CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
+                            CheckSig(vchSig, vchPubKey, scriptCode, tx, nHashType, flags);
 
                         if (fOk) {
                             isig++;
@@ -1111,6 +1113,13 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     CScriptTx tx(txTo, nIn);
     return tx.SignatureHash(scriptCode, nHashType);
 }
+
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
+{
+    CScriptTx tx(txTo, nIn);
+    return EvalScript(stack, script, tx, flags, nHashType);
+}
+
 
 // Valid signature cache, to avoid doing expensive ECDSA signature checking
 // twice for every transaction (once when accepted into memory pool, and
