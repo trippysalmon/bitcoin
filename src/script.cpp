@@ -1075,7 +1075,7 @@ public:
 
 class CScriptTx {
 private:
-    const CTransaction txTo;  // reference to the spending transaction (the one being serialized)
+    const CTransaction& txTo;  // reference to the spending transaction (the one being serialized)
     const unsigned int nIn;    // input index of txTo being signed
 public:
     CScriptTx(const CTransaction& txToIn, unsigned int nInIn) :
@@ -1674,17 +1674,15 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     return VerifyScript(scriptSig, scriptPubKey, tx, flags, nHashType);
 }
 
-bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
+template <typename T>
+bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, T& tx, int nHashType, CScript& scriptSigRet)
 {
-    assert(nIn < txTo.vin.size());
-    CTxIn& txin = txTo.vin[nIn];
-
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
-    uint256 hash = SignatureHash(fromPubKey, txTo, nIn, nHashType);
+    uint256 hash = tx.SignatureHash(fromPubKey, nHashType);
 
     txnouttype whichType;
-    if (!Solver(keystore, fromPubKey, hash, nHashType, txin.scriptSig, whichType))
+    if (!Solver(keystore, fromPubKey, hash, nHashType, scriptSigRet, whichType))
         return false;
 
     if (whichType == TX_SCRIPTHASH)
@@ -1692,21 +1690,29 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
         // Solver returns the subscript that need to be evaluated;
         // the final scriptSig is the signatures from that
         // and then the serialized subscript:
-        CScript subscript = txin.scriptSig;
+        CScript subscript = scriptSigRet;
 
         // Recompute txn hash using subscript in place of scriptPubKey:
-        uint256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
+        uint256 hash2 = tx.SignatureHash(subscript, nHashType);
 
         txnouttype subType;
         bool fSolved =
-            Solver(keystore, subscript, hash2, nHashType, txin.scriptSig, subType) && subType != TX_SCRIPTHASH;
+            Solver(keystore, subscript, hash2, nHashType, scriptSigRet, subType) && subType != TX_SCRIPTHASH;
         // Append serialized subscript whether or not it is completely signed:
-        txin.scriptSig << static_cast<valtype>(subscript);
+        scriptSigRet << static_cast<valtype>(subscript);
         if (!fSolved) return false;
     }
 
     // Test solution
-    return VerifyScript(txin.scriptSig, fromPubKey, txTo, nIn, STANDARD_SCRIPT_VERIFY_FLAGS, 0);
+    return VerifyScript(scriptSigRet, fromPubKey, tx, STANDARD_SCRIPT_VERIFY_FLAGS, 0);
+}
+
+bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
+{
+    assert(nIn < txTo.vin.size());
+    CTxIn& txin = txTo.vin[nIn];
+    CScriptTx tx(txTo, nIn);
+    return SignSignature(keystore, fromPubKey, tx, nHashType, txin.scriptSig);
 }
 
 bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
@@ -1716,7 +1722,8 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutab
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType);
+    CScriptTx tx(txTo, nIn);
+    return SignSignature(keystore, txout.scriptPubKey, tx, nHashType, txin.scriptSig);
 }
 
 static CScript PushAll(const vector<valtype>& values)
