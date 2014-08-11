@@ -7,6 +7,7 @@
 #define H_BITCOIN_SCRIPT_WALLET_H
 
 #include "key.h"
+#include "script_standard.h"
 
 class CKeyStore;
 class CScript;

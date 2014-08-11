@@ -7,6 +7,7 @@
 
 #include "keystore.h"
 #include "script.h"
+#include "script_standard.h"
 
 using namespace std;
 

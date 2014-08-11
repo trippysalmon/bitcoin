@@ -4,6 +4,7 @@
 
 #include "core_io.h"
 #include "univalue/univalue.h"
+#include "script_standard.h"
 #include "script_wallet.h"
 #include "core.h"
 #include "serialize.h"
