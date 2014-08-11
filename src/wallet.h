@@ -10,6 +10,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "script_wallet.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "walletdb.h"
