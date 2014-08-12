@@ -7,6 +7,7 @@
 #include "core.h"
 #include "main.h"         // for MAX_BLOCK_SIZE
 #include "keystore.h"
+#include "script_core.h"
 #include "ui_interface.h" // for _(...)
 #include "univalue/univalue.h"
 #include "core_io.h"

@@ -9,6 +9,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "script.h"
+#include "script_core.h"
 #include "core_io.h"
 
 #include <map>

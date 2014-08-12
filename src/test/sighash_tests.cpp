@@ -7,6 +7,7 @@
 #include "random.h"
 #include "serialize.h"
 #include "script.h"
+#include "script_core.h"
 #include "util.h"
 #include "version.h"
 

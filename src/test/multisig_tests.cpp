@@ -5,6 +5,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "script_core.h"
 #include "script_wallet.h"
 #include "uint256.h"
 

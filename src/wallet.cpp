@@ -9,6 +9,8 @@
 #include "checkpoints.h"
 #include "coincontrol.h"
 #include "net.h"
+#include "script.h"
+#include "script_core.h"
 #include "timedata.h"
 
 #include <boost/algorithm/string/replace.hpp>

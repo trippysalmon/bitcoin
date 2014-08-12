@@ -102,6 +102,7 @@ BITCOIN_CORE_H = \
   rpcprotocol.h \
   rpcserver.h \
   script.h \
+  script_core.h \
   script_interpreter.hpp \
   script_sign.hpp \
   script_standard.h \
@@ -210,6 +211,7 @@ libbitcoin_common_a_SOURCES = \
   netbase.cpp \
   protocol.cpp \
   script.cpp \
+  script_core.cpp \
   script_standard.cpp \
   script_wallet.cpp \
   $(BITCOIN_CORE_H)

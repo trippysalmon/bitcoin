@@ -12,6 +12,7 @@
 #include "main.h"
 #include "script.h"
 #include "core_io.h"
+#include "script_core.h"
 
 #include <fstream>
 #include <stdint.h>
