@@ -103,6 +103,7 @@ BITCOIN_CORE_H = \
   rpcserver.h \
   script.h \
   script_interpreter.hpp \
+  script_sign.hpp \
   script_standard.h \
   script_wallet.h \
   serialize.h \
