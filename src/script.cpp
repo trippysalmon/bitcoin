@@ -1208,12 +1208,6 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char>& vchPubK
     return true;
 }
 
-bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char>& vchPubKey, const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, int flags)
-{
-    CScriptTx tx(txTo, nIn);
-    return CheckSig(vchSig, vchPubKey, scriptCode, tx, nHashType, flags);
-}
-
 //
 // Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
 //
