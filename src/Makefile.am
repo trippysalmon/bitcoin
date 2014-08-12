@@ -211,6 +211,8 @@ libbitcoin_common_a_SOURCES = \
   netbase.cpp \
   protocol.cpp \
   script.cpp \
+  example_interpreter.cpp \
+  example_sign.cpp \
   script_core.cpp \
   script_standard.cpp \
   script_wallet.cpp \
