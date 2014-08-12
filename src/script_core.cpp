@@ -103,18 +103,7 @@ public:
     }
 };
 
-class CScriptTx {
-private:
-    const CTransaction txTo;  // reference to the spending transaction (the one being serialized)
-    const unsigned int nIn;    // input index of txTo being signed
-public:
-    CScriptTx(const CTransaction& txToIn, unsigned int nInIn) :
-        txTo(txToIn), nIn(nInIn) {}
-
-    uint256 SignatureHash(const CScript& scriptCode, int nHashType) const;
-};
-
-uint256 CScriptTx::SignatureHash(const CScript& scriptCode, int nHashType) const
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     if (nIn >= txTo.vin.size()) {
         LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
@@ -138,11 +127,38 @@ uint256 CScriptTx::SignatureHash(const CScript& scriptCode, int nHashType) const
     return ss.GetHash();
 }
 
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+uint256 SignatureHashOld(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
-    CScriptTx tx(txTo, nIn);
-    return tx.SignatureHash(scriptCode, nHashType);
+    return SignatureHash(scriptCode, txTo, nIn, nHashType);
 }
+
+class CScriptTx {
+private:
+    const CTransaction& txTo;  // reference to the spending transaction (the one being serialized)
+    const unsigned int nIn;    // input index of txTo being signed
+public:
+    CScriptTx(const CTransaction& txToIn, unsigned int nInIn) :
+        txTo(txToIn), nIn(nInIn) {}
+
+    uint256 SignatureHash(const CScript& scriptCode, int nHashType) const
+    {
+        return SignatureHashOld(scriptCode, txTo, nIn, nHashType);
+    }
+};
+
+class CScriptMutableTx {
+private:
+    const CMutableTransaction txTo;  // reference to the spending transaction (the one being serialized)
+    const unsigned int nIn;    // input index of txTo being signed
+public:
+    CScriptMutableTx(const CMutableTransaction& txToIn, unsigned int nInIn) :
+        txTo(txToIn), nIn(nInIn) {}
+
+    uint256 SignatureHash(const CScript& scriptCode, int nHashType) const
+    {
+        return SignatureHashOld(scriptCode, txTo, nIn, nHashType);
+    }
+};
 
 bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
 {
@@ -160,7 +176,7 @@ bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutabl
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
-    CScriptTx tx(txTo, nIn);
+    CScriptMutableTx tx(txTo, nIn);
     return SignSignature(keystore, fromPubKey, tx, nHashType, txin.scriptSig);
 }
 
@@ -171,14 +187,13 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutab
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    CScriptTx tx(txTo, nIn);
+    CScriptMutableTx tx(txTo, nIn);
     return SignSignature(keystore, txout.scriptPubKey, tx, nHashType, txin.scriptSig);
 }
 
 CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn, const CScript& scriptSig1, const CScript& scriptSig2)
 {
-    CScriptTx tx(txTo, nIn);
-    CTransaction txAux;
-    CScriptTx emptyTx(txAux, 0);
+    CScriptMutableTx tx(txTo, nIn);
+    CScriptMutableTx emptyTx(CTransaction(), 0);
     return CombineSignatures(scriptPubKey, tx, emptyTx, scriptSig1, scriptSig2);
 }
