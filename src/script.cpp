@@ -346,7 +346,7 @@ public:
 
 class CScriptTx {
 private:
-    const CTransaction& txTo;  // reference to the spending transaction (the one being serialized)
+    const CTransaction txTo;  // reference to the spending transaction (the one being serialized)
     const unsigned int nIn;    // input index of txTo being signed
 public:
     CScriptTx(const CTransaction& txToIn, unsigned int nInIn) :
