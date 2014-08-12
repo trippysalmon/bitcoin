@@ -28,20 +28,23 @@ static bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash
     return true;
 }
 
-//
-// Sign scriptPubKey with private keys stored in keystore, given transaction hash and hash type.
+// Sign scriptPubKey with private keys stored in keystore, given transaction to hash and hash type.
 // Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
 // unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
 // Returns false if scriptPubKey could not be completely satisfied.
-//
-static bool SignSignature(const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet, const txnouttype& whichType, const vector<valtype>& vSolutions)
+template <typename T>
+bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, T& tx, int nHashType, CScript& scriptSigRet, const txnouttype& whichType, const vector<vector<unsigned char> >& vSolutions)
 {
+    // Leave out the signature from the hash, since a signature can't sign itself.
+    // The checksig op will also drop the signatures from its hash.
+    uint256 hash = tx.SignatureHash(fromPubKey, nHashType);
     scriptSigRet.clear();
     CKeyID keyID;
     switch (whichType)
     {
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
+    case TX_SCRIPTHASH: // Remove warning
         return false;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
@@ -84,25 +87,20 @@ bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, T& tx, 
     bool fSolved;
     if (whichType == TX_SCRIPTHASH) {
         // The subscript found in the keystore is what needs to be evaluated
+        CScript subscript;
         if (!keystore.GetCScript(uint160(vSolutions[0]), subscript))
             return false;
 
         vSolutions.clear();
         fSolved = Solver(subscript, whichType, vSolutions) && whichType != TX_SCRIPTHASH;
-
         if (fSolved) {
-            // use the subscript instead of the fromPubKey to compute txn hash:
-            uint256 hash2 = tx.SignatureHash(subscript, nHashType);
-            fSolved = SignSignature(keystore, hash2, nHashType, scriptSigRet, whichType, vSolutions);
+            fSolved = SignSignature(keystore, subscript, tx, nHashType, scriptSigRet, whichType, vSolutions);
         }
         // the final scriptSig is the signatures from the subscript and then
         // the serialized subscript whether or not it is completely signed
         scriptSigRet << static_cast<valtype>(subscript);
     } else {
-        // Leave out the signature from the hash, since a signature can't sign itself.
-        // The checksig op will also drop the signatures from its hash.
-        uint256 hash = tx.SignatureHash(fromPubKey, nHashType);
-        fSolved = SignSignature(keystore, hash, nHashType, scriptSigRet, whichType, vSolutions);
+        fSolved = SignSignature(keystore, fromPubKey, tx, nHashType, scriptSigRet, whichType, vSolutions);
     }
     if (!fSolved) return false;
     // Test solution
