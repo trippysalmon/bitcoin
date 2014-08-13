@@ -17,12 +17,8 @@ using namespace std;
 
 typedef vector<unsigned char> valtype;
 
-bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
+bool SignHash(const CKey& key, uint256 hash, int nHashType, CScript& scriptSigRet)
 {
-    CKey key;
-    if (!keystore.GetKey(address, key))
-        return false;
-
     vector<unsigned char> vchSig;
     if (!key.Sign(hash, vchSig))
         return false;
@@ -32,7 +28,18 @@ bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int n
     return true;
 }
 
-bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
+bool Sign(const CKeyID& address, const CKeyStore& keystore, const CScript& scriptPubKey, SignatureHasher& hasher, int nHashType, CScript& scriptSigRet)
+{
+    CKey key;
+    if (!keystore.GetKey(address, key))
+        return false;
+    // Leave out the signature from the hash, since a signature can't sign itself.
+    // The checksig op will also drop the signatures from its hash.
+    uint256 hash = hasher.SignatureHash(scriptPubKey, nHashType);
+    return SignHash(key, hash, nHashType, scriptSigRet);
+}
+
+bool MultiSign(const vector<valtype>& multisigdata, const CKeyStore& keystore, const uint256& hash, int nHashType, CScript& scriptSigRet)
 {
     int nSigned = 0;
     int nRequired = multisigdata.front()[0];
@@ -40,7 +47,8 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
     {
         const valtype& pubkey = multisigdata[i];
         CKeyID keyID = CPubKey(pubkey).GetID();
-        if (Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
+        CKey key;
+        if (keystore.GetKey(keyID, key) && SignHash(key, hash, nHashType, scriptSigRet))
             ++nSigned;
     }
     return nSigned==nRequired;
@@ -52,14 +60,9 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
 // unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
 // Returns false if scriptPubKey could not be completely satisfied.
 //
-bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType, CScript& scriptSigRet, const txnouttype& whichType, const vector<valtype> vSolutions)
+bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, SignatureHasher& hasher, int nHashType, CScript& scriptSigRet, const txnouttype& whichType, const vector<valtype> vSolutions)
 {
     scriptSigRet.clear();
-
-    // Leave out the signature from the hash, since a signature can't sign itself.
-    // The checksig op will also drop the signatures from its hash.
-    SignatureHasher hasher(txTo, nIn);
-    uint256 hash = hasher.SignatureHash(scriptPubKey, nHashType);
 
     CKeyID keyID;
     switch (whichType)
@@ -70,10 +73,10 @@ bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, CMuta
         return false;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
-        return Sign1(keyID, keystore, hash, nHashType, scriptSigRet);
+        return Sign(keyID, keystore, scriptPubKey, hasher, nHashType, scriptSigRet);
     case TX_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
-        if (!Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
+        if (!Sign(keyID, keystore, scriptPubKey, hasher, nHashType, scriptSigRet))
             return false;
         else
         {
@@ -83,8 +86,9 @@ bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, CMuta
         }
         return true;
     case TX_MULTISIG:
+        uint256 hash = hasher.SignatureHash(scriptPubKey, nHashType);
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
-        return (SignN(vSolutions, keystore, hash, nHashType, scriptSigRet));
+        return (MultiSign(vSolutions, keystore, hash, nHashType, scriptSigRet));
     }
     return false;
 }
@@ -111,12 +115,12 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
         txnouttype subType;
         vSolutions.clear();
         fSolved = Solver(subscript, subType, vSolutions);
-        fSolved = fSolved && SignSignature(keystore, subscript, txTo, nIn, nHashType, txin.scriptSig, subType, vSolutions);
+        fSolved = fSolved && SignSignature(keystore, subscript, hasher, nHashType, txin.scriptSig, subType, vSolutions);
         // The final scriptSig are the signatures from the subscript and then
         // the serialized subscript whether or not it is completely signed:
         txin.scriptSig << static_cast<valtype>(subscript);
     } else {
-        fSolved = SignSignature(keystore, fromPubKey, txTo, nIn, nHashType, txin.scriptSig, whichType, vSolutions);
+        fSolved = SignSignature(keystore, fromPubKey, hasher, nHashType, txin.scriptSig, whichType, vSolutions);
     }
 
     // Test solution
@@ -164,6 +168,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     unsigned int nPubKeys = vSolutions.size()-2;
     map<valtype, valtype> sigs;
     SignatureHasher hasher(txTo, nIn);
+    SignatureChecker checker(hasher);
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
         for (unsigned int i = 0; i < nPubKeys; i++)
@@ -172,7 +177,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
 
-            if (SignatureChecker(hasher).CheckSig(sig, pubkey, scriptPubKey))
+            if (checker.CheckSig(sig, pubkey, scriptPubKey))
             {
                 sigs[pubkey] = sig;
                 break;
