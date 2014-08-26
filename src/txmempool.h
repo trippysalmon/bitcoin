@@ -30,6 +30,8 @@ inline bool AllowFree(double dPriority)
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
+class CTxMemPool;
+
 /**
  * CTxMemPool stores these:
  */
@@ -43,6 +45,7 @@ private:
     int64_t nTime; //! Local time when entering the mempool
     double dPriority; //! Priority when entering the mempool
     unsigned int nHeight; //! Chain height when entering the mempool
+    bool hadNoDependencies; //! Not dependent on any other txs when it entered the mempool
 
 public:
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
@@ -56,9 +59,11 @@ public:
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
+    bool WasClearAtEntry() const { return hadNoDependencies; }
+    bool HasNoInputsInPool(const CTxMemPool& pool) const;
 };
 
-class CMinerPolicyEstimator;
+class CBlockPolicyEstimator;
 
 /** An inpoint - a combination of a transaction and an index n into its vin */
 class CInPoint
@@ -88,7 +93,7 @@ class CTxMemPool
 private:
     bool fSanityCheck; //! Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;
-    CMinerPolicyEstimator* minerPolicyEstimator;
+    CBlockPolicyEstimator* minerPolicyEstimator;
 
     CFeeRate minRelayFee; //! Passed to constructor to avoid dependency on main
     uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
@@ -139,7 +144,7 @@ public:
         return totalTxSize;
     }
 
-    bool exists(uint256 hash)
+    bool exists(uint256 hash) const
     {
         LOCK(cs);
         return (mapTx.count(hash) != 0);
