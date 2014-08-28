@@ -374,10 +374,17 @@ bool static ScanHash(CBlockHeader *pblock, uint256 *phash)
         // the double-SHA256 state, and compute the result.
         CHash256(hasher).Write((unsigned char*)&pblock->nNonce, 4).Finalize((unsigned char*)phash);
 
-        // Return the nonce if the hash has at least some zero bits,
-        // caller will check if it has enough to reach the target
-        if (((uint16_t*)phash)[15] == 0)
-            return true;
+        // Check if the hash has at least some zero bits,
+        if (((uint16_t*)phash)[15] == 0) {
+            // then check if it has enough to reach the target
+            uint256 hashTarget = uint256().SetCompact(pblock->nBits);
+            if (*phash <= hashTarget) {
+                assert(*phash == pblock->GetHash());
+                LogPrintf("hash: %s  \ntarget: %s\n", phash->GetHex(), hashTarget.GetHex());
+                return true;
+            }
+            return false;
+        }
 
         // If nothing found after trying for a while, return -1
         if ((pblock->nNonce & 0xffff) == 0)
@@ -467,30 +474,22 @@ void static BitcoinMiner(CWallet *pwallet)
             // Search
             //
             int64_t nStart = GetTime();
-            uint256 hashTarget = uint256().SetCompact(pblock->nBits);
             uint256 hash;
             pblock->nNonce = 0;
             while (true) {
                 // Check if something found
                 if (ScanHash(pblock, &hash))
                 {
-                    if (hash <= hashTarget)
-                    {
-                        // Found a solution
-                        assert(hash == pblock->GetHash());
+                    SetThreadPriority(THREAD_PRIORITY_NORMAL);
+                    LogPrintf("BitcoinMiner:\n proof-of-work found\n");
+                    ProcessBlockFound(pblock, *pwallet, reservekey);
+                    SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
-                        SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                        LogPrintf("BitcoinMiner:\n");
-                        LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-                        ProcessBlockFound(pblock, *pwallet, reservekey);
-                        SetThreadPriority(THREAD_PRIORITY_LOWEST);
+                    // In regression test mode, stop mining after a block is found.
+                    if (Params().MineBlocksOnDemand())
+                        throw boost::thread_interrupted();
 
-                        // In regression test mode, stop mining after a block is found.
-                        if (Params().MineBlocksOnDemand())
-                            throw boost::thread_interrupted();
-
-                        break;
-                    }
+                    break;
                 }
 
                 // Check for stop or if block needs to be rebuilt
@@ -507,11 +506,6 @@ void static BitcoinMiner(CWallet *pwallet)
 
                 // Update nTime every few seconds
                 UpdateTime(pblock, pindexPrev);
-                if (Params().AllowMinDifficultyBlocks())
-                {
-                    // Changing pblock->nTime can change work required on testnet:
-                    hashTarget.SetCompact(pblock->nBits);
-                }
             }
         }
     }
