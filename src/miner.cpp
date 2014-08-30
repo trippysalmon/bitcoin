@@ -475,7 +475,7 @@ void static BitcoinMiner(CWallet *pwallet)
             //
             int64_t nStart = GetTime();
             pblock->nNonce = 0;
-            while (true) {
+            for (int i=0; i < 1000; i++) {
                 // Check if something found
                 if (ScanHash(pblock))
                 {
@@ -496,8 +496,8 @@ void static BitcoinMiner(CWallet *pwallet)
                 // Regtest mode doesn't require peers
                 if (vNodes.empty() && Params().MiningRequiresPeers())
                     break;
-                if (pblock->nNonce >= 0xffff0000)
-                    break;
+                // periodically or after 1000 iterations, 
+                // the block is rebuilt and nNonce starts over at zero.
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
                 if (pindexPrev != chainActive.Tip())
