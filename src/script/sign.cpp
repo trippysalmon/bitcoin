@@ -124,12 +124,6 @@ bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, const S
     return fSolved && VerifyScript(scriptSigRet, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(hasher));
 }
 
-bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, CScript& scriptSigRet, int nHashType)
-{
-    SignatureHasher hasher(txTo, nIn);
-    return SignSignature(keystore, fromPubKey, hasher, scriptSigRet, nHashType);
-}
-
 bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
 {
     assert(nIn < txTo.vin.size());
@@ -137,7 +131,11 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutab
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, txin.scriptSig, nHashType);
+    CScript scriptSigRet = txin.scriptSig;
+    SignatureHasher hasher(txTo, nIn);
+    bool fToReturn = SignSignature(keystore, txout.scriptPubKey, hasher, scriptSigRet, nHashType);
+    txin.scriptSig = scriptSigRet;
+    return fToReturn;
 }
 
 static CScript PushAll(const vector<valtype>& values)

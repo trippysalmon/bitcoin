@@ -680,10 +680,13 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
         txin.scriptSig.clear();
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
-        if (!fHashSingle || (i < mergedTx.vout.size()))
-            SignSignature(keystore, prevPubKey, mergedTx, i, txin.scriptSig, nHashType);
-
         SignatureHasher hasher(mergedTx, i);
+        if (!fHashSingle || (i < mergedTx.vout.size())) {
+            CScript scriptSigRet = txin.scriptSig;
+            SignSignature(keystore, prevPubKey, hasher, scriptSigRet, nHashType);
+            txin.scriptSig = scriptSigRet;
+        }
+
         // ... and merge in other signatures:
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
             txin.scriptSig = CombineSignatures(prevPubKey, hasher, txin.scriptSig, txv.vin[i].scriptSig);
