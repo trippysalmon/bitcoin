@@ -93,10 +93,8 @@ bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, Signa
     return false;
 }
 
-bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
+bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, CScript& scriptSigRet, int nHashType)
 {
-    assert(nIn < txTo.vin.size());
-    CTxIn& txin = txTo.vin[nIn];
     SignatureHasher hasher(txTo, nIn);
 
     txnouttype whichType;
@@ -115,16 +113,16 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
         txnouttype subType;
         vSolutions.clear();
         fSolved = Solver(subscript, subType, vSolutions);
-        fSolved = fSolved && SignSignature(keystore, subscript, hasher, nHashType, txin.scriptSig, subType, vSolutions);
+        fSolved = fSolved && SignSignature(keystore, subscript, hasher, nHashType, scriptSigRet, subType, vSolutions);
         // The final scriptSig are the signatures from the subscript and then
         // the serialized subscript whether or not it is completely signed:
-        txin.scriptSig << static_cast<valtype>(subscript);
+        scriptSigRet << static_cast<valtype>(subscript);
     } else {
-        fSolved = SignSignature(keystore, fromPubKey, hasher, nHashType, txin.scriptSig, whichType, vSolutions);
+        fSolved = SignSignature(keystore, fromPubKey, hasher, nHashType, scriptSigRet, whichType, vSolutions);
     }
 
     // Test solution
-    return fSolved && VerifyScript(txin.scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(hasher));
+    return fSolved && VerifyScript(scriptSigRet, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(hasher));
 }
 
 bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
@@ -134,7 +132,7 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutab
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType);
+    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, txin.scriptSig, nHashType);
 }
 
 static CScript PushAll(const vector<valtype>& values)
