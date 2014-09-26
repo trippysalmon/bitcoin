@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
         unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
 
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, scriptflags, SignatureChecker(SignatureHasher(BuildSpendingTransaction(scriptSig, scriptPubKey), 0))), strTest);
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, scriptflags, SignatureChecker(TxSignatureHasher(BuildSpendingTransaction(scriptSig, scriptPubKey), 0))), strTest);
     }
 }
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(script_invalid)
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
         unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
 
-        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, scriptflags, SignatureChecker(SignatureHasher(BuildSpendingTransaction(scriptSig, scriptPubKey), 0))), strTest);
+        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, scriptflags, SignatureChecker(TxSignatureHasher(BuildSpendingTransaction(scriptSig, scriptPubKey), 0))), strTest);
     }
 }
 
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(script_PushData)
 CScript
 sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transaction)
 {
-    uint256 hash = SignatureHasher(transaction, 0).SignatureHash(scriptPubKey, SIGHASH_ALL);
+    uint256 hash = TxSignatureHasher(transaction, 0).SignatureHash(scriptPubKey, SIGHASH_ALL);
 
     CScript result;
     //
@@ -222,9 +222,9 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     txTo12.vout[0].nValue = 1;
 
     CScript goodsig1 = sign_multisig(scriptPubKey12, key1, txTo12);
-    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey12, flags, SignatureChecker(SignatureHasher(txTo12, 0))));
+    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey12, flags, SignatureChecker(TxSignatureHasher(txTo12, 0))));
     txTo12.vout[0].nValue = 2;
-    SignatureHasher hasher(txTo12, 0);
+    TxSignatureHasher hasher(txTo12, 0);
     SignatureChecker checker(hasher);
     BOOST_CHECK(!VerifyScript(goodsig1, scriptPubKey12, flags, checker));
 
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     txTo23.vin[0].prevout.hash = txFrom23.GetHash();
     txTo23.vout[0].nValue = 1;
 
-    SignatureHasher hasher(txTo23, 0);
+    TxSignatureHasher hasher(txTo23, 0);
     SignatureChecker checker(hasher);
     std::vector<CKey> keys;
     keys.push_back(key1); keys.push_back(key2);
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(combined == scriptSig);
 
     // A couple of partially-signed versions:
-    SignatureHasher hasher(txTo, 0);
+    TxSignatureHasher hasher(txTo, 0);
     vector<unsigned char> sig1;
     uint256 hash1 = hasher.SignatureHash(scriptPubKey, SIGHASH_ALL);
     BOOST_CHECK(keys[0].Sign(hash1, sig1));

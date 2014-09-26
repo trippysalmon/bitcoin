@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     break;
                 }
 
-                SignatureHasher hasher(tx, i);
+                TxSignatureHasher hasher(tx, i);
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout], verify_flags, SignatureChecker(hasher)), strTest);
             }
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                 }
 
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
-                fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout], verify_flags, SignatureChecker(SignatureHasher(tx, i)));
+                fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout], verify_flags, SignatureChecker(TxSignatureHasher(tx, i)));
             }
 
             BOOST_CHECK_MESSAGE(!fValid, strTest);

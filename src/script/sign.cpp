@@ -95,7 +95,7 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
-    SignatureHasher hasher(txTo, nIn);
+    TxSignatureHasher hasher(txTo, nIn);
 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
@@ -167,7 +167,8 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     unsigned int nSigsRequired = vSolutions.front()[0];
     unsigned int nPubKeys = vSolutions.size()-2;
     map<valtype, valtype> sigs;
-    SignatureHasher hasher(txTo, nIn);
+
+    TxSignatureHasher hasher(txTo, nIn);
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
         for (unsigned int i = 0; i < nPubKeys; i++)

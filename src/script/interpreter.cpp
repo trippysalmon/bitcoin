@@ -892,7 +892,7 @@ public:
 
 } // anon namespace
 
-uint256 SignatureHasher::SignatureHash(const CScript& scriptCode, int nHashType) const
+uint256 TxSignatureHasher::SignatureHash(const CScript& scriptCode, int nHashType) const
 {
     if (nIn >= txTo.vin.size()) {
         LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);

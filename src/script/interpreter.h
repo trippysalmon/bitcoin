@@ -41,14 +41,20 @@ bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig, unsigned int
 
 class SignatureHasher
 {
+public:
+    virtual uint256 SignatureHash(const CScript& scriptCode, int nHashType) const = 0;
+};
+
+class TxSignatureHasher : public SignatureHasher
+{
 private:
     const CTransaction txAux;
     const CTransaction& txTo;
     unsigned int nIn;
 public:
-    SignatureHasher(const CTransaction& txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
-    SignatureHasher(const CMutableTransaction& txToIn, unsigned int nInIn) : txAux(txToIn), txTo(this->txAux), nIn(nInIn) { }
-    uint256 SignatureHash(const CScript& scriptCode, int nHashType) const;
+    TxSignatureHasher(const CTransaction& txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
+    TxSignatureHasher(const CMutableTransaction& txToIn, unsigned int nInIn) : txAux(txToIn), txTo(this->txAux), nIn(nInIn) { }
+    virtual uint256 SignatureHash(const CScript& scriptCode, int nHashType) const;
 };
 
 class BaseSignatureChecker

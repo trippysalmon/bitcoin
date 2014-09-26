@@ -683,7 +683,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         if (!fHashSingle || (i < mergedTx.vout.size()))
             SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
 
-        SignatureHasher hasher(mergedTx, i);
+        TxSignatureHasher hasher(mergedTx, i);
         // ... and merge in other signatures:
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
             txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
