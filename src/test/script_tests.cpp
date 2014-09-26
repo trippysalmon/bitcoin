@@ -90,7 +90,7 @@ CTransaction BuildSpendingTransaction(const CScript& scriptSig, const CMutableTr
 
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, bool expect, const std::string& message)
 {
-    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, flags, SignatureChecker(BuildSpendingTransaction(scriptSig, BuildCreditingTransaction(scriptPubKey)), 0)) == expect, message);
+    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, flags, SignatureChecker(TxSignatureHasher(BuildSpendingTransaction(scriptSig, BuildCreditingTransaction(scriptPubKey)), 0))) == expect, message);
 }
 
 namespace
@@ -527,16 +527,18 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     CTransaction txTo12 = CTransaction(txTo12Mutable);
 
     CScript goodsig1 = sign_multisig(scriptPubKey12, key1, txTo12);
-    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey12, flags, SignatureChecker(txTo12, 0)));
+    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey12, flags, SignatureChecker(TxSignatureHasher(txTo12, 0))));
     txTo12Mutable.vout[0].nValue = 2;
     txTo12 = CTransaction(txTo12Mutable);
-    BOOST_CHECK(!VerifyScript(goodsig1, scriptPubKey12, flags, SignatureChecker(txTo12, 0)));
+    TxSignatureHasher hasher(txTo12, 0);
+    SignatureChecker checker(hasher);
+    BOOST_CHECK(!VerifyScript(goodsig1, scriptPubKey12, flags, checker));
 
     CScript goodsig2 = sign_multisig(scriptPubKey12, key2, txTo12);
-    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey12, flags, SignatureChecker(txTo12, 0)));
+    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey12, flags, checker));
 
     CScript badsig1 = sign_multisig(scriptPubKey12, key3, txTo12);
-    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey12, flags, SignatureChecker(txTo12, 0)));
+    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey12, flags, checker));
 }
 
 BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
@@ -553,49 +555,51 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     CMutableTransaction txFrom23 = BuildCreditingTransaction(scriptPubKey23);
     CTransaction txTo23 = CTransaction(BuildSpendingTransaction(CScript(), txFrom23));
 
+    TxSignatureHasher hasher(txTo23, 0);
+    SignatureChecker checker(hasher);
     std::vector<CKey> keys;
     keys.push_back(key1); keys.push_back(key2);
     CScript goodsig1 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey23, flags, SignatureChecker(txTo23, 0)));
+    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey23, flags, checker));
 
     keys.clear();
     keys.push_back(key1); keys.push_back(key3);
     CScript goodsig2 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey23, flags, SignatureChecker(txTo23, 0)));
+    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey23, flags, checker));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key3);
     CScript goodsig3 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig3, scriptPubKey23, flags, SignatureChecker(txTo23, 0)));
+    BOOST_CHECK(VerifyScript(goodsig3, scriptPubKey23, flags, checker));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key2); // Can't re-use sig
     CScript badsig1 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey23, flags, SignatureChecker(txTo23, 0)));
+    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey23, flags, checker));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key1); // sigs must be in correct order
     CScript badsig2 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig2, scriptPubKey23, flags, SignatureChecker(txTo23, 0)));
+    BOOST_CHECK(!VerifyScript(badsig2, scriptPubKey23, flags, checker));
 
     keys.clear();
     keys.push_back(key3); keys.push_back(key2); // sigs must be in correct order
     CScript badsig3 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig3, scriptPubKey23, flags, SignatureChecker(txTo23, 0)));
+    BOOST_CHECK(!VerifyScript(badsig3, scriptPubKey23, flags, checker));
 
     keys.clear();
     keys.push_back(key4); keys.push_back(key2); // sigs must match pubkeys
     CScript badsig4 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig4, scriptPubKey23, flags, SignatureChecker(txTo23, 0)));
+    BOOST_CHECK(!VerifyScript(badsig4, scriptPubKey23, flags, checker));
 
     keys.clear();
     keys.push_back(key1); keys.push_back(key4); // sigs must match pubkeys
     CScript badsig5 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig5, scriptPubKey23, flags, SignatureChecker(txTo23, 0)));
+    BOOST_CHECK(!VerifyScript(badsig5, scriptPubKey23, flags, checker));
 
     keys.clear(); // Must have signatures
     CScript badsig6 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig6, scriptPubKey23, flags, SignatureChecker(txTo23, 0)));
+    BOOST_CHECK(!VerifyScript(badsig6, scriptPubKey23, flags, checker));
 }    
 
 BOOST_AUTO_TEST_CASE(script_combineSigs)
