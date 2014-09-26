@@ -28,7 +28,7 @@ bool SignHash(const CKey& key, uint256 hash, int nHashType, CScript& scriptSigRe
     return true;
 }
 
-bool Sign(const CKeyID& address, const CKeyStore& keystore, const CScript& scriptPubKey, SignatureHasher& hasher, int nHashType, CScript& scriptSigRet)
+bool Sign(const CKeyID& address, const CKeyStore& keystore, const CScript& scriptPubKey, const SignatureHasher& hasher, int nHashType, CScript& scriptSigRet)
 {
     CKey key;
     if (!keystore.GetKey(address, key))
@@ -39,8 +39,11 @@ bool Sign(const CKeyID& address, const CKeyStore& keystore, const CScript& scrip
     return SignHash(key, hash, nHashType, scriptSigRet);
 }
 
-bool MultiSign(const vector<valtype>& multisigdata, const CKeyStore& keystore, const uint256& hash, int nHashType, CScript& scriptSigRet)
+bool MultiSign(const vector<valtype>& multisigdata, const CKeyStore& keystore, const CScript& scriptPubKey, const SignatureHasher& hasher, int nHashType, CScript& scriptSigRet)
 {
+    uint256 hash = hasher.SignatureHash(scriptPubKey, nHashType);
+    scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
+
     int nSigned = 0;
     int nRequired = multisigdata.front()[0];
     for (unsigned int i = 1; i < multisigdata.size()-1 && nSigned < nRequired; i++)
@@ -60,7 +63,7 @@ bool MultiSign(const vector<valtype>& multisigdata, const CKeyStore& keystore, c
 // unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
 // Returns false if scriptPubKey could not be completely satisfied.
 //
-bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, SignatureHasher& hasher, int nHashType, CScript& scriptSigRet, const txnouttype& whichType, const vector<valtype> vSolutions)
+bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, const SignatureHasher& hasher, int nHashType, CScript& scriptSigRet, const txnouttype& whichType, const vector<valtype> vSolutions)
 {
     scriptSigRet.clear();
 
@@ -86,17 +89,13 @@ bool SignSignature(const CKeyStore& keystore, const CScript& scriptPubKey, Signa
         }
         return true;
     case TX_MULTISIG:
-        uint256 hash = hasher.SignatureHash(scriptPubKey, nHashType);
-        scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
-        return (MultiSign(vSolutions, keystore, hash, nHashType, scriptSigRet));
+        return MultiSign(vSolutions, keystore, scriptPubKey, hasher, nHashType, scriptSigRet);
     }
     return false;
 }
 
-bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, CScript& scriptSigRet, int nHashType)
+bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, const SignatureHasher& hasher, CScript& scriptSigRet, int nHashType)
 {
-    SignatureHasher hasher(txTo, nIn);
-
     txnouttype whichType;
     vector<valtype> vSolutions;
     if (!Solver(fromPubKey, whichType, vSolutions))
@@ -123,6 +122,12 @@ bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutabl
 
     // Test solution
     return fSolved && VerifyScript(scriptSigRet, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(hasher));
+}
+
+bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, CScript& scriptSigRet, int nHashType)
+{
+    SignatureHasher hasher(txTo, nIn);
+    return SignSignature(keystore, fromPubKey, hasher, scriptSigRet, nHashType);
 }
 
 bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
