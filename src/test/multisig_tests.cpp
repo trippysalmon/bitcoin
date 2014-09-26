@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     CScript s;
 
     // Test a AND b:
-    SignatureHasher hasherAnd(txTo[0], 0);
+    TxSignatureHasher hasherAnd(txTo[0], 0);
     SignatureChecker checkerAnd(hasherAnd);
     keys.clear();
     keys += key[0],key[1]; // magic operator+= from boost.assign
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     }
 
     // Test a OR b:
-    SignatureHasher hasherOr(txTo[1], 0);
+    TxSignatureHasher hasherOr(txTo[1], 0);
     SignatureChecker checkerOr(hasherOr);
     for (int i = 0; i < 4; i++)
     {
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     s << OP_0 << OP_1;
     BOOST_CHECK(!VerifyScript(s, a_or_b, flags, checkerOr));
 
-    SignatureHasher hasherEscrow(txTo[2], 0);
+    TxSignatureHasher hasherEscrow(txTo[2], 0);
     SignatureChecker checkerEscrow(hasherEscrow);
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 4; j++)

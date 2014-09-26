@@ -166,7 +166,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const SignatureHasher& hash
     unsigned int nSigsRequired = vSolutions.front()[0];
     unsigned int nPubKeys = vSolutions.size()-2;
     map<valtype, valtype> sigs;
-    SignatureChecker checker(hasher);
+    TxSignatureHasher hasher(txTo, nIn);
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
         for (unsigned int i = 0; i < nPubKeys; i++)
