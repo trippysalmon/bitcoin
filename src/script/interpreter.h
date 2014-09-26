@@ -63,12 +63,12 @@ public:
 class SignatureChecker : public BaseSignatureChecker
 {
 private:
-    const SignatureHasher hasher;
+    const SignatureHasher& hasher;
 protected:
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
-    SignatureChecker(const CTransaction& txToIn, unsigned int nIn) : hasher(SignatureHasher(txToIn, nIn)) { }
+    SignatureChecker(const SignatureHasher& hasherIn) : hasher(hasherIn) { }
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
 };
 
