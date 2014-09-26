@@ -148,9 +148,7 @@ static CScript PushAll(const vector<valtype>& values)
     return result;
 }
 
-static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& txTo, unsigned int nIn,
-                               const vector<valtype>& vSolutions,
-                               vector<valtype>& sigs1, vector<valtype>& sigs2)
+static CScript CombineMultisig(CScript scriptPubKey, const SignatureHasher& hasher, const vector<valtype>& vSolutions, vector<valtype>& sigs1, vector<valtype>& sigs2)
 {
     // Combine all the signatures we've got:
     set<valtype> allsigs;
@@ -170,7 +168,6 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     unsigned int nSigsRequired = vSolutions.front()[0];
     unsigned int nPubKeys = vSolutions.size()-2;
     map<valtype, valtype> sigs;
-    SignatureHasher hasher(txTo, nIn);
     SignatureChecker checker(hasher);
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
@@ -205,9 +202,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     return result;
 }
 
-static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
-                                 const txnouttype txType, const vector<valtype>& vSolutions,
-                                 vector<valtype>& sigs1, vector<valtype>& sigs2)
+static CScript CombineSignatures(CScript scriptPubKey, const SignatureHasher& hasher, const txnouttype txType, const vector<valtype>& vSolutions, vector<valtype>& sigs1, vector<valtype>& sigs2)
 {
     switch (txType)
     {
@@ -239,12 +234,13 @@ static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo,
             Solver(pubKey2, txType2, vSolutions2);
             sigs1.pop_back();
             sigs2.pop_back();
-            CScript result = CombineSignatures(pubKey2, txTo, nIn, txType2, vSolutions2, sigs1, sigs2);
+            CScript result = CombineSignatures(pubKey2, hasher, txType2, vSolutions2, sigs1, sigs2);
             result << spk;
             return result;
         }
-    case TX_MULTISIG:
-        return CombineMultisig(scriptPubKey, txTo, nIn, vSolutions, sigs1, sigs2);
+    case TX_MULTISIG:{
+        return CombineMultisig(scriptPubKey, hasher, vSolutions, sigs1, sigs2);
+        }
     }
 
     return CScript();
@@ -262,5 +258,6 @@ CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsign
     vector<valtype> stack2;
     EvalScript(stack2, scriptSig2, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker());
 
-    return CombineSignatures(scriptPubKey, txTo, nIn, txType, vSolutions, stack1, stack2);
+    SignatureHasher hasher(txTo, nIn);
+    return CombineSignatures(scriptPubKey, hasher, txType, vSolutions, stack1, stack2);
 }
