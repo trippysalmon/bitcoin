@@ -331,20 +331,21 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     CScript& scriptSig = txTo.vin[0].scriptSig;
     txTo.vout[0].nValue = 1;
 
+    SignatureHasher hasher(txTo, 0);
     CScript empty;
-    CScript combined = CombineSignatures(scriptPubKey, txTo, 0, empty, empty);
+    CScript combined = CombineSignatures(scriptPubKey, hasher, empty, empty);
     BOOST_CHECK(combined.empty());
 
     // Single signature case:
     SignSignature(keystore, txFrom, txTo, 0); // changes scriptSig
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
+    combined = CombineSignatures(scriptPubKey, hasher, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
+    combined = CombineSignatures(scriptPubKey, hasher, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
     CScript scriptSigCopy = scriptSig;
     // Signing again will give a different, valid signature:
     SignSignature(keystore, txFrom, txTo, 0);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
+    combined = CombineSignatures(scriptPubKey, hasher, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSigCopy || combined == scriptSig);
 
     // P2SH, single-signature case:
@@ -352,32 +353,31 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     keystore.AddCScript(pkSingle);
     scriptPubKey = GetScriptForDestination(pkSingle.GetID());
     SignSignature(keystore, txFrom, txTo, 0);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
+    combined = CombineSignatures(scriptPubKey, hasher, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
+    combined = CombineSignatures(scriptPubKey, hasher, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
     scriptSigCopy = scriptSig;
     SignSignature(keystore, txFrom, txTo, 0);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
+    combined = CombineSignatures(scriptPubKey, hasher, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSigCopy || combined == scriptSig);
     // dummy scriptSigCopy with placeholder, should always choose non-placeholder:
     scriptSigCopy = CScript() << OP_0 << static_cast<vector<unsigned char> >(pkSingle);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
+    combined = CombineSignatures(scriptPubKey, hasher, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSig);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, scriptSigCopy);
+    combined = CombineSignatures(scriptPubKey, hasher, scriptSig, scriptSigCopy);
     BOOST_CHECK(combined == scriptSig);
 
     // Hardest case:  Multisig 2-of-3
     scriptPubKey = GetScriptForMultisig(2, pubkeys);
     keystore.AddCScript(scriptPubKey);
     SignSignature(keystore, txFrom, txTo, 0);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
+    combined = CombineSignatures(scriptPubKey, hasher, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
+    combined = CombineSignatures(scriptPubKey, hasher, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
 
     // A couple of partially-signed versions:
-    SignatureHasher hasher(txTo, 0);
     vector<unsigned char> sig1;
     uint256 hash1 = hasher.SignatureHash(scriptPubKey, SIGHASH_ALL);
     BOOST_CHECK(keys[0].Sign(hash1, sig1));
@@ -403,21 +403,21 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     CScript complete13 = CScript() << OP_0 << sig1 << sig3;
     CScript complete23 = CScript() << OP_0 << sig2 << sig3;
 
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial1a, partial1b);
+    combined = CombineSignatures(scriptPubKey, hasher, partial1a, partial1b);
     BOOST_CHECK(combined == partial1a);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial1a, partial2a);
+    combined = CombineSignatures(scriptPubKey, hasher, partial1a, partial2a);
     BOOST_CHECK(combined == complete12);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial2a, partial1a);
+    combined = CombineSignatures(scriptPubKey, hasher, partial2a, partial1a);
     BOOST_CHECK(combined == complete12);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial1b, partial2b);
+    combined = CombineSignatures(scriptPubKey, hasher, partial1b, partial2b);
     BOOST_CHECK(combined == complete12);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial1b);
+    combined = CombineSignatures(scriptPubKey, hasher, partial3b, partial1b);
     BOOST_CHECK(combined == complete13);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial2a, partial3a);
+    combined = CombineSignatures(scriptPubKey, hasher, partial2a, partial3a);
     BOOST_CHECK(combined == complete23);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial2b);
+    combined = CombineSignatures(scriptPubKey, hasher, partial3b, partial2b);
     BOOST_CHECK(combined == complete23);
-    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial3a);
+    combined = CombineSignatures(scriptPubKey, hasher, partial3b, partial3a);
     BOOST_CHECK(combined == partial3c);
 }
 

@@ -246,8 +246,7 @@ static CScript CombineSignatures(CScript scriptPubKey, const SignatureHasher& ha
     return CScript();
 }
 
-CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
-                          const CScript& scriptSig1, const CScript& scriptSig2)
+CScript CombineSignatures(CScript scriptPubKey, const SignatureHasher& hasher, const CScript& scriptSig1, const CScript& scriptSig2)
 {
     txnouttype txType;
     vector<vector<unsigned char> > vSolutions;
@@ -258,6 +257,5 @@ CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsign
     vector<valtype> stack2;
     EvalScript(stack2, scriptSig2, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker());
 
-    SignatureHasher hasher(txTo, nIn);
     return CombineSignatures(scriptPubKey, hasher, txType, vSolutions, stack1, stack2);
 }
