@@ -891,9 +891,7 @@ public:
     }
 };
 
-} // anon namespace
-
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+uint256 TxSignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     if (nIn >= txTo.vin.size()) {
         LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
@@ -917,6 +915,13 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     return ss.GetHash();
 }
 
+} // anon namespace
+
+uint256 TxSignatureHasher::SignatureHash(const CScript& scriptCode, int nHashType) const
+{
+    return TxSignatureHash(scriptCode, txTo, nIn, nHashType);
+}
+
 bool SignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
     return pubkey.Verify(sighash, vchSig);
@@ -935,7 +940,7 @@ bool SignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn, const vec
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
+    uint256 sighash = hasher.SignatureHash(scriptCode, nHashType);
 
     if (!VerifySignature(vchSig, pubkey, sighash))
         return false;

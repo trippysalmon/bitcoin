@@ -96,10 +96,11 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
     assert(nIn < _txTo.vin.size());
     CTxIn& txin = _txTo.vin[nIn];
     CTransaction txTo(_txTo);
+    TxSignatureHasher hasher(txTo, nIn);
 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
-    uint256 hash = SignatureHash(fromPubKey, txTo, nIn, nHashType);
+    uint256 hash = hasher.SignatureHash(fromPubKey, nHashType);
 
     txnouttype whichType;
     if (!Solver(keystore, fromPubKey, hash, nHashType, txin.scriptSig, whichType))
@@ -113,7 +114,7 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
         CScript subscript = txin.scriptSig;
 
         // Recompute txn hash using subscript in place of scriptPubKey:
-        uint256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
+        uint256 hash2 = hasher.SignatureHash(subscript, nHashType);
 
         txnouttype subType;
         bool fSolved =
