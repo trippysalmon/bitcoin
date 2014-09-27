@@ -958,7 +958,7 @@ public:
 
 } // anon namespace
 
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+uint256 TxSignatureHasher::SignatureHash(const CScript& scriptCode, int nHashType) const
 {
     if (nIn >= txTo.vin.size()) {
         LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
@@ -1000,7 +1000,7 @@ bool SignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn, const vec
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
+    uint256 sighash = hasher.SignatureHash(scriptCode, nHashType);
 
     if (!VerifySignature(vchSig, pubkey, sighash))
         return false;
