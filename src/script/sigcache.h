@@ -6,7 +6,7 @@
 #ifndef H_BITCOIN_SCRIPT_SIGCACHE
 #define H_BITCOIN_SCRIPT_SIGCACHE
 
-#include "script/interpreter.h"
+#include "script/txchecker.h"
 
 #include <vector>
 
