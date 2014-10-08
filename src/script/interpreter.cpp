@@ -919,7 +919,7 @@ uint256 TxSignatureHash(const CScript& scriptCode, const CTransaction& txTo, uns
 
 uint256 TxSignatureHasher::SignatureHash(const CScript& scriptCode, int nHashType) const
 {
-    return TxSignatureHash(scriptCode, txTo, nIn, nHashType);
+    return TxSignatureHash(scriptCode, *txTo, nIn, nHashType);
 }
 
 bool SignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
