@@ -6,8 +6,6 @@
 #ifndef H_BITCOIN_SCRIPT_INTERPRETER
 #define H_BITCOIN_SCRIPT_INTERPRETER
 
-#include "core.h"
-
 #include <vector>
 #include <stdint.h>
 #include <string>
@@ -42,12 +40,10 @@ bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig, unsigned int
 class TxSignatureHasher
 {
 private:
-    const CTransaction txAux;
     const CTransaction& txTo;
     unsigned int nIn;
 public:
     TxSignatureHasher(const CTransaction& txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
-    TxSignatureHasher(const CMutableTransaction& txToIn, unsigned int nInIn) : txAux(txToIn), txTo(this->txAux), nIn(nInIn) { }
     uint256 SignatureHash(const CScript& scriptCode, int nHashType) const;
 };
 
