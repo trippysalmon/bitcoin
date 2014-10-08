@@ -223,6 +223,7 @@ libbitcoin_common_a_SOURCES = \
   script/script.cpp \
   script/sigcache.cpp \
   script/sign.cpp \
+  script/standalone.cpp \
   script/standard.cpp \
   script/txchecker.cpp \
   $(BITCOIN_CORE_H)
