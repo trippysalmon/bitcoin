@@ -6,7 +6,6 @@
 #ifndef H_BITCOIN_SCRIPT_TXSERIALIZER
 #define H_BITCOIN_SCRIPT_TXSERIALIZER
 
-#include "core.h"
 #include "script/script.h"
 #include "uint256.h"
 #include "util.h"
@@ -14,6 +13,7 @@
 /** Wrapper that serializes like CTransaction, but with the modifications
  *  required for the signature hash done in-place
  */
+template<typename CTransaction, typename CTxOut>
 class CTransactionSignatureSerializer {
 private:
     const CTransaction &txTo;  // reference to the spending transaction (the one being serialized)
@@ -105,6 +105,7 @@ public:
     }
 };
 
+template<typename CTransaction, typename CTxOut>
 uint256 TxSignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     if (nIn >= txTo.vin.size()) {
@@ -121,7 +122,7 @@ uint256 TxSignatureHash(const CScript& scriptCode, const CTransaction& txTo, uns
     }
 
     // Wrapper to serialize only the necessary parts of the transaction being signed
-    CTransactionSignatureSerializer txTmp(txTo, scriptCode, nIn, nHashType);
+    CTransactionSignatureSerializer<CTransaction, CTxOut> txTmp(txTo, scriptCode, nIn, nHashType);
 
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);

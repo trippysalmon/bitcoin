@@ -5,6 +5,7 @@
 
 #include "script/txchecker.h"
 
+#include "core.h"
 #include "script/script.h"
 #include "script/txserializer.hpp"
 #include "uint256.h"
@@ -14,7 +15,7 @@ using namespace std;
 
 uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
-    return TxSignatureHash(scriptCode, txTo, nIn, nHashType);
+    return TxSignatureHash<CTransaction, CTxOut>(scriptCode, txTo, nIn, nHashType);
 }
 
 bool SignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
