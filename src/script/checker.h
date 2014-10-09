@@ -24,7 +24,13 @@ enum
     SIGHASH_ANYONECANPAY = 0x80,
 };
 
-class TxSignatureHasher
+class SignatureHasher
+{
+public:
+    virtual uint256 SignatureHash(const CScript& scriptCode, int nHashType) const = 0;
+};
+
+class TxSignatureHasher : public SignatureHasher
 {
 private:
     const CTransaction txTo;
@@ -48,12 +54,12 @@ public:
 class SignatureChecker : public BaseSignatureChecker
 {
 private:
-    const TxSignatureHasher hasher;
+    const SignatureHasher& hasher;
 protected:
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
-    SignatureChecker(const TxSignatureHasher& hasherIn) : hasher(hasherIn) { }
+    SignatureChecker(const SignatureHasher& hasherIn) : hasher(hasherIn) { }
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
 };
 
