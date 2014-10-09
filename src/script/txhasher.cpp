@@ -9,5 +9,5 @@
 
 uint256 TxSignatureHasher::SignatureHash(const CScript& scriptCode, int nHashType) const
 {
-    return TxSignatureHash(scriptCode, txTo, nIn, nHashType);
+    return TxSignatureHash<CTransaction, CTxOut>(scriptCode, txTo, nIn, nHashType);
 }
