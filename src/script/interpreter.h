@@ -6,25 +6,15 @@
 #ifndef H_BITCOIN_SCRIPT_INTERPRETER
 #define H_BITCOIN_SCRIPT_INTERPRETER
 
-#include "core.h"
+#include "script/checker.h"
 
-#include <vector>
-#include <stdint.h>
-#include <string>
+/* #include <vector> */
+/* #include <stdint.h> */
+/* #include <string> */
 
 class CPubKey;
 class CScript;
-class CTransaction;
 class uint256;
-
-/** Signature hash types/flags */
-enum
-{
-    SIGHASH_ALL = 1,
-    SIGHASH_NONE = 2,
-    SIGHASH_SINGLE = 3,
-    SIGHASH_ANYONECANPAY = 0x80,
-};
 
 /** Script verification flags */
 enum
@@ -48,39 +38,6 @@ enum
 
     // verify dummy stack item consumed by CHECKMULTISIG is of zero-length (softfork safe, BIP62 rule 7).
     SCRIPT_VERIFY_NULLDUMMY = (1U << 4),
-};
-
-class TxSignatureHasher
-{
-private:
-    const CTransaction txTo;
-    unsigned int nIn;
-public:
-    TxSignatureHasher(const CTransaction& txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
-    uint256 SignatureHash(const CScript& scriptCode, int nHashType) const;
-};
-
-class BaseSignatureChecker
-{
-public:
-    virtual bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const
-    {
-        return false;
-    }
-
-    virtual ~BaseSignatureChecker() {}
-};
-
-class SignatureChecker : public BaseSignatureChecker
-{
-private:
-    const TxSignatureHasher hasher;
-protected:
-    virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
-
-public:
-    SignatureChecker(const TxSignatureHasher& hasherIn) : hasher(hasherIn) { }
-    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
 };
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker);

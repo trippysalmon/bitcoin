@@ -7,6 +7,7 @@
 #include "core_io.h"
 #include "keystore.h"
 #include "main.h" // for MAX_BLOCK_SIZE
+#include "script/checker.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "ui_interface.h" // for _(...)

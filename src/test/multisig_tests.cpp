@@ -5,6 +5,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "script/checker.h"
 #include "script/script.h"
 #include "script/interpreter.h"
 #include "script/sign.h"

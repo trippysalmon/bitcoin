@@ -100,6 +100,7 @@ BITCOIN_CORE_H = \
   rpcclient.h \
   rpcprotocol.h \
   rpcserver.h \
+  script/checker.h \
   script/compressor.h \
   script/interpreter.h \
   script/script.h \
@@ -216,6 +217,7 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
+  script/checker.cpp \
   script/compressor.cpp \
   script/interpreter.cpp \
   script/script.cpp \
