@@ -10,6 +10,7 @@
 #include "script/checker.h"
 #include "script/script.h"
 #include "script/sign.h"
+#include "script/txhasher.h"
 #include "ui_interface.h" // for _(...)
 #include "univalue/univalue.h"
 #include "util.h"

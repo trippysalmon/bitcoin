@@ -13,6 +13,8 @@
 #include "init.h"
 #include "net.h"
 #include "pow.h"
+#include "script/sigcache.h"
+#include "script/txhasher.h"
 #include "txdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"

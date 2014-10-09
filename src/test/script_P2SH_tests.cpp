@@ -8,6 +8,7 @@
 #include "script/checker.h"
 #include "script/script.h"
 #include "script/sign.h"
+#include "script/txhasher.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet_ismine.h"

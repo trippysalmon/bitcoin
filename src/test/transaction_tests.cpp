@@ -10,6 +10,7 @@
 #include "main.h"
 #include "script/checker.h"
 #include "script/script.h"
+#include "script/txhasher.h"
 #include "core_io.h"
 
 #include <map>

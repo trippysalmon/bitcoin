@@ -9,6 +9,7 @@
 #include "script/script.h"
 #include "script/interpreter.h"
 #include "script/sign.h"
+#include "script/txhasher.h"
 #include "uint256.h"
 
 #ifdef ENABLE_WALLET

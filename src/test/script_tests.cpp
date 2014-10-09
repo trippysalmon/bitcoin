@@ -13,6 +13,7 @@
 #include "script/interpreter.h"
 #include "script/script.h"
 #include "script/sign.h"
+#include "script/txhasher.h"
 #include "util.h"
 
 #include <fstream>

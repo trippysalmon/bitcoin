@@ -6,13 +6,10 @@
 #ifndef H_BITCOIN_SCRIPT_CHECKER
 #define H_BITCOIN_SCRIPT_CHECKER
 
-#include "core.h"
-
 #include <vector>
 
 class CPubKey;
 class CScript;
-class CTransaction;
 class uint256;
 
 /** Signature hash types/flags */
@@ -28,16 +25,6 @@ class SignatureHasher
 {
 public:
     virtual uint256 SignatureHash(const CScript& scriptCode, int nHashType) const = 0;
-};
-
-class TxSignatureHasher : public SignatureHasher
-{
-private:
-    const CTransaction txTo;
-    unsigned int nIn;
-public:
-    TxSignatureHasher(const CTransaction& txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
-    uint256 SignatureHash(const CScript& scriptCode, int nHashType) const;
 };
 
 class BaseSignatureChecker

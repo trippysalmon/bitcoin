@@ -8,8 +8,8 @@
 #include "core.h"
 #include "key.h"
 #include "keystore.h"
-#include "script/checker.h"
 #include "script/standard.h"
+#include "script/txhasher.h"
 #include "uint256.h"
 
 #include <boost/foreach.hpp>

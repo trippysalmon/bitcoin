@@ -107,6 +107,7 @@ BITCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
+  script/txhasher.h \
   serialize.h \
   sync.h \
   threadsafety.h \
@@ -224,6 +225,7 @@ libbitcoin_common_a_SOURCES = \
   script/sigcache.cpp \
   script/sign.cpp \
   script/standard.cpp \
+  script/txhasher.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
