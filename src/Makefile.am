@@ -108,6 +108,7 @@ BITCOIN_CORE_H = \
   script/sign.h \
   script/standard.h \
   script/txhasher.h \
+  script/txserializer.hpp \
   serialize.h \
   sync.h \
   threadsafety.h \
