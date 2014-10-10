@@ -277,6 +277,24 @@ bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
     return true;
 }
 
+bool CTxMemPool::lookupConflicts(const CTransaction& tx, std::vector<const CTransaction *> *vtxConflicts) const
+{
+    bool rv = false;
+    LOCK(cs);
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const COutPoint& outpoint = tx.vin[i].prevout;
+        std::map<COutPoint, CInPoint>::const_iterator elem = mapNextTx.find(outpoint);
+        if (mapNextTx.end() != elem)
+        {
+            if (!vtxConflicts)
+                return true;
+            vtxConflicts->push_back(elem->second.ptx);
+            rv = true;
+        }
+    }
+    return rv;
+}
+
 void CTxMemPool::PrioritiseTransaction(const uint256 hash, const string strHash, double dPriorityDelta, const CAmount& nFeeDelta)
 {
     {
