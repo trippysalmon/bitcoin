@@ -78,6 +78,13 @@ CAmount CCoinsViewEfficient::GetValueIn(const CTransaction& tx) const
     return nResult;
 }
 
+CAmount CCoinsViewEfficient::GetTxFees(const CTransaction& tx) const
+{
+    CAmount nValueIn = GetValueIn(tx);
+    CAmount nValueOut = tx.GetValueOut();
+    return nValueIn - nValueOut;
+}
+
 bool CCoinsViewEfficient::HaveInputs(const CTransaction& tx) const
 {
     if (!tx.IsCoinBase()) {

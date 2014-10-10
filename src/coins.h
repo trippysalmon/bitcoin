@@ -367,6 +367,7 @@ public:
      * @return	Sum of value of all inputs (scriptSigs)
      */
     CAmount GetValueIn(const CTransaction& tx) const;
+    CAmount GetTxFees(const CTransaction& tx) const;
 
     //! Return priority of tx at height nHeight
     double GetPriority(const CTransaction& tx, int nHeight) const;
