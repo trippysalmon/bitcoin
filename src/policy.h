@@ -8,9 +8,12 @@
 
 #include <string>
 
+class CCoinsViewCache;
 class CFeeRate;
 class CTransaction;
-class CCoinsViewCache;
+class CTxMemPool;
+class CTxMemPoolEntry;
+class CValidationState;
 
 /** The maximum size for transactions we're willing to relay/mine */
 static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
@@ -25,6 +28,11 @@ class CPolicy
 public:
     virtual bool CheckTxPreInputs(const CTransaction& tx, std::string& reason) const = 0;
     virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
+    virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit) const = 0;
+    virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&) const = 0;
+
+    virtual bool AcceptTxPoolPreInputs(CTxMemPool&, CValidationState&, const CTransaction&) const;
+    virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&) const;
 };
 
 /** Standard Policy implementing CPolicy */
@@ -42,6 +50,8 @@ public:
      *    CHECKSIG/CHECKMULTISIG operations
      */
     virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
+    virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit) const;
+    virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&) const;
 };
 
 void SelectPolicy(std::string policyType);
