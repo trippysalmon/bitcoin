@@ -588,10 +588,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (!Consensus::CheckTx(tx, state))
         return error("%s: Consensus::CheckTx(): ", __func__, state.GetRejectReason().c_str());
 
-    // Rather not work on nonstandard transactions (unless -testnet/-regtest)
-    if (!Policy().ValidateTx(tx, state))
-        return error("%s: CPolicy::ValidateTx: %s", __func__, state.GetRejectReason().c_str());
-
     int nHeight = chainActive.Height();
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
@@ -618,18 +614,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pool.exists(hash))
         return false;
 
-    // Check for conflicts with in-memory transactions
-    if (pool.lookupConflicts(tx, NULL))
-    {
-        // Disable replacement feature for now
-        return false;
-    }
+    if (!Policy().AcceptTxPoolPreInputs(pool, state, tx))
+        return error("%s: CPolicy::AcceptTxPoolPreInputs: %s", __func__, state.GetRejectReason().c_str());
 
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
 
-        CAmount nValueIn = 0;
         {
         LOCK(pool.cs);
         CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
@@ -658,8 +649,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // Bring the best block into scope
         view.GetBestBlock();
 
-        nValueIn = view.GetValueIn(tx);
-
         // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
         view.SetBackend(dummy);
         }
@@ -667,25 +656,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         if (!tx.IsCoinBase() && !Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view)))
             return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
-        // Check for non-standard pay-to-script-hash in inputs
-        if (!Policy().ValidateTxInputs(tx, view))
-            return error("%s: CPolicy::ValidateTxInputs failed %s", __func__, hash.ToString());
+        if (!Policy().AcceptTxWithInputs(pool, state, tx, view))
+            return error("%s: CPolicy::AcceptTxWithInputs failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
-        // Check that the transaction doesn't have an excessive number of
-        // sigops, making it impossible to mine. Since the coinbase transaction
-        // itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
-        // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
-        // merely non-standard transaction.
-        unsigned int nSigOps = Consensus::GetLegacySigOpCount(tx);
-        nSigOps += Consensus::GetP2SHSigOpCount(tx, view);
-        if (nSigOps > MAX_STANDARD_TX_SIGOPS)
-            return state.DoS(0,
-                             error("AcceptToMemoryPool: too many sigops %s, %d > %d",
-                                   hash.ToString(), nSigOps, MAX_STANDARD_TX_SIGOPS),
-                             REJECT_NONSTANDARD, "bad-txns-too-many-sigops");
-
-        CAmount nValueOut = tx.GetValueOut();
-        CAmount nFees = nValueIn-nValueOut;
+        CAmount nFees = view.GetTxFees(tx);
         double dPriority = view.GetPriority(tx, nHeight);
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, nHeight);
         if (!Policy().ValidateTxFee(nFees, entry.GetTxSize(), tx, nHeight, fRejectAbsurdFee, fLimitFree, view, mempool, state))

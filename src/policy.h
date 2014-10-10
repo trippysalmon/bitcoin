@@ -19,6 +19,7 @@ class CCoinsViewEfficient;
 class CFeeRate;
 class CTransaction;
 class CTxMemPool;
+class CTxMemPoolEntry;
 class CTxOut;
 class CValidationState;
 
@@ -84,12 +85,14 @@ public:
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
     virtual bool ValidateTx(const CTransaction&, CValidationState&) const = 0;
+    virtual bool AcceptTxPoolPreInputs(CTxMemPool&, CValidationState&, const CTransaction&) const = 0;
     /** 
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
     virtual bool ValidateTxInputs(const CTransaction&, const CCoinsViewEfficient&) const = 0;
+    virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewEfficient&) const = 0;
     virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewEfficient&, CTxMemPool&, CValidationState&) const = 0;
     /**
      * Collect transactions (probably from the mempool) into a new block template

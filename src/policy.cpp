@@ -68,6 +68,8 @@ public:
      *    CHECKSIG/CHECKMULTISIG operations
      */
     virtual bool ValidateTxInputs(const CTransaction& tx, const CCoinsViewEfficient& mapInputs) const;
+    virtual bool AcceptTxPoolPreInputs(CTxMemPool&, CValidationState&, const CTransaction&) const;
+    virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewEfficient&) const;
     virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewEfficient&, CTxMemPool&, CValidationState&) const;
     virtual bool BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex&, CCoinsViewCache&) const;
 };
@@ -265,6 +267,21 @@ bool CStandardPolicy::ValidateTx(const CTransaction& tx, CValidationState& state
     return true;
 }
 
+bool CStandardPolicy::AcceptTxPoolPreInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx) const
+{
+    // Rather not work on nonstandard transactions (unless -testnet/-regtest)
+    if (!ValidateTx(tx, state))
+        return false;
+
+    // Check for conflicts with in-memory transactions
+    if (pool.lookupConflicts(tx, NULL))
+    {
+        // Disable replacement feature for now
+        return false;
+    }
+    return true;
+}
+
 bool CStandardPolicy::ValidateTxInputs(const CTransaction& tx, const CCoinsViewEfficient& mapInputs) const
 {
     if (tx.IsCoinBase())
@@ -320,6 +337,25 @@ bool CStandardPolicy::ValidateTxInputs(const CTransaction& tx, const CCoinsViewE
         if (stack.size() != (unsigned int)nArgsExpected)
             return false;
     }
+
+    return true;
+}
+
+bool CStandardPolicy::AcceptTxWithInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx, CCoinsViewEfficient& view) const
+{
+    // Check for non-standard pay-to-script-hash in inputs
+    if (!ValidateTxInputs(tx, view))
+        return false;
+
+    // Check that the transaction doesn't have an excessive number of
+    // sigops, making it impossible to mine. Since the coinbase transaction
+    // itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
+    // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
+    // merely non-standard transaction.
+    unsigned int nSigOps = Consensus::GetLegacySigOpCount(tx);
+    nSigOps += Consensus::GetP2SHSigOpCount(tx, view);
+    if (nSigOps > MAX_STANDARD_TX_SIGOPS)
+        return state.DoS(0, false, REJECT_NONSTANDARD, strprintf("bad-txns-too-many-sigops (%d > %d)", nSigOps, MAX_STANDARD_TX_SIGOPS));
 
     return true;
 }
