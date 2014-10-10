@@ -470,14 +470,9 @@ void static BitcoinMiner(CWallet *pwallet)
             uint256 hashTarget = uint256().SetCompact(pblock->nBits);
             uint256 hash;
             uint32_t nNonce = 0;
-            uint32_t nOldNonce = 0;
             while (true) {
-                bool fFound = ScanHash(pblock, nNonce, &hash);
-                uint32_t nHashesDone = nNonce - nOldNonce;
-                nOldNonce = nNonce;
-
                 // Check if something found
-                if (fFound)
+                if (ScanHash(pblock, nNonce, &hash))
                 {
                     if (hash <= hashTarget)
                     {
@@ -496,35 +491,6 @@ void static BitcoinMiner(CWallet *pwallet)
                             throw boost::thread_interrupted();
 
                         break;
-                    }
-                }
-
-                // Meter hashes/sec
-                static int64_t nHashCounter;
-                if (nHPSTimerStart == 0)
-                {
-                    nHPSTimerStart = GetTimeMillis();
-                    nHashCounter = 0;
-                }
-                else
-                    nHashCounter += nHashesDone;
-                if (GetTimeMillis() - nHPSTimerStart > 4000)
-                {
-                    static CCriticalSection cs;
-                    {
-                        LOCK(cs);
-                        if (GetTimeMillis() - nHPSTimerStart > 4000)
-                        {
-                            dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
-                            nHPSTimerStart = GetTimeMillis();
-                            nHashCounter = 0;
-                            static int64_t nLogTime;
-                            if (GetTime() - nLogTime > 30 * 60)
-                            {
-                                nLogTime = GetTime();
-                                LogPrintf("hashmeter %6.0f khash/s\n", dHashesPerSec/1000.0);
-                            }
-                        }
                     }
                 }
 
