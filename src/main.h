@@ -17,6 +17,7 @@
 #include "core/block.h"
 #include "core/transaction.h"
 #include "net.h"
+#include "policy.h"
 #include "pow.h"
 #include "script/script.h"
 #include "script/sigcache.h"
