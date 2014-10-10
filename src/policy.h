@@ -14,7 +14,10 @@
 class CCoinsViewCache;
 class CFeeRate;
 class CTransaction;
+class CTxMemPool;
+class CTxMemPoolEntry;
 class CTxOut;
+class CValidationState;
 
 /** The maximum size for transactions we're willing to relay/mine */
 static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
@@ -41,6 +44,10 @@ public:
      */
     virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
     virtual CAmount GetMinRelayFee(const CTransaction&, unsigned int nBytes, bool fAllowFree) const = 0;
+    virtual bool AcceptTxPoolPreInputs(CTxMemPool&, CValidationState&, const CTransaction&) const = 0;
+    virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&) const = 0;
+    virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit) const = 0;
+    virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&) const = 0;
 };
 
 void SelectPolicy(std::string policyType);
