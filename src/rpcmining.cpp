@@ -184,24 +184,6 @@ Value setgenerate(const Array& params, bool fHelp)
     return Value::null;
 }
 
-Value gethashespersec(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
-            "gethashespersec\n"
-            "\nReturns a recent hashes per second performance measurement while generating.\n"
-            "See the getgenerate and setgenerate calls to turn generation on and off.\n"
-            "\nResult:\n"
-            "n            (numeric) The recent hashes per second when generation is on (will return 0 if generation is off)\n"
-            "\nExamples:\n"
-            + HelpExampleCli("gethashespersec", "")
-            + HelpExampleRpc("gethashespersec", "")
-        );
-
-    if (GetTimeMillis() - nHPSTimerStart > 8000)
-        return (int64_t)0;
-    return (int64_t)dHashesPerSec;
-}
 #endif
 
 
@@ -243,7 +225,6 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("chain",            Params().NetworkIDString()));
 #ifdef ENABLE_WALLET
     obj.push_back(Pair("generate",         getgenerate(params, false)));
-    obj.push_back(Pair("hashespersec",     gethashespersec(params, false)));
 #endif
     return obj;
 }

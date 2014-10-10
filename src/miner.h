@@ -26,7 +26,4 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 
-extern double dHashesPerSec;
-extern int64_t nHPSTimerStart;
-
 #endif // BITCOIN_MINER_H

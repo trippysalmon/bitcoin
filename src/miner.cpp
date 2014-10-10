@@ -349,8 +349,6 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 //
 // Internal miner
 //
-double dHashesPerSec = 0.0;
-int64_t nHPSTimerStart = 0;
 
 //
 // ScanHash scans nonces looking for a hash with at least some zero bits.
