@@ -6,6 +6,8 @@
 #ifndef BITCOIN_POLICY_H
 #define BITCOIN_POLICY_H
 
+#include "script/standard.h"
+
 #include <string>
 
 class CCoinsViewCache;
@@ -20,6 +22,7 @@ static const unsigned int MAX_P2SH_SIGOPS = 15;
 
 extern CFeeRate minRelayTxFee;
 
+bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
 bool IsDust(const CTxOut& txout);
 /** Check for standard transaction types
  * @return True if all outputs (scriptPubKeys) use only standard transaction forms
