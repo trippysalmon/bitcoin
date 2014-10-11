@@ -13,6 +13,7 @@
 #include "sync.h"
 #include "txmempool.h"
 #include "ui_interface.h"
+#include "uint256.h"
 #include "util.h"
 #include "utilmoneystr.h"
 
@@ -21,6 +22,35 @@
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
+
+CAmount CNodePolicy::GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree)
+{
+    {
+        LOCK(mempool.cs);
+        uint256 hash = tx.GetHash();
+        double dPriorityDelta = 0;
+        CAmount nFeeDelta = 0;
+        mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
+        if (dPriorityDelta > 0 || nFeeDelta > 0)
+            return 0;
+    }
+
+    CAmount nMinFee = minRelayTxFee.GetFee(nBytes);
+
+    if (fAllowFree)
+    {
+        // There is a free transaction area in blocks created by most miners,
+        // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
+        //   to be considered to fall into this category. We don't want to encourage sending
+        //   multiple transactions instead of one big transaction to avoid fees.
+        if (nBytes < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))
+            nMinFee = 0;
+    }
+
+    if (!MoneyRange(nMinFee))
+        nMinFee = MAX_MONEY;
+    return nMinFee;
+}
 
 bool CNodePolicy::AcceptTxPoolPreInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx)
 {

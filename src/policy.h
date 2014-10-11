@@ -6,6 +6,8 @@
 #ifndef BITCOIN_POLICY_H
 #define BITCOIN_POLICY_H
 
+#include "amount.h"
+
 class CCoinsViewCache;
 class CFeeRate;
 class CTransaction;
@@ -30,6 +32,8 @@ public:
     bool fRequireStandardTx;
 
     CNodePolicy() : fRequireStandardTx(true) { };
+
+    virtual CAmount GetMinRelayFee(const CTransaction&, unsigned int nBytes, bool fAllowFree);
 
     virtual bool AcceptTxPoolPreInputs(CTxMemPool&, CValidationState&, const CTransaction&);
     virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&);
