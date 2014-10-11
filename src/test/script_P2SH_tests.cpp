@@ -262,6 +262,7 @@ BOOST_AUTO_TEST_CASE(switchover)
 
 BOOST_AUTO_TEST_CASE(AreInputsStandard)
 {
+    CNodePolicy policy;
     LOCK(cs_main);
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
@@ -342,7 +343,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin[3].scriptSig << OP_11 << OP_11 << static_cast<vector<unsigned char> >(oneAndTwo);
     txTo.vin[4].scriptSig << static_cast<vector<unsigned char> >(fifteenSigops);
 
-    BOOST_CHECK(::AreInputsStandard(txTo, coins));
+    BOOST_CHECK(policy.AreInputsStandard(txTo, coins));
     // 22 P2SH sigops for all inputs (1 for vin[0], 6 for vin[3], 15 for vin[4]
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txTo, coins), 22U);
 
@@ -351,7 +352,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     {
         CScript t = txTo.vin[i].scriptSig;
         txTo.vin[i].scriptSig = (CScript() << 11) + t;
-        BOOST_CHECK(!::AreInputsStandard(txTo, coins));
+        BOOST_CHECK(!policy.AreInputsStandard(txTo, coins));
         txTo.vin[i].scriptSig = t;
     }
 
@@ -364,7 +365,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd1.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd1.vin[0].scriptSig << static_cast<vector<unsigned char> >(sixteenSigops);
 
-    BOOST_CHECK(!::AreInputsStandard(txToNonStd1, coins));
+    BOOST_CHECK(!policy.AreInputsStandard(txToNonStd1, coins));
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txToNonStd1, coins), 16U);
 
     CMutableTransaction txToNonStd2;
@@ -376,7 +377,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd2.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd2.vin[0].scriptSig << static_cast<vector<unsigned char> >(twentySigops);
 
-    BOOST_CHECK(!::AreInputsStandard(txToNonStd2, coins));
+    BOOST_CHECK(!policy.AreInputsStandard(txToNonStd2, coins));
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txToNonStd2, coins), 20U);
 }
 
