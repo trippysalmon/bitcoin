@@ -9,6 +9,8 @@
 #include "amount.h"
 #include "script/standard.h"
 
+static const unsigned int MAX_OP_RETURN_RELAY = 40;      //! bytes
+
 class CCoinsViewCache;
 class CFeeRate;
 class CTransaction;
@@ -31,8 +33,9 @@ class CNodePolicy : CNodePolicyBase
 {
 public:
     bool fRequireStandardTx;
+    unsigned nDataCarrierBytes;
 
-    CNodePolicy() : fRequireStandardTx(true) { };
+    CNodePolicy() : fRequireStandardTx(true), nDataCarrierBytes(MAX_OP_RETURN_RELAY) { };
 
     virtual bool IsStandardScript(const CScript& scriptPubKey, txnouttype& whichType);
 
