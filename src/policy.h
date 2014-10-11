@@ -6,6 +6,7 @@
 #ifndef BITCOIN_POLICY_H
 #define BITCOIN_POLICY_H
 
+#include "amount.h"
 #include "script/standard.h"
 
 #include <string>
@@ -39,6 +40,7 @@ public:
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
     virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
+    virtual CAmount GetMinRelayFee(const CTransaction&, unsigned int nBytes, bool fAllowFree) const = 0;
 };
 
 void SelectPolicy(std::string policyType);
