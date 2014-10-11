@@ -665,6 +665,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
 
     policy.fRequireStandardTx = Params().RequireStandard();
+    if (!GetBoolArg("-datacarrier", true))
+        policy.nDataCarrierBytes = 0;
+    policy.nDataCarrierBytes = GetArg("-datacarriersize", policy.nDataCarrierBytes);
 
     // Fee-per-kilobyte amount considered the same as "free"
     // If you are mining, be careful setting this:
@@ -726,7 +729,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif // ENABLE_WALLET
 
     fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
-    nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
