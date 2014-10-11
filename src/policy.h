@@ -19,6 +19,7 @@ class CTxOut;
 static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
 /** Maximum number of signature check operations in an Standard P2SH script */
 static const unsigned int MAX_P2SH_SIGOPS = 15;
+static const unsigned int MAX_OP_RETURN_RELAY = 40; //! bytes
 
 extern CFeeRate minRelayTxFee;
 

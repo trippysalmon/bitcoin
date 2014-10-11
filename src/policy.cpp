@@ -19,6 +19,7 @@
 static bool fIsBareMultisigStd = true;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
+static unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;
 
 void InitPolicyFromCommandLine()
 {
@@ -37,6 +38,10 @@ void InitPolicyFromCommandLine()
             throw std::runtime_error(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
     }
     fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
+    if (GetBoolArg("-datacarrier", true))
+        nMaxDatacarrierBytes = GetArg("-datacarriersize", MAX_OP_RETURN_RELAY);
+    else
+        nMaxDatacarrierBytes = 0;
 }
 
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
@@ -45,15 +50,37 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
-    if (whichType == TX_MULTISIG)
+    switch (whichType)
     {
-        unsigned char m = vSolutions.front()[0];
-        unsigned char n = vSolutions.back()[0];
-        // Support up to x-of-3 multisig txns as standard
-        if (n < 1 || n > 3)
-            return false;
-        if (m < 1 || m > n)
-            return false;
+        case TX_MULTISIG:
+        {
+            unsigned char m = vSolutions.front()[0];
+            unsigned char n = vSolutions.back()[0];
+            // Support up to x-of-3 multisig txns as standard
+            if (n < 1 || n > 3)
+                return false;
+            if (m < 1 || m > n)
+                return false;
+            break;
+        }
+
+        case TX_NULL_DATA:
+            // TX_NULL_DATA without any vSolutions is a lone OP_RETURN, which traditionally is accepted regardless of the -datacarrier option, so we skip the check.
+            // If you want to filter lone OP_RETURNs, be sure to handle vSolutions being empty below where vSolutions.front() is accessed!
+            if (vSolutions.size())
+            {
+                if (!nMaxDatacarrierBytes)
+                    return false;
+
+                if (vSolutions.front().size() > nMaxDatacarrierBytes)
+                    return false;
+            }
+
+            break;
+
+        default:
+            // no other restrictions on standard scripts
+            break;
     }
 
     return whichType != TX_NONSTANDARD;
