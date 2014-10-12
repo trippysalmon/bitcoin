@@ -380,7 +380,7 @@ public:
     }
 };
 
-CAmount CNodePolicy::BuildNewBlock(CBlockTemplate& blocktemplate, const CTxMemPool& pool, const CBlockIndex& indexPrev, CCoinsViewCache& view)
+bool CNodePolicy::BuildNewBlock(CBlockTemplate& blocktemplate, const CTxMemPool& pool, const CBlockIndex& indexPrev, CCoinsViewCache& view)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(pool.cs);
@@ -482,7 +482,7 @@ CAmount CNodePolicy::BuildNewBlock(CBlockTemplate& blocktemplate, const CTxMemPo
     }
 
     // Collect transactions into block
-    CAmount nFees = 0;
+    CAmount& nFees = blocktemplate.nTotalTxFees;
     uint64_t nBlockSize = 1000;
     int nBlockSigOps = 100;
     bool fSortedByFee = (nBlockPrioritySize <= 0);
@@ -578,7 +578,7 @@ CAmount CNodePolicy::BuildNewBlock(CBlockTemplate& blocktemplate, const CTxMemPo
         }
     }
 
-    return nFees;
+    return true;
 }
 
 CNodePolicy policy;
