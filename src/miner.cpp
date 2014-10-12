@@ -39,6 +39,50 @@ using namespace std;
 // BitcoinMiner
 //
 
+bool CBlockTemplate::AddTransaction(const CTransaction& tx, CCoinsViewCache& view)
+{
+    if (!view.HaveInputs(tx))
+        return false;
+
+    // Size limit
+    unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+    if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE)
+        return false;
+
+    // While checking, GetBestBlock() refers to the parent block.
+    // This is also true for mempool checks.
+    CBlockIndex *pindexPrev = mapBlockIndex.find(view.GetBestBlock())->second;
+    int nSpendHeight = pindexPrev->nHeight + 1;
+    CValidationState state;
+    if (!Consensus::CheckTxInputs(tx, state, view, nSpendHeight))
+        return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
+
+    // SigOp limit
+    unsigned int nTxSigOps = Consensus::GetLegacySigOpCount(tx) + Consensus::GetP2SHSigOpCount(tx, view);
+    if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
+        return false;
+
+    // Note that flags: we don't want to set mempool/CPolicy::CheckScript()
+    // policy here, but we still have to ensure that the block we
+    // create only contains transactions that are valid in new blocks.
+    if (!Consensus::CheckTxInputsScripts(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
+        return error("%s: Consensus::CheckTxInputsScripts failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
+
+    UpdateCoins(tx, state, view, nHeight);
+
+    CAmount nTxFees = view.GetTxFees(tx);
+
+    // Added
+    block.vtx.push_back(tx);
+    vTxFees.push_back(nTxFees);
+    vTxSigOps.push_back(nTxSigOps);
+    nBlockSize += nTxSize;
+    nBlockSigOps += nTxSigOps;
+    nTotalTxFees += nTxFees;
+
+    return true;
+}
+
 //
 // Unconfirmed transactions in the memory pool often depend on other
 // transactions in the memory pool. When we select transactions from the
@@ -144,14 +188,16 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
     pblocktemplate->nTotalTxFees = 0;
+    pblocktemplate->nBlockSize = 1000;
+    pblocktemplate->nBlockSigOps = 100;
 
     {
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
-        const int nHeight = pindexPrev->nHeight + 1;
         if (!pindexPrev)
             throw std::runtime_error("CreateNewBlock() : Active chain has no tip");
         CCoinsViewCache view(pcoinsTip);
+        pblocktemplate->nHeight = pindexPrev->nHeight + 1;
 
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
@@ -165,7 +211,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
              mi != mempool.mapTx.end(); ++mi)
         {
             const CTransaction& tx = mi->second.GetTx();
-            if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight))
+            if (tx.IsCoinBase() || !IsFinalTx(tx, pblocktemplate->nHeight))
                 continue;
 
             COrphan* porphan = NULL;
@@ -208,7 +254,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 CAmount nValueIn = coins->vout[txin.prevout.n].nValue;
                 nTotalIn += nValueIn;
 
-                int nConf = nHeight - coins->nHeight;
+                int nConf = pblocktemplate->nHeight - coins->nHeight;
 
                 dPriority += (double)nValueIn * nConf;
             }
@@ -233,10 +279,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         }
 
         // Collect memory pool transactions into the block
-        CAmount& nFees = pblocktemplate->nTotalTxFees;
-        uint64_t nBlockSize = 1000;
         uint64_t nBlockTx = 0;
-        int nBlockSigOps = 100;
         bool fSortedByFee = (nBlockPrioritySize <= 0);
 
         TxPriorityCompare comparer(fSortedByFee);
@@ -252,64 +295,29 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             std::pop_heap(vecPriority.begin(), vecPriority.end(), comparer);
             vecPriority.pop_back();
 
-            // Size limits
-            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
-            if (nBlockSize + nTxSize >= nBlockMaxSize)
-                continue;
-
-            // Legacy limits on sigOps:
-            unsigned int nTxSigOps = Consensus::GetLegacySigOpCount(tx);
-            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
-                continue;
-
             // Skip free transactions if we're past the minimum block size:
             const uint256& hash = tx.GetHash();
             double dPriorityDelta = 0;
             CAmount nFeeDelta = 0;
             mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-            if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && !Policy().ValidateFeeRate(feeRate) && (nBlockSize + nTxSize >= nBlockMinSize))
+            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+            if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && !Policy().ValidateFeeRate(feeRate) && (pblocktemplate->nBlockSize + nTxSize >= nBlockMinSize))
                 continue;
 
             // Prioritise by fee once past the priority size or we run out of high-priority
             // transactions:
             if (!fSortedByFee &&
-                ((nBlockSize + nTxSize >= nBlockPrioritySize) || !AllowFree(dPriority)))
+                ((pblocktemplate->nBlockSize + nTxSize >= nBlockPrioritySize) || !AllowFree(dPriority)))
             {
                 fSortedByFee = true;
                 comparer = TxPriorityCompare(fSortedByFee);
                 std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
             }
 
-            CValidationState state;
-            if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view))) {
-                error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
-                continue;
-            }
-
-            nTxSigOps += Consensus::GetP2SHSigOpCount(tx, view);
-            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
+            if (!pblocktemplate->AddTransaction(tx, view))
                 continue;
 
-            // Note that flags: we don't want to set mempool/IsStandard()
-            // policy here, but we still have to ensure that the block we
-            // create only contains transactions that are valid in new blocks.
-            if (!Consensus::CheckTxInputsScripts(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS)) {
-                error("%s: CheckInputsScripts failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
-                continue;
-            }
-
-            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
-
-            UpdateCoins(tx, state, view, nHeight);
-
-            // Added
-            pblock->vtx.push_back(tx);
-            pblocktemplate->vTxFees.push_back(nTxFees);
-            pblocktemplate->vTxSigOps.push_back(nTxSigOps);
-            nBlockSize += nTxSize;
             ++nBlockTx;
-            nBlockSigOps += nTxSigOps;
-            nFees += nTxFees;
 
             if (fPrintPriority)
             {
@@ -336,10 +344,10 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         }
 
         nLastBlockTx = nBlockTx;
-        nLastBlockSize = nBlockSize;
-        LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
+        nLastBlockSize = pblocktemplate->nBlockSize;
+        LogPrintf("CreateNewBlock(): total size %u\n", pblocktemplate->nBlockSize);
 
-        pblock->vtx[0] = CreateCoinbaseTransaction(scriptPubKeyIn, nHeight, Params().GetConsensus(), pblocktemplate->nTotalTxFees);
+        pblock->vtx[0] = CreateCoinbaseTransaction(scriptPubKeyIn, pblocktemplate->nHeight, Params().GetConsensus(), pblocktemplate->nTotalTxFees);
         pblocktemplate->vTxFees[0] = -pblocktemplate->nTotalTxFees;
 
         // Fill in header
