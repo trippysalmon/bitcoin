@@ -143,6 +143,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     // until there are no more or the block reaches this size:
     unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
+    pblocktemplate->nTotalTxFees = 0;
 
     {
         LOCK2(cs_main, mempool.cs);
@@ -232,7 +233,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         }
 
         // Collect memory pool transactions into the block
-        CAmount nFees = 0;
+        CAmount& nFees = pblocktemplate->nTotalTxFees;
         uint64_t nBlockSize = 1000;
         uint64_t nBlockTx = 0;
         int nBlockSigOps = 100;
@@ -338,8 +339,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
-        pblock->vtx[0] = CreateCoinbaseTransaction(scriptPubKeyIn, nHeight, Params().GetConsensus(), nFees);
-        pblocktemplate->vTxFees[0] = -nFees;
+        pblock->vtx[0] = CreateCoinbaseTransaction(scriptPubKeyIn, nHeight, Params().GetConsensus(), pblocktemplate->nTotalTxFees);
+        pblocktemplate->vTxFees[0] = -pblocktemplate->nTotalTxFees;
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
