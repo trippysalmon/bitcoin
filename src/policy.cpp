@@ -8,6 +8,7 @@
 #include "amount.h"
 #include "primitives/transaction.h"
 #include "main.h"
+#include "miner.h"
 #include "script/standard.h"
 #include "sync.h"
 #include "txmempool.h"
