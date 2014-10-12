@@ -53,7 +53,7 @@ public:
     /** Collect transactions (probably from the mempool) into a new block template
         @return Total amount of transaction fees collected by transactions
     */
-    virtual CAmount BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex& indexPrev, CCoinsViewCache&) const = 0;
+    virtual bool BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex& indexPrev, CCoinsViewCache&) const = 0;
 };
 
 void SelectPolicy(std::string policyType);

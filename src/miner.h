@@ -18,6 +18,7 @@ class CWallet;
 struct CBlockTemplate
 {
     CBlock block;
+    CAmount nTotalTxFees;
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOps;
 };

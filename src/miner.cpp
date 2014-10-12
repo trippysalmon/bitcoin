@@ -69,13 +69,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     {
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
-        const int nHeight = pindexPrev->nHeight + 1;
         if (!pindexPrev)
             throw std::runtime_error("CreateNewBlock() : Active chain has no tip");
         CCoinsViewCache view(pcoinsTip);
 
         // Collect memory pool transactions into the block
-        CAmount nFees = Policy().BuildNewBlock(*pblocktemplate, mempool, *pindexPrev, view);
+        if (!Policy().BuildNewBlock(*pblocktemplate, mempool, *pindexPrev, view))
+            throw std::runtime_error("CreateNewBlock() : BuildNewBlock failed");
 
         nLastBlockTx = pblock->vtx.size() - 1;
         unsigned nBlockSize = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
@@ -83,8 +83,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Compute final coinbase transaction.
-        txNew.vout[0].nValue = GetBlockValue(nHeight, nFees);
-        txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
+        CAmount nFees = pblocktemplate->nTotalTxFees;
+        txNew.vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
+        txNew.vin[0].scriptSig = CScript() << OP_0 << OP_0;
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
 

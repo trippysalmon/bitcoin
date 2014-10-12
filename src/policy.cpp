@@ -48,7 +48,7 @@ public:
     virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&) const;
     virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit) const;
     virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&) const;
-    virtual CAmount BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex& indexPrev, CCoinsViewCache&) const;
+    virtual bool BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex& indexPrev, CCoinsViewCache&) const;
 };
 
 /** Default Policy for testnet and regtest */
@@ -458,7 +458,7 @@ public:
     }
 };
 
-CAmount CStandardPolicy::BuildNewBlock(CBlockTemplate& blocktemplate, const CTxMemPool& pool, const CBlockIndex& indexPrev, CCoinsViewCache& view) const
+bool CStandardPolicy::BuildNewBlock(CBlockTemplate& blocktemplate, const CTxMemPool& pool, const CBlockIndex& indexPrev, CCoinsViewCache& view) const
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(pool.cs);
@@ -560,7 +560,7 @@ CAmount CStandardPolicy::BuildNewBlock(CBlockTemplate& blocktemplate, const CTxM
     }
 
     // Collect transactions into block
-    CAmount nFees = 0;
+    CAmount& nFees = blocktemplate.nTotalTxFees;
     uint64_t nBlockSize = 1000;
     int nBlockSigOps = 100;
     bool fSortedByFee = (nBlockPrioritySize <= 0);
@@ -656,5 +656,5 @@ CAmount CStandardPolicy::BuildNewBlock(CBlockTemplate& blocktemplate, const CTxM
         }
     }
 
-    return nFees;
+    return true;
 }
