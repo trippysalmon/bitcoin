@@ -9,6 +9,7 @@
 
 #include "amount.h"
 #include "main.h"
+#include "miner.h"
 #include "primitives/transaction.h"
 #include "script/standard.h"
 #include "sync.h"

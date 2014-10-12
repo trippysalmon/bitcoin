@@ -500,14 +500,6 @@ extern CCoinsViewCache *pcoinsTip;
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
 
-struct CBlockTemplate
-{
-    CBlock block;
-    CAmount nTotalTxFees;
-    std::vector<CAmount> vTxFees;
-    std::vector<int64_t> vTxSigOps;
-};
-
 
 
 
