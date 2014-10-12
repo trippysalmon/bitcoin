@@ -11,6 +11,8 @@
 
 #include <string>
 
+class CBlockIndex;
+class CBlockTemplate;
 class CCoinsViewCache;
 class CFeeRate;
 class CTransaction;
@@ -48,6 +50,10 @@ public:
     virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&) const = 0;
     virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit) const = 0;
     virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&) const = 0;
+    /** Collect transactions (probably from the mempool) into a new block template
+        @return Total amount of transaction fees collected by transactions
+    */
+    virtual CAmount BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex& indexPrev, CCoinsViewCache&) const = 0;
 };
 
 void SelectPolicy(std::string policyType);
