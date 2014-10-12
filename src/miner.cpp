@@ -148,6 +148,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
+        if (!pindexPrev)
+            throw std::runtime_error("CreateNewBlock() : Active chain has no tip");
         CCoinsViewCache view(pcoinsTip);
 
         // Priority order to process transactions
