@@ -11,6 +11,8 @@
 
 static const unsigned int MAX_OP_RETURN_RELAY = 40;      //! bytes
 
+class CBlockIndex;
+class CBlockTemplate;
 class CCoinsViewCache;
 class CFeeRate;
 class CTransaction;
@@ -27,6 +29,8 @@ public:
     virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&) = 0;
     virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit) = 0;
     virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&) = 0;
+
+    virtual CAmount BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex& indexPrev, CCoinsViewCache&) = 0;
 };
 
 class CNodePolicy : CNodePolicyBase
@@ -56,6 +60,11 @@ public:
     virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&);
     virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit);
     virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&);
+
+    /** Collect transactions (probably from the mempool) into a new block template
+        @return Total amount of transaction fees collected by transactions
+    */
+    virtual CAmount BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex& indexPrev, CCoinsViewCache&);
 };
 
 extern CNodePolicy policy;
