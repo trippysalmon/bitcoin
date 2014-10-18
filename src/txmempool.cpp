@@ -5,7 +5,6 @@
 
 #include "txmempool.h"
 
-#include "core.h"
 #include "util.h"
 #include "utilmoneystr.h"
 
