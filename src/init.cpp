@@ -9,6 +9,7 @@
 
 #include "init.h"
 
+#include "amount.h"
 #include "addrman.h"
 #include "checkpoints.h"
 #include "compat/sanity.h"
