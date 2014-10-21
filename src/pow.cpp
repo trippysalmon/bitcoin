@@ -76,7 +76,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits)
+bool CheckProofOfWork(uint256 hash, const CProof& proof)
 {
     bool fNegative;
     bool fOverflow;
@@ -85,7 +85,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     if (Params().SkipProofOfWorkCheck())
        return true;
 
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+    bnTarget.SetCompact(proof.nBits, &fNegative, &fOverflow);
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit())
@@ -107,12 +107,12 @@ void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
 }
 
-uint256 GetProofIncrement(unsigned int nBits)
+uint256 GetProofIncrement(const CProof& proof)
 {
     uint256 bnTarget;
     bool fNegative;
     bool fOverflow;
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+    bnTarget.SetCompact(proof.nBits, &fNegative, &fOverflow);
     if (fNegative || fOverflow || bnTarget == 0)
         return 0;
     // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256

@@ -15,10 +15,10 @@ class uint256;
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+bool CheckProofOfWork(uint256 hash, const CProof& proof);
 
 void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 
-uint256 GetProofIncrement(unsigned int nBits);
+uint256 GetProofIncrement(const CProof& proof);
 
 #endif // BITCOIN_POW_H
