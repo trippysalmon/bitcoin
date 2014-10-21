@@ -45,6 +45,8 @@ public:
     {
         return (nBits == 0);
     }
+
+    std::string ToString() const;
 };
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
