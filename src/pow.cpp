@@ -89,7 +89,7 @@ void ResetChallenge(CBlockHeader& block, const CBlockIndex& indexLast)
     block.proof.nBits = GetNextWorkRequired(&indexLast, block.GetBlockTime());
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits)
+bool CheckProof(uint256 hash, const CProof& proof)
 {
     bool fNegative;
     bool fOverflow;
@@ -98,15 +98,15 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     if (Params().SkipProofOfWorkCheck())
        return true;
 
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+    bnTarget.SetCompact(proof.nBits, &fNegative, &fOverflow);
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit())
-        return error("CheckProofOfWork() : nBits below minimum work");
+        return error("%s : nBits below minimum work", __func__);
 
     // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget)
-        return error("CheckProofOfWork() : hash doesn't match nBits");
+        return error("%s : hash doesn't match nBits", __func__);
 
     return true;
 }

@@ -16,7 +16,7 @@ class uint256;
 class arith_uint256;
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+bool CheckProof(uint256 hash, const CProof& proof);
 /** Scans nonces looking for a hash with at least some zero bits */
 bool GenerateProof(CBlockHeader* pblock);
 void ResetProof(CBlockHeader& block);
