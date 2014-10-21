@@ -37,12 +37,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, int64_t nTime)
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->proof.nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
-                return pindex->nBits;
+                return pindex->proof.nBits;
             }
         }
-        return pindexLast->nBits;
+        return pindexLast->proof.nBits;
     }
 
     // Go back by what we want to be 14 days worth of blocks
@@ -62,7 +62,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, int64_t nTime)
     // Retarget
     arith_uint256 bnNew;
     arith_uint256 bnOld;
-    bnNew.SetCompact(pindexLast->nBits);
+    bnNew.SetCompact(pindexLast->proof.nBits);
     bnOld = bnNew;
     bnNew *= nActualTimespan;
     bnNew /= Params().TargetTimespan();
@@ -73,7 +73,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, int64_t nTime)
     /// debug print
     LogPrintf("GetNextWorkRequired RETARGET\n");
     LogPrintf("Params().TargetTimespan() = %d    nActualTimespan = %d\n", Params().TargetTimespan(), nActualTimespan);
-    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, bnOld.ToString());
+    LogPrintf("Before: %08x  %s\n", pindexLast->proof.nBits, bnOld.ToString());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString());
 
     return bnNew.GetCompact();
@@ -81,12 +81,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, int64_t nTime)
 
 bool CheckChallenge(const CBlockHeader& block, const CBlockIndex& indexLast)
 {
-    return block.nBits == GetNextWorkRequired(&indexLast, block.GetBlockTime());
+    return block.proof.nBits == GetNextWorkRequired(&indexLast, block.GetBlockTime());
 }
 
 void ResetChallenge(CBlockHeader& block, const CBlockIndex& indexLast)
 {
-    block.nBits = GetNextWorkRequired(&indexLast, block.GetBlockTime());
+    block.proof.nBits = GetNextWorkRequired(&indexLast, block.GetBlockTime());
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits)
@@ -122,16 +122,16 @@ bool GenerateProof(CBlockHeader *pblock)
     hasher.Write((unsigned char*)&ss[0], 76);
 
     while (true) {
-        pblock->nNonce++;
+        pblock->proof.nNonce++;
 
         // Write the last 4 bytes of the block header (the nonce) to a copy of
         // the double-SHA256 state, and compute the result.
-        CHash256(hasher).Write((unsigned char*)&pblock->nNonce, 4).Finalize((unsigned char*)&hash);
+        CHash256(hasher).Write((unsigned char*)&pblock->proof.nNonce, 4).Finalize((unsigned char*)&hash);
 
         // Check if the hash has at least some zero bits,
         if (((uint16_t*)&hash)[15] == 0) {
             // then check if it has enough to reach the target
-            arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
+            arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->proof.nBits);
             if (UintToArith256(hash) <= hashTarget) {
                 assert(hash == pblock->GetHash());
                 LogPrintf("hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
@@ -140,14 +140,14 @@ bool GenerateProof(CBlockHeader *pblock)
         }
 
         // If nothing found after trying for a while, return -1
-        if ((pblock->nNonce & 0xfff) == 0)
+        if ((pblock->proof.nNonce & 0xfff) == 0)
             return false;
     }
 }
 
 void ResetProof(CBlockHeader& block)
 {
-    block.nNonce = 0;
+    block.proof.nNonce = 0;
 }
 
 arith_uint256 GetBlockProof(const CBlockIndex& block)
@@ -155,7 +155,7 @@ arith_uint256 GetBlockProof(const CBlockIndex& block)
     arith_uint256 bnTarget;
     bool fNegative;
     bool fOverflow;
-    bnTarget.SetCompact(block.nBits, &fNegative, &fOverflow);
+    bnTarget.SetCompact(block.proof.nBits, &fNegative, &fOverflow);
     if (fNegative || fOverflow || bnTarget == 0)
         return 0;
     // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256
@@ -167,10 +167,10 @@ arith_uint256 GetBlockProof(const CBlockIndex& block)
 
 double GetChallengeDifficulty(const CBlockIndex* blockindex)
 {
-    int nShift = (blockindex->nBits >> 24) & 0xff;
+    int nShift = (blockindex->proof.nBits >> 24) & 0xff;
 
     double dDiff =
-        (double)0x0000ffff / (double)(blockindex->nBits & 0x00ffffff);
+        (double)0x0000ffff / (double)(blockindex->proof.nBits & 0x00ffffff);
 
     while (nShift < 29)
     {
@@ -187,20 +187,20 @@ double GetChallengeDifficulty(const CBlockIndex* blockindex)
 
 std::string GetChallengeStr(const CBlockIndex& block)
 {
-    return strprintf("%08x", block.nBits);
+    return strprintf("%08x", block.proof.nBits);
 }
 
 std::string GetChallengeStrHex(const CBlockIndex& block)
 {
-    return arith_uint256().SetCompact(block.nBits).GetHex();
+    return arith_uint256().SetCompact(block.proof.nBits).GetHex();
 }
 
 uint32_t GetNonce(const CBlockHeader& block)
 {
-    return block.nNonce;
+    return block.proof.nNonce;
 }
 
 void SetNonce(CBlockHeader& block, uint32_t nNonce)
 {
-    block.nNonce = nNonce;
+    block.proof.nNonce = nNonce;
 }

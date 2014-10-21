@@ -11,6 +11,7 @@
 
 class CBlockHeader;
 class CBlockIndex;
+class CProof;
 class uint256;
 class arith_uint256;
 
