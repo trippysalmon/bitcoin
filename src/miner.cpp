@@ -388,7 +388,7 @@ bool static ScanHash(CBlockHeader *pblock)
         if ((pblock->nNonce & 0xffff) == 0)
             return false;
         if ((pblock->nNonce & 0xfff) == 0)
-            boost::this_thread::interruption_point();
+            return false;
     }
 }
 
