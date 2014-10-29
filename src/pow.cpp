@@ -145,6 +145,11 @@ bool GenerateProof(CBlockHeader *pblock)
     }
 }
 
+void ResetProof(CBlockHeader& block)
+{
+    block.nNonce = 0;
+}
+
 arith_uint256 GetBlockProof(const CBlockIndex& block)
 {
     arith_uint256 bnTarget;

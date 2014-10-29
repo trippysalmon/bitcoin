@@ -17,6 +17,7 @@ class arith_uint256;
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 /** Scans nonces looking for a hash with at least some zero bits */
 bool GenerateProof(CBlockHeader* pblock);
+void ResetProof(CBlockHeader& block);
 arith_uint256 GetBlockProof(const CBlockIndex& block);
 bool CheckChallenge(const CBlockHeader& block, const CBlockIndex& indexLast);
 void ResetChallenge(CBlockHeader& block, const CBlockIndex& indexLast);
