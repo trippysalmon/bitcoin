@@ -22,8 +22,6 @@ struct CBlockTemplate
     std::vector<int64_t> vTxSigOps;
 };
 
-/** Scans nonces looking for a hash with at least some zero bits */
-bool GenerateProof(CBlockHeader *pblock);
 /** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads);
 /** Generate a new block, without valid proof-of-work */
