@@ -15,6 +15,7 @@ class CTransaction;
 struct CMutableTransaction;
 
 bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, const SignatureHasher& hasher, int nHashType, CScript& scriptSigRet);
+CScript CombineSignatures(CScript scriptPubKey, const SignatureHasher& hasher, const CScript& scriptSig1, const CScript& scriptSig2);
 
 bool SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
