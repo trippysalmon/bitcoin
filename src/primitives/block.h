@@ -15,9 +15,10 @@ static const unsigned int MAX_BLOCK_SIZE = 1000000;
 
 class CProof
 {
-public:
+protected:
     uint32_t nBits;
     uint32_t nNonce;
+public:
 
     CProof()
     {
