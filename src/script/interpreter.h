@@ -60,7 +60,13 @@ enum
     SCRIPT_VERIFY_MINIMALDATA = (1U << 6)
 };
 
-class TxSignatureHasher
+class SignatureHasher
+{
+public:
+    virtual uint256 SignatureHash(const CScript& scriptCode, int nHashType) const = 0;
+};
+
+class TxSignatureHasher : public SignatureHasher
 {
 private:
     const CTransaction txTo;
@@ -81,16 +87,23 @@ public:
     virtual ~BaseSignatureChecker() {}
 };
 
-class SignatureChecker : public BaseSignatureChecker
+class GenericSignatureChecker : public BaseSignatureChecker
 {
-private:
-    const TxSignatureHasher hasher;
 protected:
+    const SignatureHasher* hasher;
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
-    SignatureChecker(const CTransaction& txToIn, unsigned int nIn) : hasher(TxSignatureHasher(txToIn, nIn)) { }
+    GenericSignatureChecker(const SignatureHasher* hasherIn) : hasher(hasherIn) { }
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
+};
+
+class SignatureChecker : public GenericSignatureChecker
+{
+protected:
+    const TxSignatureHasher txHasher;
+public:
+ SignatureChecker(const CTransaction& txToIn, unsigned int nIn) : GenericSignatureChecker(&txHasher), txHasher(TxSignatureHasher(txToIn, nIn))  { }
 };
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker);
