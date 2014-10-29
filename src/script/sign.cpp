@@ -96,13 +96,17 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
     TxSignatureHasher hasher(txTo, nIn);
+    return SignSignature(keystore, fromPubKey, hasher, nHashType, txin.scriptSig);
+}
 
+bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, const SignatureHasher& hasher, int nHashType, CScript& scriptSigRet)
+{
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
     uint256 hash = hasher.SignatureHash(fromPubKey, nHashType);
 
     txnouttype whichType;
-    if (!Solver(keystore, fromPubKey, hash, nHashType, txin.scriptSig, whichType))
+    if (!Solver(keystore, fromPubKey, hash, nHashType, scriptSigRet, whichType))
         return false;
 
     if (whichType == TX_SCRIPTHASH)
@@ -110,21 +114,21 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
         // Solver returns the subscript that need to be evaluated;
         // the final scriptSig is the signatures from that
         // and then the serialized subscript:
-        CScript subscript = txin.scriptSig;
+        CScript subscript = scriptSigRet;
 
         // Recompute txn hash using subscript in place of scriptPubKey:
         uint256 hash2 = hasher.SignatureHash(subscript, nHashType);
 
         txnouttype subType;
         bool fSolved =
-            Solver(keystore, subscript, hash2, nHashType, txin.scriptSig, subType) && subType != TX_SCRIPTHASH;
+            Solver(keystore, subscript, hash2, nHashType, scriptSigRet, subType) && subType != TX_SCRIPTHASH;
         // Append serialized subscript whether or not it is completely signed:
-        txin.scriptSig << static_cast<valtype>(subscript);
+        scriptSigRet << static_cast<valtype>(subscript);
         if (!fSolved) return false;
     }
 
     // Test solution
-    return VerifyScript(txin.scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(txTo, nIn));
+    return VerifyScript(scriptSigRet, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, GenericSignatureChecker(&hasher));
 }
 
 bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
