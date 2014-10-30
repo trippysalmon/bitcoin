@@ -51,6 +51,18 @@ public:
      *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
+    /**
+     * "Dust" is defined in terms of CTransaction::minRelayTxFee,
+     * which has units satoshis-per-kilobyte.
+     * If you'd pay more than 1/3 in fees
+     * to spend something, then we consider it dust.
+     * A typical txout is 34 bytes big, and will
+     * need a CTxIn of at least 148 bytes to spend:
+     * so dust is a txout less than 546 satoshis 
+     * with default minRelayTxFee.
+     */
+    virtual CAmount GetDustThreshold(const CTxOut& txout) const;
+    virtual bool ApproveOutput(const CTxOut& txout) const;
 };
 
 /** Global variables and their interfaces */
@@ -169,7 +181,7 @@ bool CStandardPolicy::ApproveTx(const CTransaction& tx, CValidationState& state)
             nDataOut++;
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd))
             return state.DoS(0, false, REJECT_NONSTANDARD, "bare-multisig");
-        else if (tx.vout[i].IsDust(::minRelayTxFee))
+        else if (ApproveOutput(tx.vout[i]))
             return state.DoS(0, false, REJECT_NONSTANDARD, "dust");
     }
 
@@ -237,4 +249,15 @@ bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCa
     }
 
     return true;
+}
+
+CAmount CStandardPolicy::GetDustThreshold(const CTxOut& txout) const
+{
+    size_t nSize = txout.GetSerializeSize(SER_DISK,0) + 148u;
+    return 3 * minRelayTxFee.GetFee(nSize);
+}
+
+bool CStandardPolicy::ApproveOutput(const CTxOut& txout) const
+{
+    return txout.nValue < GetDustThreshold(txout);
 }

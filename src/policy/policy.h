@@ -63,6 +63,8 @@ public:
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
+    virtual CAmount GetDustThreshold(const CTxOut& txout) const = 0;
+    virtual bool ApproveOutput(const CTxOut& txout) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */
