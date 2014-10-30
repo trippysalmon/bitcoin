@@ -19,7 +19,7 @@ bool CNodePolicy::AcceptTxPoolPreInputs(CTxMemPool& pool, CValidationState& stat
 {
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
-    if (fRequireStandardTx && !IsStandardTx(tx, reason))
+    if (Params().RequireStandard() && !IsStandardTx(tx, reason))
         return state.DoS(0,
                          error("%s : nonstandard transaction: %s", __func__, reason),
                          REJECT_NONSTANDARD, reason);
@@ -37,7 +37,7 @@ bool CNodePolicy::AcceptTxPoolPreInputs(CTxMemPool& pool, CValidationState& stat
 bool CNodePolicy::AcceptTxWithInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx, CCoinsViewCache& view)
 {
     // Check for non-standard pay-to-script-hash in inputs
-    if (fRequireStandardTx && !AreInputsStandard(tx, view))
+    if (Params().RequireStandard() && !AreInputsStandard(tx, view))
         return error("%s : nonstandard transaction input", __func__);
 
     // Check that the transaction doesn't have an excessive number of

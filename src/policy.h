@@ -24,10 +24,6 @@ public:
 class CNodePolicy : CNodePolicyBase
 {
 public:
-    bool fRequireStandardTx;
-
-    CNodePolicy() : fRequireStandardTx(true) { };
-
     virtual bool AcceptTxPoolPreInputs(CTxMemPool&, CValidationState&, const CTransaction&);
     virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&);
     virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit);
