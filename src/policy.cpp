@@ -5,6 +5,8 @@
 
 // NOTE: This file is intended to be customised by the end user, and includes only local node policy logic
 
+#include "policy.h"
+
 #include "amount.h"
 #include "core/transaction.h"
 #include "main.h"
@@ -24,31 +26,19 @@ public:
     virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&);
 };
 
-bool CNodePolicy::AcceptTxPoolPreInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx)
+bool CheckConflicts(CTxMemPool& pool, CValidationState& state, const CTransaction& tx)
 {
-    // Rather not work on nonstandard transactions (unless -testnet/-regtest)
-    std::string reason;
-    if (Params().RequireStandard() && !IsStandardTx(tx, reason))
-        return state.DoS(0,
-                         error("%s : nonstandard transaction: %s", __func__, reason),
-                         REJECT_NONSTANDARD, reason);
-
     // Check for conflicts with in-memory transactions
     if (pool.lookupConflicts(tx, NULL))
     {
         // Disable replacement feature for now
         return false;
     }
-
     return true;
 }
 
-bool CNodePolicy::AcceptTxWithInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx, CCoinsViewCache& view)
+bool CheckSigOpsCount(CTxMemPool& pool, CValidationState& state, const CTransaction& tx, CCoinsViewCache& view)
 {
-    // Check for non-standard pay-to-script-hash in inputs
-    if (Params().RequireStandard() && !AreInputsStandard(tx, view))
-        return error("%s : nonstandard transaction input", __func__);
-
     // Check that the transaction doesn't have an excessive number of
     // sigops, making it impossible to mine. Since the coinbase transaction
     // itself can contain sigops MAX_TX_SIGOPS is less than
@@ -63,6 +53,27 @@ bool CNodePolicy::AcceptTxWithInputs(CTxMemPool& pool, CValidationState& state, 
                          REJECT_NONSTANDARD, "bad-txns-too-many-sigops");
 
     return true;
+}
+
+bool CNodePolicy::AcceptTxPoolPreInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx)
+{
+    // Rather not work on nonstandard transactions (unless -testnet/-regtest)
+    std::string reason;
+    if (!IsStandardTx(tx, reason))
+        return state.DoS(0,
+                         error("%s : nonstandard transaction: %s", __func__, reason),
+                         REJECT_NONSTANDARD, reason);
+
+    return CheckConflicts(pool, state, tx);
+}
+
+bool CNodePolicy::AcceptTxWithInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx, CCoinsViewCache& view)
+{
+    // Check for non-standard pay-to-script-hash in inputs
+    if (!AreInputsStandard(tx, view))
+        return error("%s : nonstandard transaction input", __func__);
+
+    return CheckSigOpsCount(pool, state, tx, view);
 }
 
 bool CNodePolicy::AcceptMemPoolEntry(CTxMemPool& pool, CValidationState& state, CTxMemPoolEntry& entry, CCoinsViewCache& view, bool& fRateLimit)
@@ -111,11 +122,27 @@ bool CNodePolicy::RateLimitTx(CTxMemPool& pool, CValidationState& state, CTxMemP
     return true;
 }
 
+class CTestPolicy : public CNodePolicy
+{
+public:
+    virtual bool AcceptTxPoolPreInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx)
+    {
+        return CheckConflicts(pool, state, tx);
+    }
+    virtual bool AcceptTxWithInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx, CCoinsViewCache& view)
+    {
+        return CheckSigOpsCount(pool, state, tx, view);
+    }
+};
+
 // Policy Factory
 
 static CNodePolicy standardPolicy;
+static CTestPolicy testPolicy;
+
 CNodePolicyBase* Policy()
 {
-    return &standardPolicy;
+    if (Params().RequireStandard())
+        return &standardPolicy;
+    return &testPolicy;
 }
-
