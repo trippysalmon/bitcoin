@@ -7,8 +7,11 @@
 #define BITCOIN_POLICY_H
 
 class CFeeRate;
+class CTxOut;
 
 extern CFeeRate minRelayTxFee;
+
+bool IsDust(const CTxOut& txout);
 
 void InitPolicyFromCommandLine();
 
