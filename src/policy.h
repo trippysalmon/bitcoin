@@ -13,6 +13,7 @@
 #include <string>
 
 class CFeeRate;
+class CTxOut;
 
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
@@ -61,6 +62,7 @@ class CPolicy
 public:
     virtual void InitFromArgs(const std::map<std::string, std::string>&) = 0;
     virtual bool ValidateScript(const CScript&, txnouttype&) const = 0;
+    virtual bool ValidateOutput(const CTxOut& txout) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */
