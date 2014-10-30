@@ -15,6 +15,15 @@
 #include <cmath>
 #include <string>
 
+class CNodePolicy : public CNodePolicyBase
+{
+public:
+    virtual bool AcceptTxPoolPreInputs(CTxMemPool&, CValidationState&, const CTransaction&);
+    virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&);
+    virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit);
+    virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&);
+};
+
 bool CNodePolicy::AcceptTxPoolPreInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx)
 {
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
@@ -101,3 +110,12 @@ bool CNodePolicy::RateLimitTx(CTxMemPool& pool, CValidationState& state, CTxMemP
 
     return true;
 }
+
+// Policy Factory
+
+static CNodePolicy standardPolicy;
+CNodePolicyBase* Policy()
+{
+    return &standardPolicy;
+}
+

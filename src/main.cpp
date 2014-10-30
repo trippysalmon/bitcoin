@@ -58,7 +58,6 @@ unsigned int nCoinCacheSize = 5000;
 CFeeRate minRelayTxFee = CFeeRate(1000);
 
 CTxMemPool mempool(::minRelayTxFee);
-CNodePolicy policy;
 
 struct COrphanTx {
     CTransaction tx;
@@ -894,7 +893,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pool.exists(hash))
         return false;
 
-    if (!policy.AcceptTxPoolPreInputs(pool, state, tx))
+    if (!Policy()->AcceptTxPoolPreInputs(pool, state, tx))
         return false;
 
     {
@@ -933,7 +932,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         view.SetBackend(dummy);
         }
 
-        if (!policy.AcceptTxWithInputs(pool, state, tx, view))
+        if (!Policy()->AcceptTxWithInputs(pool, state, tx, view))
             return false;
 
         CAmount nFees = view.GetTxFees(tx);
@@ -943,11 +942,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         bool fRateLimit = false;
         // policy.AcceptMemPoolEntry is expected to set fRateLimit (passed by reference) if it wants to
-        if (!policy.AcceptMemPoolEntry(pool, state, entry, view, fRateLimit))
+        if (!Policy()->AcceptMemPoolEntry(pool, state, entry, view, fRateLimit))
             return false;
         if (!fLimitFree)
             fRateLimit = false;
-        if (fRateLimit && !policy.RateLimitTx(pool, state, entry, view))
+        if (fRateLimit && !Policy()->RateLimitTx(pool, state, entry, view))
             return false;
 
         unsigned int nSize = entry.GetTxSize();
