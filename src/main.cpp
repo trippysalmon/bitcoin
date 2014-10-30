@@ -13,6 +13,7 @@
 #include "init.h"
 #include "merkleblock.h"
 #include "net.h"
+#include "policy.h"
 #include "pow.h"
 #include "txdb.h"
 #include "txmempool.h"
@@ -694,7 +695,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (txout.IsDust(::minRelayTxFee)) {
+        } else if (IsDust(txout, ::minRelayTxFee)) {
             reason = "dust";
             return false;
         }
