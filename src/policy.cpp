@@ -149,3 +149,20 @@ CNodePolicyBase* Policy()
         return &testPolicy;
     return &standardPolicy;
 }
+
+CNodePolicyBase* PolicyFactory(std::string policyArg)
+{
+    if (policyArg == "")
+        policyArg = Params().DefaultPolicy();
+    if (policyArg == "")
+        policyArg = "standard";
+
+    if (policyArg == "standard") {
+        return new CNodePolicy();
+    } else if (policyArg == "test") {
+        return new CTestPolicy();
+    } else {
+        error("%s : Unkown policy %s", __func__, policyArg);
+        return 0;
+    }    
+}

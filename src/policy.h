@@ -6,6 +6,8 @@
 #ifndef BITCOIN_POLICY_H
 #define BITCOIN_POLICY_H
 
+#include <string>
+
 class CCoinsViewCache;
 class CTransaction;
 class CTxMemPool;
@@ -19,8 +21,10 @@ public:
     virtual bool AcceptTxWithInputs(CTxMemPool&, CValidationState&, const CTransaction&, CCoinsViewCache&) = 0;
     virtual bool AcceptMemPoolEntry(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&, bool& fRateLimit) = 0;
     virtual bool RateLimitTx(CTxMemPool&, CValidationState&, CTxMemPoolEntry&, CCoinsViewCache&) = 0;
+    virtual ~CNodePolicyBase() {}
 };
 
 CNodePolicyBase* Policy();
+CNodePolicyBase* PolicyFactory(std::string="");
 
 #endif // BITCOIN_POLICY_H
