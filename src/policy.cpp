@@ -142,7 +142,10 @@ static CTestPolicy testPolicy;
 
 CNodePolicyBase* Policy()
 {
-    if (Params().RequireStandard())
+    std::string policyArg = Params().DefaultPolicy();
+    if (policyArg == "standard")
         return &standardPolicy;
-    return &testPolicy;
+    else if (policyArg == "test")
+        return &testPolicy;
+    return &standardPolicy;
 }
