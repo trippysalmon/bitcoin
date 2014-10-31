@@ -6,7 +6,7 @@
 // NOTE: This file is intended to be customised by the end user, and includes only local node policy logic
 
 #include "amount.h"
-#include "core.h"
+#include "core/transaction.h"
 #include "main.h"
 #include "sync.h"
 #include "txmempool.h"
