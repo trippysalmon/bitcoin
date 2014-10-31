@@ -137,19 +137,6 @@ public:
 
 // Policy Factory
 
-static CNodePolicy standardPolicy;
-static CTestPolicy testPolicy;
-
-CNodePolicyBase* Policy()
-{
-    std::string policyArg = Params().DefaultPolicy();
-    if (policyArg == "standard")
-        return &standardPolicy;
-    else if (policyArg == "test")
-        return &testPolicy;
-    return &standardPolicy;
-}
-
 CNodePolicyBase* PolicyFactory(std::string policyArg)
 {
     if (policyArg == "")
@@ -165,4 +152,58 @@ CNodePolicyBase* PolicyFactory(std::string policyArg)
         error("%s : Unkown policy %s", __func__, policyArg);
         return 0;
     }    
+}
+
+typedef std::map<std::string, CNodePolicyBase*> CPolicyMap;
+
+class CPolicyPool
+{
+    CPolicyMap policyMap;
+public:
+    CNodePolicyBase* Create(std::string policyID, std::string policyType="");
+    CNodePolicyBase* Get(std::string policyID);
+    ~CPolicyPool()
+    {
+        for (CPolicyMap::iterator it = policyMap.begin(); it != policyMap.end(); ++it)
+            delete(it->second);
+        policyMap.clear();
+    }
+};
+
+CNodePolicyBase* CPolicyPool::Create(std::string policyID, std::string policyType)
+{
+    if (!policyMap.count(policyID)) {
+        policyMap[policyID] = PolicyFactory(policyType);
+    }
+    return policyMap[policyID];
+}
+
+CNodePolicyBase* CPolicyPool::Get(std::string policyID)
+{
+    if (!policyMap.count(policyID)) {
+        error("%s : Policy %s not found.", __func__, policyID);
+        return 0;
+    }
+    return policyMap[policyID];
+}
+
+static CPolicyPool policySingleton;
+
+static CNodePolicyBase* pCurrentPolicy = 0;
+
+CNodePolicyBase* Policy(std::string policyType)
+{
+    if (policyType == "")
+        if (pCurrentPolicy)
+            return pCurrentPolicy;
+        policyType = Params().DefaultPolicy();
+    if (policyType == "")
+        policyType = "standard";
+
+    CNodePolicyBase* search = policySingleton.Get(policyType);
+    if (!search) {
+        search = policySingleton.Create(policyType, policyType);
+    }
+    pCurrentPolicy = search;
+    return search;
 }

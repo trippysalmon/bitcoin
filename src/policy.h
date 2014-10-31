@@ -7,6 +7,7 @@
 #define BITCOIN_POLICY_H
 
 #include <string>
+#include <map>
 
 class CCoinsViewCache;
 class CTransaction;
@@ -24,7 +25,7 @@ public:
     virtual ~CNodePolicyBase() {}
 };
 
-CNodePolicyBase* Policy();
+CNodePolicyBase* Policy(std::string policyType="");
 CNodePolicyBase* PolicyFactory(std::string="");
 
 #endif // BITCOIN_POLICY_H
