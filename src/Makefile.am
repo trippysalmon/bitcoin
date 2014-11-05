@@ -231,6 +231,7 @@ libbitcoin_common_a_SOURCES = \
   netbase.cpp \
   protocol.cpp \
   pubkey.cpp \
+  script/alertsign.cpp \
   script/interpreter.cpp \
   script/script.cpp \
   script/sigcache.cpp \
