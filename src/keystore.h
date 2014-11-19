@@ -6,6 +6,7 @@
 #ifndef BITCOIN_KEYSTORE_H
 #define BITCOIN_KEYSTORE_H
 
+#include "allocators.h"
 #include "key.h"
 #include "pubkey.h"
 #include "sync.h"
@@ -47,7 +48,7 @@ public:
     virtual bool HaveWatchOnly() const =0;
 };
 
-typedef std::map<CKeyID, CKey> KeyMap;
+typedef std::map<CKeyID, secure_object<CKey> > KeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
 

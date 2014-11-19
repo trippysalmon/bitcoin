@@ -71,14 +71,14 @@ CPubKey CWallet::GenerateNewKey()
     bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
 
     RandAddSeedPerfmon();
-    CKey secret;
-    secret.MakeNewKey(fCompressed);
+    secure_object<CKey> secret;
+    secret->MakeNewKey(fCompressed);
 
     // Compressed public keys were introduced in version 0.6.0
     if (fCompressed)
         SetMinVersion(FEATURE_COMPRPUBKEY);
 
-    CPubKey pubkey = secret.GetPubKey();
+    CPubKey pubkey = secret->GetPubKey();
 
     // Create new metadata
     int64_t nCreationTime = GetTime();

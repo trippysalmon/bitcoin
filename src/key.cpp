@@ -4,6 +4,7 @@
 
 #include "key.h"
 
+#include "allocators.h"
 #include "crypto/sha2.h"
 #include "eccryptoverify.h"
 #include "pubkey.h"
@@ -76,10 +77,10 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
         return false;
     vchSig.resize(72);
     int nSigLen = 72;
-    CKey nonce;
+    secure_object<CKey> nonce;
     do {
-        nonce.MakeNewKey(true);
-        if (secp256k1_ecdsa_sign((const unsigned char*)&hash, 32, (unsigned char*)&vchSig[0], &nSigLen, begin(), nonce.begin()))
+        nonce->MakeNewKey(true);
+        if (secp256k1_ecdsa_sign((const unsigned char*)&hash, 32, (unsigned char*)&vchSig[0], &nSigLen, begin(), nonce->begin()))
             break;
     } while(true);
     vchSig.resize(nSigLen);
@@ -91,10 +92,10 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
         return false;
     vchSig.resize(65);
     int rec = -1;
-    CKey nonce;
+    secure_object<CKey> nonce;
     do {
-        nonce.MakeNewKey(true);
-        if (secp256k1_ecdsa_sign_compact((const unsigned char*)&hash, 32, &vchSig[1], begin(), nonce.begin(), &rec))
+        nonce->MakeNewKey(true);
+        if (secp256k1_ecdsa_sign_compact((const unsigned char*)&hash, 32, &vchSig[1], begin(), nonce->begin(), &rec))
             break;
     } while(true);
     assert(rec != -1);
@@ -120,8 +121,7 @@ bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
 bool CKey::Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const {
     assert(IsValid());
     assert(IsCompressed());
-    unsigned char out[64];
-    LockObject(out);
+    secure_object<unsigned char[64]> out;
     if ((nChild >> 31) == 0) {
         CPubKey pubkey = GetPubKey();
         assert(pubkey.begin() + 33 == pubkey.end());
@@ -133,7 +133,6 @@ bool CKey::Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild
     memcpy(ccChild, out+32, 32);
     memcpy((unsigned char*)keyChild.begin(), begin(), 32);
     bool ret = secp256k1_ec_privkey_tweak_add((unsigned char*)keyChild.begin(), out);
-    UnlockObject(out);
     keyChild.fCompressed = true;
     keyChild.fValid = ret;
     return ret;
@@ -149,12 +148,10 @@ bool CExtKey::Derive(CExtKey &out, unsigned int nChild) const {
 
 void CExtKey::SetMaster(const unsigned char *seed, unsigned int nSeedLen) {
     static const unsigned char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
-    unsigned char out[64];
-    LockObject(out);
+    secure_object<unsigned char[64]> out;
     CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(seed, nSeedLen).Finalize(out);
     key.Set(&out[0], &out[32], true);
     memcpy(vchChainCode, &out[32], 32);
-    UnlockObject(out);
     nDepth = 0;
     nChild = 0;
     memset(vchFingerprint, 0, sizeof(vchFingerprint));

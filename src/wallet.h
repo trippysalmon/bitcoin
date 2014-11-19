@@ -935,7 +935,7 @@ public:
 class CWalletKey
 {
 public:
-    CPrivKey vchPrivKey;
+    secure_object<CPrivKey> vchPrivKey;
     int64_t nTimeCreated;
     int64_t nTimeExpires;
     std::string strComment;
@@ -950,7 +950,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
-        READWRITE(vchPrivKey);
+        READWRITE(*vchPrivKey);
         READWRITE(nTimeCreated);
         READWRITE(nTimeExpires);
         READWRITE(LIMITED_STRING(strComment, 65536));

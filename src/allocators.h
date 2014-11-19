@@ -161,22 +161,48 @@ private:
     static boost::once_flag init_flag;
 };
 
-//
-// Functions for directly locking/unlocking memory objects.
-// Intended for non-dynamically allocated structures.
-//
-template <typename T>
-void LockObject(const T& t)
+/** Locking wrapper around non-dynamically allocated objects. */
+template<typename T>
+class secure_object
 {
-    LockedPageManager::Instance().LockRange((void*)(&t), sizeof(T));
-}
+private:
+    T object;
 
-template <typename T>
-void UnlockObject(const T& t)
-{
-    OPENSSL_cleanse((void*)(&t), sizeof(T));
-    LockedPageManager::Instance().UnlockRange((void*)(&t), sizeof(T));
-}
+    void LockObject() {
+        LockedPageManager::Instance().LockRange((void*)(&object), sizeof(T));
+    }
+
+    void UnlockObject() {
+        OPENSSL_cleanse((void*)(&object), sizeof(T));
+        LockedPageManager::Instance().UnlockRange((void*)(&object), sizeof(T));
+    }
+
+public:
+    secure_object() {
+        LockObject();
+    }
+
+    secure_object(const T& obj) {
+        LockObject();
+        object = obj;
+    }
+
+    secure_object(const secure_object<T>& obj) {
+        LockObject();
+        object = obj;
+    }
+
+    ~secure_object() {
+        UnlockObject();
+    }
+
+    T& operator*() { return object; }
+    const T& operator*() const { return object; }
+    operator T&() { return object; }
+    operator const T&() const { return object; }
+    T* operator->() { return &object; }
+    const T* operator->() const { return &object; }
+};
 
 //
 // Allocator that locks its contents from being paged
@@ -223,7 +249,6 @@ struct secure_allocator : public std::allocator<T> {
         std::allocator<T>::deallocate(p, n);
     }
 };
-
 
 //
 // Allocator that clears its contents before deletion.
