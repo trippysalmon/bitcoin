@@ -40,7 +40,7 @@ double
 CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 {
     CAmount nValueIn = tx.GetValueOut()+nFee;
-    double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nModSize;
+    double deltaPriority = ((currentHeight-nHeight)*AmountToDouble(nValueIn))/nModSize;
     double dResult = dPriority + deltaPriority;
     return dResult;
 }

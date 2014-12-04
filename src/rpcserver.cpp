@@ -105,7 +105,7 @@ CAmount AmountFromValue(const Value& value)
 
 Value ValueFromAmount(const CAmount& amount)
 {
-    return (double)amount / (double)COIN;
+    return AmountToDouble(amount) / (double)COIN;
 }
 
 uint256 ParseHashV(const Value& v, string strName)

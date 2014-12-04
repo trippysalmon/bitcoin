@@ -554,7 +554,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
         }
     }
 
-    return (double)nAmount / (double)COIN;
+    return AmountToDouble(nAmount) / (double)COIN;
 }
 
 
