@@ -1420,7 +1420,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     //The priority after the next block (depth+1) is used instead of the current,
                     //reflecting an assumption the user would accept a bit more delay for
                     //a chance at a free transaction.
-                    dPriority += (double)nCredit * (pcoin.first->GetDepthInMainChain()+1);
+                    dPriority += AmountToDouble(nCredit) * (pcoin.first->GetDepthInMainChain()+1);
                 }
 
                 CAmount nChange = nValueIn - nValue - nFeeRet;
