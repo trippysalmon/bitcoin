@@ -92,7 +92,7 @@ public:
     static QString formatWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
     static QString formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
     //! Parse string to coin amount
-    static bool parse(int unit, const QString &value, CAmount *val_out);
+    static bool parse(int unit, const QString &value, int64_t *val_out);
     //! Gets title for amount column including current display unit if optionsModel reference available */
     static QString getAmountColumnTitle(int unit);
     ///@}
@@ -119,7 +119,7 @@ public:
     }
 
     //! Return maximum number of base units (Satoshis)
-    static CAmount maxMoney();
+    static int64_t maxMoney();
 
 private:
     QList<BitcoinUnits::Unit> unitlist;

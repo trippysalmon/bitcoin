@@ -150,7 +150,7 @@ QString BitcoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool p
 }
 
 
-bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out)
+bool BitcoinUnits::parse(int unit, const QString &value, int64_t *val_out)
 {
     if(!valid(unit) || value.isEmpty())
         return false; // Refuse to parse invalid unit or empty string
@@ -181,7 +181,7 @@ bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out)
     {
         return false; // Longer numbers will exceed 63 bits
     }
-    CAmount retvalue(str.toLongLong(&ok));
+    int64_t retvalue(str.toLongLong(&ok));
     if(val_out)
     {
         *val_out = retvalue;
@@ -225,7 +225,7 @@ QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-CAmount BitcoinUnits::maxMoney()
+int64_t BitcoinUnits::maxMoney()
 {
     return MAX_MONEY;
 }
