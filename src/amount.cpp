@@ -9,25 +9,25 @@
 
 std::string AmountToString(const CAmount& n)
 {
-    return strprintf("%d", n);
+    return strprintf("%d", n.n);
 }
 
 double AmountToDouble(const CAmount& n)
 {
-    return (double)n;
+    return (double)n.n;
 }
 
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nSize)
 {
     if (nSize > 0)
-        n = nFeePaid*1000/nSize;
+        n = nFeePaid.n*1000/nSize;
     else
         n = 0;
 }
 
-CAmount CFeeRate::GetFee(size_t nSize) const
+int64_t CFeeRate::GetFee(size_t nSize) const
 {
-    CAmount nFee = n * nSize / 1000;
+    int64_t nFee = n * nSize / 1000;
 
     if (nFee == 0 && n > 0)
         nFee = n;
