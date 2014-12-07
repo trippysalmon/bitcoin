@@ -630,9 +630,9 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     // how many satoshis the estimated fee can vary per byte we guess wrong
     double dFeeVary;
     if (payTxFee.GetFeePerK() > 0)
-        dFeeVary = (double)std::max(CWallet::minTxFee.GetFeePerK(), payTxFee.GetFeePerK()) / 1000;
+        dFeeVary = AmountToDouble(std::max(CWallet::minTxFee.GetFeePerK(), payTxFee.GetFeePerK())) / 1000;
     else
-        dFeeVary = (double)std::max(CWallet::minTxFee.GetFeePerK(), mempool.estimateFee(nTxConfirmTarget).GetFeePerK()) / 1000;
+        dFeeVary = AmountToDouble(std::max(CWallet::minTxFee.GetFeePerK(), mempool.estimateFee(nTxConfirmTarget).GetFeePerK())) / 1000;
     QString toolTip4 = tr("Can vary +/- %1 satoshi(s) per input.").arg(dFeeVary);
 
     l3->setToolTip(toolTip4);
