@@ -669,7 +669,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     {
         CAmount n = 0;
         if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
-            ::minRelayTxFee = CFeeRate(n);
+            ::minRelayTxFee = CFeeRate(n.n);
         else
             return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
     }
@@ -679,7 +679,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     {
         CAmount n = 0;
         if (ParseMoney(mapArgs["-mintxfee"], n) && n > 0)
-            CWallet::minTxFee = CFeeRate(n);
+            CWallet::minTxFee = CFeeRate(n.n);
         else
             return InitError(strprintf(_("Invalid amount for -mintxfee=<amount>: '%s'"), mapArgs["-mintxfee"]));
     }

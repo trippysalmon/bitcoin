@@ -129,7 +129,7 @@ public:
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return (nValue == NULL_AMOUNT);
     }
 
     uint256 GetHash() const;

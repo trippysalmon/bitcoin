@@ -11,14 +11,25 @@
 
 using namespace std;
 
-string FormatMoney(const CAmount& n, bool fPlus)
+static const int COIN_DECIMALS = 8;
+
+CAmount Factor(int decimals)
+{
+    CAmount factor = 1;
+    for ( ; decimals > 0 ; decimals--)
+        factor *= 10;
+    return factor;
+}
+
+std::string FormatAmount(const CAmount& n, int nDecimals, bool fPlus)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
-    int64_t n_abs = (n > 0 ? n : -n);
-    int64_t quotient = n_abs/COIN;
-    int64_t remainder = n_abs%COIN;
-    string str = strprintf("%d.%08d", quotient, remainder);
+    CAmount n_abs = (n > 0 ? n : -n);
+    CAmount coin = Factor(nDecimals);
+    CAmount quotient = n_abs / coin;
+    CAmount remainder = n_abs % coin;
+    string str = strprintf("%d.%0*d", quotient.n, nDecimals, remainder.n);
 
     // Right-trim excess zeros before the decimal point:
     int nTrim = 0;
@@ -34,6 +45,10 @@ string FormatMoney(const CAmount& n, bool fPlus)
     return str;
 }
 
+string FormatMoney(const CAmount& n, bool fPlus)
+{
+    return FormatAmount(n, COIN_DECIMALS, fPlus);
+}
 
 bool ParseMoney(const string& str, CAmount& nRet)
 {
@@ -43,7 +58,7 @@ bool ParseMoney(const string& str, CAmount& nRet)
 bool ParseMoney(const char* pszIn, CAmount& nRet)
 {
     string strWhole;
-    int64_t nUnits = 0;
+    CAmount nUnits = 0;
     const char* p = pszIn;
     while (isspace(*p))
         p++;
@@ -52,7 +67,7 @@ bool ParseMoney(const char* pszIn, CAmount& nRet)
         if (*p == '.')
         {
             p++;
-            int64_t nMult = CENT*10;
+            CAmount nMult = CENT*10;
             while (isdigit(*p) && (nMult > 0))
             {
                 nUnits += nMult * (*p++ - '0');
