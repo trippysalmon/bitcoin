@@ -97,6 +97,19 @@ void UpdateTime(CBlockHeader* pblock, const Consensus::Params params, const CBlo
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, params);
 }
 
+inline CMutableTransaction CreateCoinbaseTransaction(const CScript& scriptPubKeyIn, const int nHeight, const Consensus::Params& params, const CAmount& nFees)
+{
+    // Create and Compute final coinbase transaction.
+    CMutableTransaction txNew;
+    txNew.vin.resize(1);
+    txNew.vin[0].prevout.SetNull();
+    txNew.vout.resize(1);
+    txNew.vout[0].scriptPubKey = scriptPubKeyIn;
+    txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, params);
+    txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    return txNew;
+}
+
 CBlockTemplate* CreateNewBlock(const CPolicy& policy, const Consensus::Params& params, const CScript& scriptPubKeyIn)
 {
     // Create new block
@@ -109,13 +122,6 @@ CBlockTemplate* CreateNewBlock(const CPolicy& policy, const Consensus::Params& p
     // -blockversion=N to test forking scenarios
     if (Params().MineBlocksOnDemand())
         pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
-
-    // Create coinbase tx
-    CMutableTransaction txNew;
-    txNew.vin.resize(1);
-    txNew.vin[0].prevout.SetNull();
-    txNew.vout.resize(1);
-    txNew.vout[0].scriptPubKey = scriptPubKeyIn;
 
     // Add dummy coinbase tx as first transaction
     pblock->vtx.push_back(CTransaction());
@@ -327,10 +333,7 @@ CBlockTemplate* CreateNewBlock(const CPolicy& policy, const Consensus::Params& p
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
-        // Compute final coinbase transaction.
-        txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, params);
-        txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
-        pblock->vtx[0] = txNew;
+        pblock->vtx[0] = CreateCoinbaseTransaction(scriptPubKeyIn, nHeight, params, nFees);
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
