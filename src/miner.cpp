@@ -110,6 +110,19 @@ void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, 
         pblock->nBits = GetNextWorkRequiredLog(pindexPrev, pblock, consensusParams);
 }
 
+inline CMutableTransaction CreateCoinbaseTransaction(const CScript& scriptPubKeyIn, const int nHeight, const Consensus::Params& chainparams, const CAmount& nFees)
+{
+    // Create and Compute final coinbase transaction.
+    CMutableTransaction txNew;
+    txNew.vin.resize(1);
+    txNew.vin[0].prevout.SetNull();
+    txNew.vout.resize(1);
+    txNew.vout[0].scriptPubKey = scriptPubKeyIn;
+    txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams);
+    txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    return txNew;
+}
+
 CBlockTemplate* CreateNewBlock(const CPolicy& policy, const CChainParams& chainparams, const CScript& scriptPubKeyIn)
 {
     // Create new block
@@ -122,13 +135,6 @@ CBlockTemplate* CreateNewBlock(const CPolicy& policy, const CChainParams& chainp
     // -blockversion=N to test forking scenarios
     if (chainparams.MineBlocksOnDemand())
         pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
-
-    // Create coinbase tx
-    CMutableTransaction txNew;
-    txNew.vin.resize(1);
-    txNew.vin[0].prevout.SetNull();
-    txNew.vout.resize(1);
-    txNew.vout[0].scriptPubKey = scriptPubKeyIn;
 
     // Add dummy coinbase tx as first transaction
     pblock->vtx.push_back(CTransaction());
@@ -338,10 +344,7 @@ CBlockTemplate* CreateNewBlock(const CPolicy& policy, const CChainParams& chainp
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
-        // Compute final coinbase transaction.
-        txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-        txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
-        pblock->vtx[0] = txNew;
+        pblock->vtx[0] = CreateCoinbaseTransaction(scriptPubKeyIn, nHeight, chainparams.GetConsensus(), nFees);
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
