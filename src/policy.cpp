@@ -20,7 +20,7 @@
 
 using namespace std;
 
-bool fIsBareMultisigStd = true;
+static bool fIsBareMultisigStd = true;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
 
@@ -203,4 +203,5 @@ void InitPolicyFromCommandLine()
         else
             throw std::runtime_error(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
     }
+    fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
 }

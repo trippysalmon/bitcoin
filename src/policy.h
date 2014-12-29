@@ -17,7 +17,6 @@ static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
 /** Maximum number of signature check operations in an IsStandard() P2SH script */
 static const unsigned int MAX_P2SH_SIGOPS = 15;
 
-extern bool fIsBareMultisigStd;
 extern CFeeRate minRelayTxFee;
 
 /** Abstract interface for Policy */
