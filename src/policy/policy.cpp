@@ -94,9 +94,24 @@ public:
     virtual bool ApproveOutput(const CTxOut& txout) const;
 };
 
+/** Default Policy for testnet and regtest */
+class CTestPolicy : public CStandardPolicy 
+{
+public:
+    virtual bool ValidateTx(const CTransaction& tx, std::string& reason) const
+    {
+        return true;
+    }
+    virtual bool ValidateTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
+    {
+        return true;
+    }
+};
+
 /** Global variables and their interfaces */
 
 static CStandardPolicy standardPolicy;
+static CTestPolicy testPolicy;
 
 static CPolicy* pCurrentPolicy = 0;
 
@@ -104,6 +119,8 @@ CPolicy& Policy(std::string policy)
 {
     if (policy == "standard")
         return standardPolicy;
+    else if (policy == "test")
+        return testPolicy;
     throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));
 }
 

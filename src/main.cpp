@@ -620,7 +620,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return error("%s: Consensus::CheckTx: ", __func__, state.GetRejectReason().c_str());
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
-    if (Params().RequireStandard() && !policy.ApproveTx(tx, state))
+    if (!policy.ApproveTx(tx, state))
         return error("%s: CPolicy::ApproveTx: %s", __func__, state.GetRejectReason().c_str());
 
     int nHeight = chainActive.Height();
@@ -707,7 +707,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Check for non-standard pay-to-script-hash in inputs
-        if (Params().RequireStandard() && !policy.ApproveTxInputs(tx, view))
+        if (!policy.ApproveTxInputs(tx, view))
             return error("%s: CPolicy::ApproveTxInputs failed %s", __func__, hash.ToString());
 
         // Check that the transaction doesn't have an excessive number of
