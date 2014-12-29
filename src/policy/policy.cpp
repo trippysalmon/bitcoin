@@ -91,7 +91,7 @@ CPolicy* Policy::Factory(const std::string& policy)
 
 CPolicy* Policy::FactoryFromArgs(const std::map<std::string, std::string>& mapArgs, const std::string& defaultPolicy)
 {
-    CPolicy* pPolicy = Policy::Factory(defaultPolicy);
+    CPolicy* pPolicy = Policy::Factory(GetArg("-policy", defaultPolicy, mapArgs));
     pPolicy->InitFromArgs(mapArgs);
     return pPolicy;
 }

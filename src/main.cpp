@@ -750,7 +750,7 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
-    Container<CPolicy> cGlobalPolicy(Policy::FactoryFromArgs(mapArgs, Params().RequireStandard() ? Policy::STANDARD : Policy::TEST));
+    Container<CPolicy> cGlobalPolicy(Policy::FactoryFromArgs(mapArgs, Params().DefaultPolicy()));
     const CPolicy& policy = cGlobalPolicy.Get();
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
