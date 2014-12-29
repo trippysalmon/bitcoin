@@ -163,6 +163,15 @@ public:
 static CStandardPolicy standardPolicy;
 static CTestPolicy testPolicy;
 
+CPolicy& Policy(std::string policy)
+{
+    if (policy == "standard")
+        return standardPolicy;
+    else if (policy == "test")
+        return testPolicy;
+    throw std::runtime_error("Unknown policy " + policy + "\n");
+}
+
 const CPolicy& Policy()
 {
     if (Params().RequireStandard())
