@@ -465,7 +465,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         {
             CTxOut txout(amount, (CScript)vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
-            if (IsDust(txout, ::minRelayTxFee))
+            if (IsDust(txout))
                fDust = true;
         }
     }
@@ -559,7 +559,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             if (nChange > 0 && nChange < CENT)
             {
                 CTxOut txout(nChange, (CScript)vector<unsigned char>(24, 0));
-                if (IsDust(txout, ::minRelayTxFee))
+                if (IsDust(txout))
                 {
                     nPayFee += nChange;
                     nChange = 0;

@@ -11,6 +11,6 @@ class CTxOut;
 
 extern CFeeRate minRelayTxFee;
 
-bool IsDust(const CTxOut& txout, CFeeRate minRelayTxFee);
+bool IsDust(const CTxOut& txout);
 
 #endif // BITCOIN_POLICY_H
