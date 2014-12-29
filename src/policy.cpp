@@ -8,6 +8,7 @@
 #include "policy.h"
 
 #include "amount.h"
+#include "chainparams.h"
 #include "coins.h"
 #include "primitives/transaction.h"
 #include "ui_interface.h"
@@ -40,11 +41,48 @@ public:
     virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
 };
 
+/** Default Policy for testnet and regtest */
+class CTestPolicy : public CStandardPolicy 
+{
+public:
+    virtual bool CheckTxPreInputs(const CTransaction& tx, std::string& reason) const
+    {
+        return true;
+    }
+    virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
+    {
+        return true;
+    }
+};
+
 static CStandardPolicy standardPolicy;
+static CTestPolicy testPolicy;
+
+static CPolicy* pCurrentPolicy = 0;
+
+CPolicy& Policy(std::string policy)
+{
+    if (policy == "standard")
+        return standardPolicy;
+    else if (policy == "test")
+        return testPolicy;
+    throw std::runtime_error("Unknown policy " + policy + "\n");
+}
+
+void SelectPolicy(std::string policyType)
+{
+    pCurrentPolicy = &Policy(policyType);
+}
 
 const CPolicy& Policy()
 {
-    return standardPolicy;
+    if (!pCurrentPolicy) {
+        if (Params().RequireStandard())
+            SelectPolicy("standard");
+        else
+            SelectPolicy("test");
+    }
+    return *pCurrentPolicy;
 }
 
 void InitPolicyFromCommandLine()

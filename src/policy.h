@@ -41,6 +41,8 @@ public:
     virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
 };
 
+void SelectPolicy(std::string policyType);
+CPolicy& Policy(std::string policyType);
 const CPolicy& Policy();
 void InitPolicyFromCommandLine();
 
