@@ -7,6 +7,7 @@
 #endif
 
 #include "uritests.h"
+#include "policy.h"
 
 #ifdef ENABLE_WALLET
 #include "paymentservertests.h"
@@ -29,6 +30,7 @@ int main(int argc, char *argv[])
 {
     bool fInvalid = false;
 
+    SelectPolicy("standard");
     // Don't remove this, it's needed to access
     // QCoreApplication:: in the tests
     QCoreApplication app(argc, argv);
