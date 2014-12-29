@@ -12,7 +12,12 @@
 #include <map>
 #include <string>
 
+class CTransaction;
 class CTxOut;
+class CValidationState;
+
+/** The maximum size for transactions we're willing to relay/mine */
+static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
 
 /** PolicyGlobal variables are supposed to become CStandardPolicy attributes */
 namespace PolicyGlobal {
@@ -30,6 +35,10 @@ public:
     virtual bool ValidateScript(const CScript&, txnouttype&) const = 0;
     virtual bool ValidateOutput(const CTxOut& txout) const = 0;
     virtual bool ValidateFee(const CAmount&, size_t) const = 0;
+    /** Check for standard transaction types
+     * @return True if all outputs (scriptPubKeys) use only standard transaction forms
+     */
+    virtual bool ValidateTx(const CTransaction&, CValidationState&) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */
