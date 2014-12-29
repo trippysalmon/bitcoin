@@ -10,6 +10,9 @@
 #include "amount.h"
 #include "primitives/transaction.h"
 
+/** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
+CFeeRate minRelayTxFee = CFeeRate(1000);
+
 bool IsDust(const CTxOut& txout, CFeeRate minRelayTxFee)
 {
     // "Dust" is defined in terms of CTransaction::minRelayTxFee,
