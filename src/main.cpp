@@ -2570,8 +2570,15 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     if (pcheckpoint && nHeight < pcheckpoint->nHeight)
         return state.DoS(100, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
+    // Reject block.nVersion=1 blocks after the BIP34 switchover point.
+    if (block.nVersion < 2 && nHeight >= Params().GetConsensus().nBIP34Height)
+    {
+        return state.Invalid(error("%s: rejected nVersion=1 block", __func__),
+                             REJECT_OBSOLETE, "bad-version");
+    }
+
     // Reject block.nVersion=n blocks when 95% (75% on testnet) of the network has upgraded (last version=3):
-    for (int i = 2; i <= 3; i++)
+    for (int i = 3; i <= 3; i++)
         if (block.nVersion < i && IsSuperMajority(i, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
             return state.Invalid(error("%s: rejected nVersion=%d block", __func__, i-1), 
                                  REJECT_OBSOLETE, "bad-version");
@@ -2590,9 +2597,8 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
             return state.DoS(10, error("%s: contains a non-final transaction", __func__), REJECT_INVALID, "bad-txns-nonfinal");
         }
 
-    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-    // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height after the BIP34 switchover point.
+    if (block.nVersion >= 2 && nHeight >= Params().GetConsensus().nBIP34Height)
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
