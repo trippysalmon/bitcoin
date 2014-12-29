@@ -12,12 +12,15 @@
 #include <map>
 #include <string>
 
+class CCoinsViewEfficient;
 class CTransaction;
 class CTxOut;
 class CValidationState;
 
 /** The maximum size for transactions we're willing to relay/mine */
 static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
+/** Maximum number of signature check operations in an Standard P2SH script */
+static const unsigned int MAX_P2SH_SIGOPS = 15;
 
 /** PolicyGlobal variables are supposed to become CStandardPolicy attributes */
 namespace PolicyGlobal {
@@ -39,6 +42,12 @@ public:
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
     virtual bool ValidateTx(const CTransaction&, CValidationState&) const = 0;
+    /** 
+     * Check for standard transaction types
+     * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
+     * @return True if all inputs (scriptSigs) use only standard transaction forms
+     */
+    virtual bool ValidateTxInputs(const CTransaction&, const CCoinsViewEfficient&) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */
