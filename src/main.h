@@ -250,9 +250,9 @@ struct CDiskTxPos : public CDiskBlockPos
 CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree);
 
 /**
- * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
- * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
- * instead of being performed inline.
+ * Check whether all inputs of this transaction are valid (scripts and sigs)
+ * This does not modify the UTXO set. This does not check double spends and amounts.
+ * Preconditions: tx.IsCoinBase() is false
  */
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
                  unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);

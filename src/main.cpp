@@ -736,7 +736,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Check for non-standard pay-to-script-hash in inputs
         if (Params().RequireStandard() && !policy.ApproveTxInputs(tx, view))
-            return error("AcceptToMemoryPool: nonstandard transaction input");
+            return error("%s: CPolicy::ApproveTxInputs failed %s", __func__, hash.ToString());
 
         // Check that the transaction doesn't have an excessive number of
         // sigops, making it impossible to mine. Since the coinbase transaction

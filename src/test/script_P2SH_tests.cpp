@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(switchover)
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EQUALVERIFY, ScriptErrorString(err));
 }
 
-BOOST_AUTO_TEST_CASE(AreInputsStandard)
+BOOST_AUTO_TEST_CASE(Policy_ApproveTxInputs)
 {
     const CPolicy& policy = Policy("standard");
     LOCK(cs_main);
