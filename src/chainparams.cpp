@@ -101,6 +101,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
+        strDefaultPolicy = "standard";
         /** 
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -168,7 +169,6 @@ public:
         fMiningRequiresPeers = true;
         fDefaultCheckMemPool = false;
         fAllowMinDifficultyBlocks = false;
-        fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fSkipProofOfWorkCheck = false;
         fTestnetToBeDeprecatedFieldRPC = false;
@@ -188,6 +188,7 @@ class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
+        strDefaultPolicy = "test";
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x09;
@@ -226,7 +227,6 @@ public:
         fMiningRequiresPeers = true;
         fDefaultCheckMemPool = false;
         fAllowMinDifficultyBlocks = true;
-        fRequireStandard = false;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = true;
     }
@@ -244,6 +244,7 @@ class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
+        strDefaultPolicy = "test";
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
         pchMessageStart[2] = 0xb5;
@@ -270,7 +271,6 @@ public:
         fMiningRequiresPeers = false;
         fDefaultCheckMemPool = true;
         fAllowMinDifficultyBlocks = true;
-        fRequireStandard = false;
         fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = false;
     }
@@ -288,6 +288,7 @@ class CUnitTestParams : public CMainParams, public CModifiableParams {
 public:
     CUnitTestParams() {
         strNetworkID = "unittest";
+        strDefaultPolicy = "standard";
         nDefaultPort = 18445;
         vFixedSeeds.clear(); //! Unit test mode doesn't have any fixed seeds.
         vSeeds.clear();  //! Unit test mode doesn't have any DNS seeds.

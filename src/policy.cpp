@@ -108,7 +108,7 @@ std::string GetPolicyUsageStr()
 
 void InitPolicyFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
-    SelectPolicy(GetArg("-policy", Params().RequireStandard() ? "standard" : "test", mapArgs));
+    SelectPolicy(GetArg("-policy", Params().DefaultPolicy(), mapArgs));
     pCurrentPolicy->InitFromArgs(mapArgs);
 }
 
