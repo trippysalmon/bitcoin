@@ -172,15 +172,23 @@ CPolicy& Policy(std::string policy)
     throw std::runtime_error("Unknown policy " + policy + "\n");
 }
 
+static CPolicy* pCurrentPolicy = 0;
+
+void SelectPolicy(std::string policyType)
+{
+    pCurrentPolicy = &Policy(policyType);
+}
+
 const CPolicy& Policy()
 {
-    if (Params().RequireStandard())
-        return standardPolicy;
-    return testPolicy;
+    assert(pCurrentPolicy);
+    return *pCurrentPolicy;
 }
 
 void InitPolicyFromCommandLine()
 {
+    std::string policyArg = GetArg("-policy", Params().DefaultPolicy());
+    SelectPolicy(policyArg);
     // Fee-per-kilobyte amount considered the same as "free"
     // If you are mining, be careful setting this:
     // if you set it to zero then
