@@ -8,6 +8,27 @@
 #include "policy.h"
 
 #include "amount.h"
+#include "ui_interface.h"
+#include "util.h"
+#include "utilmoneystr.h"
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
+
+void InitPolicyFromCommandLine()
+{
+    // Fee-per-kilobyte amount considered the same as "free"
+    // If you are mining, be careful setting this:
+    // if you set it to zero then
+    // a transaction spammer can cheaply fill blocks using
+    // 1-satoshi-fee transactions. It should be set above the real
+    // cost to you of processing a transaction.
+    if (mapArgs.count("-minrelaytxfee"))
+    {
+        CAmount n = 0;
+        if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
+            ::minRelayTxFee = CFeeRate(n);
+        else
+            throw std::runtime_error(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
+    }
+}

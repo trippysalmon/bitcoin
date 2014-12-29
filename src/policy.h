@@ -10,4 +10,6 @@ class CFeeRate;
 
 extern CFeeRate minRelayTxFee;
 
+void InitPolicyFromCommandLine();
+
 #endif // BITCOIN_POLICY_H
