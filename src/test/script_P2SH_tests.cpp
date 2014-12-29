@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(sign)
         txFrom.vout[i+4].scriptPubKey = standardScripts[i];
         txFrom.vout[i+4].nValue = COIN;
     }
-    BOOST_CHECK(IsStandardTx(txFrom, reason));
+    BOOST_CHECK(Policy().CheckTxPreInputs(txFrom, reason));
 
     CMutableTransaction txTo[8]; // Spending transactions
     for (int i = 0; i < 8; i++)
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(set)
         txFrom.vout[i].scriptPubKey = outer[i];
         txFrom.vout[i].nValue = CENT;
     }
-    BOOST_CHECK(IsStandardTx(txFrom, reason));
+    BOOST_CHECK(Policy().CheckTxPreInputs(txFrom, reason));
 
     CMutableTransaction txTo[4]; // Spending transactions
     for (int i = 0; i < 4; i++)
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(set)
     for (int i = 0; i < 4; i++)
     {
         BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
-        BOOST_CHECK_MESSAGE(IsStandardTx(txTo[i], reason), strprintf("txTo[%d].IsStandard", i));
+        BOOST_CHECK_MESSAGE(Policy().CheckTxPreInputs(txTo[i], reason), strprintf("txTo[%d].IsStandard", i));
     }
 }
 
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin[3].scriptSig << OP_11 << OP_11 << static_cast<vector<unsigned char> >(oneAndTwo);
     txTo.vin[4].scriptSig << static_cast<vector<unsigned char> >(fifteenSigops);
 
-    BOOST_CHECK(::AreInputsStandard(txTo, coins));
+    BOOST_CHECK(Policy().CheckTxWithInputs(txTo, coins));
     // 22 P2SH sigops for all inputs (1 for vin[0], 6 for vin[3], 15 for vin[4]
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txTo, coins), 22U);
 
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     {
         CScript t = txTo.vin[i].scriptSig;
         txTo.vin[i].scriptSig = (CScript() << 11) + t;
-        BOOST_CHECK(!::AreInputsStandard(txTo, coins));
+        BOOST_CHECK(!Policy().CheckTxWithInputs(txTo, coins));
         txTo.vin[i].scriptSig = t;
     }
 
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd1.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd1.vin[0].scriptSig << static_cast<vector<unsigned char> >(sixteenSigops);
 
-    BOOST_CHECK(!::AreInputsStandard(txToNonStd1, coins));
+    BOOST_CHECK(!Policy().CheckTxWithInputs(txToNonStd1, coins));
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txToNonStd1, coins), 16U);
 
     CMutableTransaction txToNonStd2;
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd2.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd2.vin[0].scriptSig << static_cast<vector<unsigned char> >(twentySigops);
 
-    BOOST_CHECK(!::AreInputsStandard(txToNonStd2, coins));
+    BOOST_CHECK(!Policy().CheckTxWithInputs(txToNonStd2, coins));
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txToNonStd2, coins), 20U);
 }
 

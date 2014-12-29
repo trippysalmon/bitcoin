@@ -23,7 +23,7 @@ bool fIsBareMultisigStd = true;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
 
-bool IsStandardTx(const CTransaction& tx, std::string& reason)
+bool CStandardPolicy::CheckTxPreInputs(const CTransaction& tx, std::string& reason) const
 {
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
         reason = "version";
@@ -87,7 +87,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     return true;
 }
 
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool CStandardPolicy::CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
@@ -144,6 +144,13 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     }
 
     return true;
+}
+
+static CStandardPolicy standardPolicy;
+
+const CPolicy& Policy()
+{
+    return standardPolicy;
 }
 
 void InitPolicyFromCommandLine()
