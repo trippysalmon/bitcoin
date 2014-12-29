@@ -784,7 +784,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // Init Policy
     try {
-        InitPolicyFromArgs(mapArgs, chainparams.RequireStandard() ? "standard" : "test");
+        InitPolicyFromArgs(mapArgs, chainparams.DefaultPolicy());
     } catch(std::exception &e) {
         return InitError(strprintf(_("Error while initializing policy: %s"), e.what()));
     }
