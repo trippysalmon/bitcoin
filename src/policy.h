@@ -23,19 +23,25 @@ static const unsigned int MAX_OP_RETURN_RELAY = 40; //! bytes
 
 extern CFeeRate minRelayTxFee;
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
-bool IsDust(const CTxOut& txout);
-/** Check for standard transaction types
- * @return True if all outputs (scriptPubKeys) use only standard transaction forms
- */
-bool IsStandardTx(const CTransaction& tx, std::string& reason);
-/** 
- * Check for standard transaction types
- * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
- * @return True if all inputs (scriptSigs) use only standard transaction forms
- */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+/** Abstract interface for Policy */
+class CPolicy
+{
+public:
+    virtual bool CheckScript(const CScript& scriptPubKey, txnouttype& whichType) const = 0;
+    virtual bool CheckOutput(const CTxOut& txout) const = 0;
+    /** Check for standard transaction types
+     * @return True if all outputs (scriptPubKeys) use only standard transaction forms
+     */
+    virtual bool CheckTxPreInputs(const CTransaction& tx, std::string& reason) const = 0;
+    /** 
+     * Check for standard transaction types
+     * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
+     * @return True if all inputs (scriptSigs) use only standard transaction forms
+     */
+    virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
+};
 
+const CPolicy& Policy();
 void InitPolicyFromCommandLine();
 
 #endif // BITCOIN_POLICY_H

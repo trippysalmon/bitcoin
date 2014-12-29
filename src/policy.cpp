@@ -21,6 +21,32 @@ static bool fIsBareMultisigStd = true;
 CFeeRate minRelayTxFee = CFeeRate(1000);
 static unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;
 
+/** Standard Policy implementing CPolicy */
+class CStandardPolicy : public CPolicy
+{
+public:
+    virtual bool CheckScript(const CScript& scriptPubKey, txnouttype& whichType) const;
+    virtual bool CheckOutput(const CTxOut& txout) const;
+    virtual bool CheckTxPreInputs(const CTransaction& tx, std::string& reason) const;
+    /**
+     * Check transaction inputs to mitigate two
+     * potential denial-of-service attacks:
+     * 
+     * 1. scriptSigs with extra data stuffed into them,
+     *    not consumed by scriptPubKey (or P2SH script)
+     * 2. P2SH scripts with a crazy number of expensive
+     *    CHECKSIG/CHECKMULTISIG operations
+     */
+    virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
+};
+
+static CStandardPolicy standardPolicy;
+
+const CPolicy& Policy()
+{
+    return standardPolicy;
+}
+
 void InitPolicyFromCommandLine()
 {
     // Fee-per-kilobyte amount considered the same as "free"
@@ -44,7 +70,8 @@ void InitPolicyFromCommandLine()
         nMaxDatacarrierBytes = 0;
 }
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
+// CStandardPolicy implementation
+bool CStandardPolicy::CheckScript(const CScript& scriptPubKey, txnouttype& whichType) const
 {
     std::vector<std::vector<unsigned char> > vSolutions;
     if (!Solver(scriptPubKey, whichType, vSolutions))
@@ -86,7 +113,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
     return whichType != TX_NONSTANDARD;
 }
 
-bool IsDust(const CTxOut& txout)
+bool CStandardPolicy::CheckOutput(const CTxOut& txout) const
 {
     // "Dust" is defined in terms of CTransaction::minRelayTxFee,
     // which has units satoshis-per-kilobyte.
@@ -100,7 +127,7 @@ bool IsDust(const CTxOut& txout)
     return (txout.nValue < 3 * minRelayTxFee.GetFee(nSize));
 }
 
-bool IsStandardTx(const CTransaction& tx, std::string& reason)
+bool CStandardPolicy::CheckTxPreInputs(const CTransaction& tx, std::string& reason) const
 {
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
         reason = "version";
@@ -139,7 +166,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     unsigned int nDataOut = 0;
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-        if (!IsStandard(txout.scriptPubKey, whichType)) {
+        if (!CheckScript(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
         }
@@ -149,7 +176,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (IsDust(txout)) {
+        } else if (CheckOutput(txout)) {
             reason = "dust";
             return false;
         }
@@ -164,16 +191,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     return true;
 }
 
-/**
- * Check transaction inputs to mitigate two
- * potential denial-of-service attacks:
- * 
- * 1. scriptSigs with extra data stuffed into them,
- *    not consumed by scriptPubKey (or P2SH script)
- * 2. P2SH scripts with a crazy number of expensive
- *    CHECKSIG/CHECKMULTISIG operations
- */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool CStandardPolicy::CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
@@ -196,7 +214,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // non-standard. Note that this EvalScript() call will
         // be quick, because if there are any operations
         // beside "push data" in the scriptSig
-        // IsStandard() will have already returned false
+        // CheckScript() will have already returned false
         // and this method isn't called.
         std::vector<std::vector<unsigned char> > stack;
         if (!EvalScript(stack, tx.vin[i].scriptSig, false, BaseSignatureChecker()))

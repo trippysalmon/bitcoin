@@ -240,7 +240,7 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
 
 /**
  * Check transaction inputs, and make sure any
- * pay-to-script-hash transactions are evaluating IsStandard scripts
+ * pay-to-script-hash transactions are evaluating standard scripts
  * 
  * Why bother? To avoid denial-of-service attacks; an attacker
  * can submit a standard HASH... OP_EQUAL transaction,
