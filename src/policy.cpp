@@ -8,6 +8,7 @@
 #include "policy.h"
 
 #include "amount.h"
+#include "chainparams.h"
 #include "coins.h"
 #include "primitives/transaction.h"
 #include "script/standard.h"
@@ -146,11 +147,27 @@ bool CStandardPolicy::CheckTxWithInputs(const CTransaction& tx, const CCoinsView
     return true;
 }
 
+class CTestPolicy : public CStandardPolicy 
+{
+public:
+    virtual bool CheckTxPreInputs(const CTransaction& tx, std::string& reason) const
+    {
+        return true;
+    }
+    virtual bool CheckTxWithInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
+    {
+        return true;
+    }
+};
+
 static CStandardPolicy standardPolicy;
+static CTestPolicy testPolicy;
 
 const CPolicy& Policy()
 {
-    return standardPolicy;
+    if (Params().RequireStandard())
+        return standardPolicy;
+    return testPolicy;
 }
 
 void InitPolicyFromCommandLine()
