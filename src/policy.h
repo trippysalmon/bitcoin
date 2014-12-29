@@ -10,14 +10,27 @@
 
 class CFeeRate;
 class CTransaction;
+class CCoinsViewCache;
 
 /** The maximum size for transactions we're willing to relay/mine */
 static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
+/** Maximum number of signature check operations in an IsStandard() P2SH script */
+static const unsigned int MAX_P2SH_SIGOPS = 15;
 
 extern bool fIsBareMultisigStd;
 extern CFeeRate minRelayTxFee;
 
 bool IsStandardTx(const CTransaction& tx, std::string& reason);
+/**
+ * Check transaction inputs to mitigate two
+ * potential denial-of-service attacks:
+ * 
+ * 1. scriptSigs with extra data stuffed into them,
+ *    not consumed by scriptPubKey (or P2SH script)
+ * 2. P2SH scripts with a crazy number of expensive
+ *    CHECKSIG/CHECKMULTISIG operations
+ */
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 void InitPolicyFromCommandLine();
 
 #endif // BITCOIN_POLICY_H
