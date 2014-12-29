@@ -101,6 +101,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
+        strDefaultPolicy = "standard";
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -169,7 +170,6 @@ public:
         fRequireRPCPassword = true;
         fMiningRequiresPeers = true;
         fDefaultCheckMemPool = false;
-        fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = false;
     }
@@ -188,6 +188,7 @@ class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
+        strDefaultPolicy = "test";
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 100;
@@ -224,7 +225,6 @@ public:
         fRequireRPCPassword = true;
         fMiningRequiresPeers = true;
         fDefaultCheckMemPool = false;
-        fRequireStandard = false;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = true;
     }
@@ -242,6 +242,7 @@ class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
+        strDefaultPolicy = "test";
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -265,7 +266,6 @@ public:
         fRequireRPCPassword = false;
         fMiningRequiresPeers = false;
         fDefaultCheckMemPool = true;
-        fRequireStandard = false;
         fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = false;
     }
@@ -283,6 +283,7 @@ class CUnitTestParams : public CMainParams, public CModifiableParams {
 public:
     CUnitTestParams() {
         strNetworkID = "unittest";
+        strDefaultPolicy = "standard";
         nDefaultPort = 18445;
         vFixedSeeds.clear(); //! Unit test mode doesn't have any fixed seeds.
         vSeeds.clear();  //! Unit test mode doesn't have any DNS seeds.
