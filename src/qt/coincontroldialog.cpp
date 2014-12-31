@@ -10,6 +10,7 @@
 #include "guiutil.h"
 #include "init.h"
 #include "optionsmodel.h"
+#include "policy.h"
 #include "scicon.h"
 #include "walletmodel.h"
 
