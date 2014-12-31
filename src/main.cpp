@@ -14,6 +14,7 @@
 #include "init.h"
 #include "merkleblock.h"
 #include "net.h"
+#include "policy.h"
 #include "pow.h"
 #include "txdb.h"
 #include "txmempool.h"
@@ -53,10 +54,6 @@ bool fReindex = false;
 bool fTxIndex = false;
 bool fIsBareMultisigStd = true;
 unsigned int nCoinCacheSize = 5000;
-
-
-/** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
-CFeeRate minRelayTxFee = CFeeRate(1000);
 
 CTxMemPool mempool(::minRelayTxFee);
 

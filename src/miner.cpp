@@ -11,6 +11,7 @@
 #include "hash.h"
 #include "main.h"
 #include "net.h"
+#include "policy.h"
 #include "pow.h"
 #include "timedata.h"
 #include "util.h"
