@@ -8,6 +8,8 @@
 
 #include "script/interpreter.h"
 
+class CValidationState;
+
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
@@ -26,5 +28,17 @@ static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20
  * details.
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
+
+/** 
+ * Consensus validations:
+ * Check_ means checking everything possible with the data provided.
+ * Verify_ means all data provided was enough for this level and its "consensus-verified".
+ */
+namespace Consensus {
+
+/** Context-independent validity checks */
+bool CheckTx(const CTransaction& tx, CValidationState &state);
+
+} // namespace Consensus
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
