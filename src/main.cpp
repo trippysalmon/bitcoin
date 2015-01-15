@@ -812,65 +812,60 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
 
 
 
+namespace Consensus {
 
+const ValidationResult CheckTx(const CTransaction& tx);
 
+} // namespace Consensus
 
-
-bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+const ValidationResult Consensus::CheckTx(const CTransaction& tx)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
-        return state.DoS(10, error("CheckTransaction() : vin empty"),
-                         REJECT_INVALID, "bad-txns-vin-empty");
+        return ValidationResult(10, false, strprintf("%s: vin empty", __func__), REJECT_INVALID, "bad-txns-vin-empty");
     if (tx.vout.empty())
-        return state.DoS(10, error("CheckTransaction() : vout empty"),
-                         REJECT_INVALID, "bad-txns-vout-empty");
+        return ValidationResult(10, false, strprintf("%s: vout empty", __func__), REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-        return state.DoS(100, error("CheckTransaction() : size limits failed"),
-                         REJECT_INVALID, "bad-txns-oversize");
+        return ValidationResult(100, false, strprintf("%s: size limits failed", __func__), REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
     CAmount nValueOut = 0;
-    BOOST_FOREACH(const CTxOut& txout, tx.vout)
-    {
-        if (txout.nValue < 0)
-            return state.DoS(100, error("CheckTransaction() : txout.nValue negative"),
-                             REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > MAX_MONEY)
-            return state.DoS(100, error("CheckTransaction() : txout.nValue too high"),
-                             REJECT_INVALID, "bad-txns-vout-toolarge");
-        nValueOut += txout.nValue;
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        if (tx.vout[i].nValue < 0)
+            return ValidationResult(100, false, strprintf("%s: txout.nValue negative", __func__), REJECT_INVALID, "bad-txns-vout-negative");
+        if (tx.vout[i].nValue > MAX_MONEY)
+            return ValidationResult(100, false, strprintf("%s: txout.nValue too high", __func__), REJECT_INVALID, "bad-txns-vout-toolarge");
+        nValueOut += tx.vout[i].nValue;
         if (!MoneyRange(nValueOut))
-            return state.DoS(100, error("CheckTransaction() : txout total out of range"),
-                             REJECT_INVALID, "bad-txns-txouttotal-toolarge");
+            return ValidationResult(100, false, strprintf("%s: txout total out of range", __func__), REJECT_INVALID, "bad-txns-txouttotal-toolarge");
     }
 
     // Check for duplicate inputs
-    set<COutPoint> vInOutPoints;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-    {
-        if (vInOutPoints.count(txin.prevout))
-            return state.DoS(100, error("CheckTransaction() : duplicate inputs"),
-                             REJECT_INVALID, "bad-txns-inputs-duplicate");
-        vInOutPoints.insert(txin.prevout);
+    std::set<COutPoint> vInOutPoints;
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        if (vInOutPoints.count(tx.vin[i].prevout))
+            return ValidationResult(100, false, strprintf("%s: duplicate inputs", __func__), REJECT_INVALID, "bad-txns-inputs-duplicate");
+        vInOutPoints.insert(tx.vin[i].prevout);
     }
 
     if (tx.IsCoinBase())
     {
         if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
-            return state.DoS(100, error("CheckTransaction() : coinbase script size"),
-                             REJECT_INVALID, "bad-cb-length");
+            return ValidationResult(100, false, strprintf("%s: coinbase script size", __func__), REJECT_INVALID, "bad-cb-length");
     }
     else
     {
-        BOOST_FOREACH(const CTxIn& txin, tx.vin)
-            if (txin.prevout.IsNull())
-                return state.DoS(10, error("CheckTransaction() : prevout is null"),
-                                 REJECT_INVALID, "bad-txns-prevout-null");
+        for (unsigned int i = 0; i < tx.vin.size(); i++)
+            if (tx.vin[i].prevout.IsNull())
+                return ValidationResult(10, false, strprintf("%s: prevout is null", __func__), REJECT_INVALID, "bad-txns-prevout-null");
     }
+    return ValidationResult(0, true);
+}
 
-    return true;
+bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+{
+    return state.ApplyResult(Consensus::CheckTx(tx));
 }
 
 CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree)
