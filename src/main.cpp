@@ -1411,6 +1411,24 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CDiskBlockPos& pos, const uin
     return true;
 }
 
+/** Abort with a message */
+bool AbortNode(const std::string& strMessage, const std::string& userMessage="")
+{
+    strMiscWarning = strMessage;
+    LogPrintf("*** %s\n", strMessage);
+    uiInterface.ThreadSafeMessageBox(
+        userMessage.empty() ? _("Error: A fatal internal error occured, see debug.log for details") : userMessage,
+        "", CClientUIInterface::MSG_ERROR);
+    StartShutdown();
+    return false;
+}
+
+bool AbortNode(CValidationState& state, const std::string& strMessage, const std::string& userMessage="")
+{
+    AbortNode(strMessage, userMessage);
+    return state.Error(strMessage);
+}
+
 } // anon namespace
 
 /**
@@ -1690,7 +1708,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             if (!FindUndoPos(state, pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
                 return error("ConnectBlock(): FindUndoPos failed");
             if (!UndoWriteToDisk(blockundo, pos, pindex->pprev->GetBlockHash()))
-                return state.Abort("Failed to write undo data");
+                return AbortNode(state, "Failed to write undo data");
 
             // update nUndoPos in block index
             pindex->nUndoPos = pos.nPos;
@@ -1703,7 +1721,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     if (fTxIndex)
         if (!pblocktree->WriteTxIndex(vPos))
-            return state.Abort("Failed to write transaction index");
+            return AbortNode(state, "Failed to write transaction index");
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
@@ -1779,12 +1797,12 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
                 setDirtyBlockIndex.erase(it++);
             }
             if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
-                return state.Abort("Files to write to block index database");
+                return AbortNode(state, "Files to write to block index database");
             }
         }
         // Flush the chainstate (which may refer to block index entries).
         if (!pcoinsTip->Flush())
-            return state.Abort("Failed to write to coin database");
+            return AbortNode(state, "Failed to write to coin database");
 
         // Finally remove any pruned files
         if (fFlushForPrune) {
@@ -1799,7 +1817,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
         nLastWrite = GetTimeMicros();
     }
     } catch (const std::runtime_error& e) {
-        return state.Abort(std::string("System error while flushing: ") + e.what());
+        return AbortNode(state, std::string("System error while flushing: ") + e.what());
     }
     return true;
 }
@@ -1863,7 +1881,7 @@ bool static DisconnectTip(CValidationState &state) {
     // Read block from disk.
     CBlock block;
     if (!ReadBlockFromDisk(block, pindexDelete))
-        return state.Abort("Failed to read block");
+        return AbortNode(state, "Failed to read block");
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
@@ -1914,7 +1932,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     CBlock block;
     if (!pblock) {
         if (!ReadBlockFromDisk(block, pindexNew))
-            return state.Abort("Failed to read block");
+            return AbortNode(state, "Failed to read block");
         pblock = &block;
     }
     // Apply the block atomically to the chain state.
@@ -2579,11 +2597,11 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
             return error("AcceptBlock(): FindBlockPos failed");
         if (dbp == NULL)
             if (!WriteBlockToDisk(block, blockPos))
-                return state.Abort("Failed to write block");
+                AbortNode(state, "Failed to write block");
         if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
             return error("AcceptBlock(): ReceivedBlockTransactions failed");
     } catch (const std::runtime_error& e) {
-        return state.Abort(std::string("System error: ") + e.what());
+        return AbortNode(state, std::string("System error: ") + e.what());
     }
 
     if (fCheckForPruning)
@@ -2647,24 +2665,6 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
 
     return true;
 }
-
-
-
-
-
-
-
-
-bool AbortNode(const std::string &strMessage, const std::string &userMessage) {
-    strMiscWarning = strMessage;
-    LogPrintf("*** %s\n", strMessage);
-    uiInterface.ThreadSafeMessageBox(
-        userMessage.empty() ? _("Error: A fatal internal error occured, see debug.log for details") : userMessage,
-        "", CClientUIInterface::MSG_ERROR);
-    StartShutdown();
-    return false;
-}
-
 
 /**
  * BLOCK PRUNING CODE
