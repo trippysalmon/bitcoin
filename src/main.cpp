@@ -2968,6 +2968,22 @@ bool static LoadBlockIndexDB()
     return true;
 }
 
+bool CValidationState::ApplyResult(const ValidationResult& result)
+{
+    chRejectCode = result.rejectCode;
+    strRejectReason = result.reason;
+    corruptionPossible = result.fCorruption;
+    if (mode == MODE_ERROR)
+        return result.fValid;
+    nDoS += result.nDoS;
+    mode = MODE_INVALID;
+    if (result.fValid)
+        return true;
+    if (result.error == "")
+        return false;
+    return error(result.error.c_str());
+}
+
 CVerifyDB::CVerifyDB()
 {
     uiInterface.ShowProgress(_("Verifying blocks..."), 0);

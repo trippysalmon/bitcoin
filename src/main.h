@@ -14,6 +14,7 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "coins.h"
+#include "consensus/validation.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "net.h"
@@ -93,16 +94,6 @@ static const unsigned int BLOCK_DOWNLOAD_WINDOW = 1024;
 static const unsigned int DATABASE_WRITE_INTERVAL = 3600;
 /** Maximum length of reject messages. */
 static const unsigned int MAX_REJECT_MESSAGE_LENGTH = 111;
-
-/** "reject" message codes */
-static const unsigned char REJECT_MALFORMED = 0x01;
-static const unsigned char REJECT_INVALID = 0x10;
-static const unsigned char REJECT_OBSOLETE = 0x11;
-static const unsigned char REJECT_DUPLICATE = 0x12;
-static const unsigned char REJECT_NONSTANDARD = 0x40;
-static const unsigned char REJECT_DUST = 0x41;
-static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
-static const unsigned char REJECT_CHECKPOINT = 0x43;
 
 struct BlockHasher
 {
@@ -438,21 +429,18 @@ private:
     bool corruptionPossible;
 public:
     CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
+    // !Modifies the CValidationState from the received ValidationResult and logs the later's error attribute unless it's empty 
+    bool ApplyResult(const ValidationResult& result);
+    // !Deprecated in favor of CValidationState::ApplyResult()
     bool DoS(int level, bool ret = false,
              unsigned char chRejectCodeIn=0, std::string strRejectReasonIn="",
              bool corruptionIn=false) {
-        chRejectCode = chRejectCodeIn;
-        strRejectReason = strRejectReasonIn;
-        corruptionPossible = corruptionIn;
-        if (mode == MODE_ERROR)
-            return ret;
-        nDoS += level;
-        mode = MODE_INVALID;
-        return ret;
+        return this->ApplyResult(ValidationResult(level, ret, "", chRejectCodeIn, strRejectReasonIn, corruptionIn));
     }
+    // !Deprecated in favor of CValidationState::ApplyResult()
     bool Invalid(bool ret = false,
                  unsigned char _chRejectCode=0, std::string _strRejectReason="") {
-        return DoS(0, ret, _chRejectCode, _strRejectReason);
+        return this->ApplyResult(ValidationResult(0, ret, "", _chRejectCode, _strRejectReason));
     }
     bool Error(std::string strRejectReasonIn="") {
         if (mode == MODE_VALID)
