@@ -8,6 +8,7 @@
 
 #include "script/interpreter.h"
 
+class CCoinsViewEfficient;
 class CValidationState;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
@@ -38,6 +39,13 @@ namespace Consensus {
 
 /** Context-independent validity checks */
 bool CheckTx(const CTransaction& tx, CValidationState &state);
+
+/** Context-dependent validity checks */
+/**
+ * Check whether all inputs of this transaction are valid (no double spends and amounts)
+ * This does not modify the UTXO set. This does not check scripts and sigs.
+ */
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, int nSpendHeight);
 
 } // namespace Consensus
 
