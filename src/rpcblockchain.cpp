@@ -6,6 +6,7 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
+#include "coinscache.h"
 #include "consensus/validation.h"
 #include "main.h"
 #include "primitives/transaction.h"

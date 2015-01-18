@@ -13,6 +13,7 @@
 #include "amount.h"
 #include "chainparams.h"
 #include "checkpoints.h"
+#include "coinscache.h"
 #include "compat/sanity.h"
 #include "consensus/validation.h"
 #include "key.h"
