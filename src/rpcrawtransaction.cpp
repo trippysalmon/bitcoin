@@ -5,6 +5,7 @@
 
 #include "base58.h"
 #include "consensus/validation.h"
+#include "coinscache.h"
 #include "core_io.h"
 #include "init.h"
 #include "keystore.h"

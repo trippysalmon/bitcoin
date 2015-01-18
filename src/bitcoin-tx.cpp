@@ -8,6 +8,7 @@
 #include "primitives/transaction.h"
 #include "core_io.h"
 #include "coins.h"
+#include "coinscache.h"
 #include "keystore.h"
 #include "script/script.h"
 #include "script/sign.h"
