@@ -11,7 +11,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "hash.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "net.h"
 #include "policy/policy.h"
 #include "primitives/block.h"

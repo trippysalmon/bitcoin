@@ -9,7 +9,7 @@
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "main.h" // CheckInputs
+#include "main.h" // GetSpendHeight, UpdateCoins
 #include "policy/fees.h"
 #include "streams.h"
 #include "util.h"

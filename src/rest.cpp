@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "rpcserver.h"

@@ -7,7 +7,7 @@
 #include "test_bitcoin.h"
 
 #include "chainparams.h"
-#include "main.h" // fCheckBlockIndex and more
+#include "main.h" // fCheckBlockIndex and more (pblocktree, pcoinsdbview, pcoinsTip...)
 #include "policy/policy.h"
 #include "random.h"
 #include "txdb.h"

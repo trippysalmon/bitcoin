@@ -6,7 +6,7 @@
 #include "checkpoints.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "miner.h"
 #include "primitives/transaction.h"
 #include "pubkey.h"

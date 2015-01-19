@@ -8,7 +8,7 @@
 #include "core_io.h"
 #include "init.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // mapBlockIndex
 #include "merkleblock.h"
 #include "net.h"
 #include "policy/policy.h"
