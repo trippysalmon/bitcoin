@@ -7,7 +7,7 @@
 
 #include "base58.h"
 #include "init.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "ui_interface.h"
 #include "util.h"
 #ifdef ENABLE_WALLET

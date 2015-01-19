@@ -8,7 +8,7 @@
 
 #include "chainparams.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // SendMessages()
 #include "net.h"
 #include "pow.h"
 #include "primitives/transaction.h"

@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "amount.h"
-#include "main.h"
+#include "main.h" // GetBlockValue()
 
 #include <boost/test/unit_test.hpp>
 

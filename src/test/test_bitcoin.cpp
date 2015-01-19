@@ -6,7 +6,7 @@
 
 #include "chainparams.h"
 #include "coinscache.h"
-#include "main.h"
+#include "main.h" // pblocktree, pcoinsdbview, pcoinsTip
 #include "random.h"
 #include "txdb.h"
 #include "ui_interface.h"

@@ -12,7 +12,7 @@
 #include "base58.h"
 #include "db.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "sync.h"
 #include "ui_interface.h"
 #include "wallet.h"

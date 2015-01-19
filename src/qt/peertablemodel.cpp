@@ -8,7 +8,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 
-#include "main.h"
+#include "main.h" // cs_main
 #include "sync.h"
 
 #include <QDebug>

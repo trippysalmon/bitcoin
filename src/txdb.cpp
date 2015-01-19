@@ -6,7 +6,7 @@
 #include "txdb.h"
 
 #include "hash.h"
-#include "main.h"
+#include "main.h" // mapBlockIndex
 #include "pow.h"
 #include "uint256.h"
 

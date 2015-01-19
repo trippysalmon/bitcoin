@@ -14,7 +14,7 @@
 #include "walletmodel.h"
 
 #include "coincontrol.h"
-#include "main.h"
+#include "main.h" // mempool
 #include "policy.h"
 #include "txmempool.h"
 #include "wallet.h"

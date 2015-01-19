@@ -6,7 +6,7 @@
 #include "rpcclient.h"
 
 #include "base58.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "wallet.h"
 
 #include <boost/algorithm/string.hpp>

@@ -12,7 +12,7 @@
 #include "coinscache.h"
 #include "consensus/validation.h"
 #include "hash.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "net.h"
 #include "policy.h"
 #include "pow.h"

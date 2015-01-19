@@ -10,7 +10,7 @@
 #include "coincontrol.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "net.h"
 #include "policy.h"
 #include "script/script.h"
