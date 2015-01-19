@@ -5,7 +5,7 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "timedata.h"
 #include "wallet.h"
 

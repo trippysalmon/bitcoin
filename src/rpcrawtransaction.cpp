@@ -9,7 +9,7 @@
 #include "core_io.h"
 #include "init.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // mapBlockIndex
 #include "net.h"
 #include "policy.h"
 #include "primitives/transaction.h"
