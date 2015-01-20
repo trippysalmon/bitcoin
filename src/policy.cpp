@@ -29,9 +29,33 @@ public:
     virtual bool ValidateScript(const CScript&, txnouttype&) const;
 };
 
+/** Custom Policy extending CStandardPolicy */
+class CCustomPolicy : public CStandardPolicy
+{
+    unsigned nCustomArg;
+public:
+    CCustomPolicy()
+    {
+        // Accept 80 bytes on op_return outputs
+        nMaxDatacarrierBytes = 80;
+    }
+    virtual bool ValidateScript(const CScript& scriptPubKey, txnouttype& whichType) const
+    {
+        // Accept all the scripts but the standard ones, so op_return
+        // outputs will only be accepted if they're bigger than 80 bytes
+        return !CStandardPolicy::ValidateScript(scriptPubKey, whichType);
+    }
+    virtual void InitFromArgs(const std::map<std::string, std::string>& mapArgs)
+    {
+        // Don't load datacarriersize, but load some other arg
+        nCustomArg = GetArg("-myarg", nCustomArg, mapArgs);
+    }
+};
+
 /** Global variables and their interfaces */
 
 static CStandardPolicy standardPolicy;
+static CCustomPolicy customPolicy;
 
 static CPolicy* pCurrentPolicy = 0;
 
@@ -39,6 +63,8 @@ CPolicy& Policy(std::string policy)
 {
     if (policy == "standard")
         return standardPolicy;
+    if (policy == "custom")
+        return customPolicy;
     throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));
 }
 
