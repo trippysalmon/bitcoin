@@ -29,6 +29,7 @@ public:
     virtual void InitFromArgs(const std::map<std::string, std::string>&) = 0;
     virtual bool ValidateScript(const CScript&, txnouttype&) const = 0;
     virtual bool ValidateOutput(const CTxOut& txout) const = 0;
+    virtual bool ValidateFee(const CAmount&, size_t) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */

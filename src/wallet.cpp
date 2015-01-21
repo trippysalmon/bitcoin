@@ -1618,7 +1618,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
-                if (nFeeNeeded < PolicyGlobal::minRelayTxFee.GetFee(nBytes))
+                if (Policy().ValidateFee(nFeeNeeded, nBytes))
                 {
                     strFailReason = _("Transaction too large for fee policy");
                     return false;

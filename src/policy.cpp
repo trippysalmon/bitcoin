@@ -35,6 +35,7 @@ public:
     // so dust is a txout less than 546 satoshis 
     // with default minRelayTxFee.
     virtual bool ValidateOutput(const CTxOut& txout) const;
+    virtual bool ValidateFee(const CAmount&, size_t) const;
 };
 
 /** Global variables and their interfaces */
@@ -144,5 +145,10 @@ bool CStandardPolicy::ValidateScript(const CScript& scriptPubKey, txnouttype& wh
 bool CStandardPolicy::ValidateOutput(const CTxOut& txout) const
 {
     size_t nSize = txout.GetSerializeSize(SER_DISK,0) + 148u;
-    return (txout.nValue < 3 * minRelayTxFee.GetFee(nSize));
+    return (txout.nValue < 3 *  PolicyGlobal::minRelayTxFee.GetFee(nSize));
+}
+
+bool CStandardPolicy::ValidateFee(const CAmount& nFees, size_t nSize) const
+{
+    return nFees < PolicyGlobal::minRelayTxFee.GetFee(nSize);
 }
