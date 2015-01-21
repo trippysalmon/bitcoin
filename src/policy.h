@@ -6,14 +6,19 @@
 #ifndef BITCOIN_POLICY_H
 #define BITCOIN_POLICY_H
 
+#include "amount.h"
 #include "script/standard.h"
 
 #include <map>
 #include <string>
 
-class CFeeRate;
+/** PolicyGlobal variables are supposed to become CStandardPolicy attributes */
+namespace PolicyGlobal {
 
-extern CFeeRate minRelayTxFee;
+/** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
+static CFeeRate minRelayTxFee = CFeeRate(1000);
+
+} // namespace PolicyGlobal
 
 /** Abstract interface for Policy */
 class CPolicy
