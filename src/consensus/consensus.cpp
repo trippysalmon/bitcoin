@@ -257,7 +257,7 @@ bool Consensus::IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlo
     if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
         return true;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        if (!tx.vin[i].IsFinal())
+        if (tx.vin[i].nSequence != std::numeric_limits<uint32_t>::max())
             return false;
     return true;
 }
