@@ -262,10 +262,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
             }
 
-            if (!view.HaveInputs(tx))
+            CValidationState state;
+            if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view))) {
+                error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
                 continue;
-
-            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
+            }
 
             nTxSigOps += GetP2SHSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
@@ -274,9 +275,12 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             // Note that flags: we don't want to set mempool/IsStandard()
             // policy here, but we still have to ensure that the block we
             // create only contains transactions that are valid in new blocks.
-            CValidationState state;
-            if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+            if (!CheckInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true)) {
+                error("%s: CheckInputsScripts failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
                 continue;
+            }
+
+            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
 
             UpdateCoins(tx, state, view, nHeight);
 
