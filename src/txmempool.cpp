@@ -590,22 +590,31 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             waitingOnDependants.push_back(&it->second);
         else {
             CValidationState state;
-            assert(CheckInputs(tx, state, mempoolDuplicate, false, 0, false, NULL));
+            // While checking, GetBestBlock() refers to the parent block.
+            // This is also true for mempool checks.
+            CBlockIndex* pindexPrev = mapBlockIndex.find(mempoolDuplicate.GetBestBlock())->second;
+            int nSpendHeight = pindexPrev->nHeight + 1;
+            assert(tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, nSpendHeight));
             UpdateCoins(tx, state, mempoolDuplicate, 1000000);
         }
     }
     unsigned int stepsSinceLastRemove = 0;
     while (!waitingOnDependants.empty()) {
         const CTxMemPoolEntry* entry = waitingOnDependants.front();
+        const CTransaction& tx = entry->GetTx();
         waitingOnDependants.pop_front();
         CValidationState state;
-        if (!mempoolDuplicate.HaveInputs(entry->GetTx())) {
+        if (!mempoolDuplicate.HaveInputs(tx)) {
             waitingOnDependants.push_back(entry);
             stepsSinceLastRemove++;
             assert(stepsSinceLastRemove < waitingOnDependants.size());
         } else {
-            assert(CheckInputs(entry->GetTx(), state, mempoolDuplicate, false, 0, false, NULL));
-            UpdateCoins(entry->GetTx(), state, mempoolDuplicate, 1000000);
+            // While checking, GetBestBlock() refers to the parent block.
+            // This is also true for mempool checks.
+            CBlockIndex* pindexPrev = mapBlockIndex.find(mempoolDuplicate.GetBestBlock())->second;
+            int nSpendHeight = pindexPrev->nHeight + 1;
+            assert(tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, nSpendHeight));
+            UpdateCoins(tx, state, mempoolDuplicate, 1000000);
             stepsSinceLastRemove = 0;
         }
     }
