@@ -59,7 +59,6 @@ BOOST_FIXTURE_TEST_SUITE(script_P2SH_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(sign)
 {
-    LOCK(cs_main);
     const CPolicy& policy = Policy("standard");
     // Pay-to-script-hash looks like this:
     // scriptSig:    <sig> <sig...> <serialized_script>
@@ -161,7 +160,6 @@ BOOST_AUTO_TEST_CASE(norecurse)
 
 BOOST_AUTO_TEST_CASE(set)
 {
-    LOCK(cs_main);
     const CPolicy& policy = Policy("standard");
     // Test the CScript::Set* methods
     CBasicKeyStore keystore;
@@ -270,7 +268,6 @@ BOOST_AUTO_TEST_CASE(switchover)
 
 BOOST_AUTO_TEST_CASE(Policy_ApproveTxInputs)
 {
-    LOCK(cs_main);
     const CPolicy& policy = Policy("standard");
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
