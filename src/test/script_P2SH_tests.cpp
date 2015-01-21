@@ -6,14 +6,16 @@
 #include "consensus/validation.h"
 #include "key.h"
 #include "keystore.h"
-#include "main.h" // cs_main
+#include "main.h" // for GetP2SHSigOpCount
+#include "policy.h"
 #include "policy.h"
 #include "primitives/transaction.h"
-#include "policy.h"
 #include "script/script.h"
 #include "script/script_error.h"
+#include "script/sigcache.h"
 #include "script/sign.h"
 #include "script/standard.h"
+#include "tinyformat.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet_ismine.h"

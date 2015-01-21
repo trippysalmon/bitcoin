@@ -5,6 +5,7 @@
 
 #include "sigcache.h"
 
+#include "primitives/transaction.h"
 #include "pubkey.h"
 #include "random.h"
 #include "uint256.h"
@@ -86,5 +87,13 @@ bool CachingSignatureChecker::VerifySignature(const std::vector<unsigned char>& 
 
     if (store)
         signatureCache.Set(sighash, vchSig, pubkey);
+    return true;
+}
+
+bool CScriptCheck::operator()() {
+    const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingSignatureChecker(*ptxTo, nIn, cacheStore), &error)) {
+        return ::error("CScriptCheck() : %s:%d VerifySignature failed: %s", ptxTo->GetHash().ToString(), nIn, ScriptErrorString(error));
+    }
     return true;
 }
