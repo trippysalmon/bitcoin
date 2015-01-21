@@ -1131,22 +1131,11 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
     return pindexPrev->nHeight + 1;
 }
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, unsigned int flags, bool cacheStore, std::vector<CScriptCheck>* pvChecks)
 {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
-            return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
-
         if (pvChecks)
             pvChecks->reserve(tx.vin.size());
 
-        // The first loop above does all the inexpensive checks.
-        // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
-        // Helps prevent CPU exhaustion attacks.
-
-        // Skip ECDSA signature verification when connecting blocks
-        // before the last block chain checkpoint. This is safe because block merkle hashes are
-        // still computed and checked, and any change will be caught at the next checkpoint.
-        if (fScriptChecks) {
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
                 const CCoins* coins = inputs.AccessCoins(prevout.hash);
@@ -1180,7 +1169,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
-        }
 
     return true;
 }
@@ -1446,15 +1434,24 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const CChainPara
 
         if (!tx.IsCoinBase())
         {
+            // This check will be repeated in Consensus::CheckTxInputs, but scoring DoS 0 if fails instead of 100
             if (!view.HaveInputs(tx))
                 return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
                                  REJECT_INVALID, "bad-txns-inputs-missingorspent");
+            // The following call does all the inexpensive checks.
+            // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
+            // Helps prevent CPU exhaustion attacks.
+            if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view)))
+                return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
+            // Skip ECDSA signature verification when connecting blocks
+            // before the last block chain checkpoint. This is safe because block merkle hashes are
+            // still computed and checked, and any change will be caught at the next checkpoint.
             std::vector<CScriptCheck> vChecks;
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
-                return false;
+            if (fScriptChecks && !CheckInputsScripts(tx, state, view, flags, false, nScriptCheckThreads ? &vChecks : NULL))
+                return error("%s: CheckInputsScripts failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
             control.Add(vChecks);
         }
 
