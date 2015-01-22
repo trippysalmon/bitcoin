@@ -351,6 +351,14 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
            std::string("\n\n");
 }
 
+std::string HelpMessagesOpt(std::vector<std::pair<std::string, std::string> > optionsHelp)
+{
+    std::string strUsage;
+    for (unsigned int i=0; i < optionsHelp.size(); i++)
+        strUsage += HelpMessageOpt(optionsHelp[i].first, optionsHelp[i].second);
+    return strUsage;
+}
+
 static std::string FormatException(const std::exception* pex, const char* pszThread)
 {
 #ifdef WIN32

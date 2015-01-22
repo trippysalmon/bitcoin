@@ -179,6 +179,12 @@ std::string HelpMessageGroup(const std::string& message);
  */
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
+/**
+ * @param optionsHelp a vector of string pairs to iteratively call HelpMessageOpt
+ * @return the formatted string with all pairs
+ */
+std::string HelpMessagesOpt(std::vector<std::pair<std::string, std::string> > optionsHelp);
+
 void SetThreadPriority(int nPriority);
 void RenameThread(const char* name);
 
