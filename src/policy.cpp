@@ -8,7 +8,60 @@
 #include "policy.h"
 
 #include "amount.h"
+#include "tinyformat.h"
+#include "ui_interface.h"
+#include "utilstrencodings.h"
 
 bool fIsBareMultisigStd = true;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
+
+/** Declaration of Standard Policy implementing CPolicy */
+class CStandardPolicy : public CPolicy
+{
+public:
+    virtual void InitFromArgs(const std::map<std::string, std::string>&);
+};
+
+/** Global variables and their interfaces */
+
+static CStandardPolicy standardPolicy;
+
+static CPolicy* pCurrentPolicy = 0;
+
+CPolicy& Policy(std::string policy)
+{
+    if (policy == "standard")
+        return standardPolicy;
+    throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));
+}
+
+void SelectPolicy(std::string policy)
+{
+    pCurrentPolicy = &Policy(policy);
+}
+
+const CPolicy& Policy()
+{
+    assert(pCurrentPolicy);
+    return *pCurrentPolicy;
+}
+
+std::string GetPolicyUsageStr()
+{
+    std::string strUsage = "";
+    strUsage += "  -policy                " + strprintf(_("Select a specific type of policy (default: %s)"), "standard") + "\n";
+    return strUsage;
+}
+
+void InitPolicyFromArgs(const std::map<std::string, std::string>& mapArgs)
+{
+    SelectPolicy(GetArg("-policy", "standard", mapArgs));
+    pCurrentPolicy->InitFromArgs(mapArgs);
+}
+
+/** CStandardPolicy implementation */
+
+void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
+{
+}

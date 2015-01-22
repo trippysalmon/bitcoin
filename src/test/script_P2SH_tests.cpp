@@ -52,6 +52,7 @@ BOOST_AUTO_TEST_SUITE(script_P2SH_tests)
 BOOST_AUTO_TEST_CASE(sign)
 {
     LOCK(cs_main);
+    SelectPolicy("standard");
     // Pay-to-script-hash looks like this:
     // scriptSig:    <sig> <sig...> <serialized_script>
     // scriptPubKey: HASH160 <hash> EQUAL
@@ -153,6 +154,7 @@ BOOST_AUTO_TEST_CASE(norecurse)
 BOOST_AUTO_TEST_CASE(set)
 {
     LOCK(cs_main);
+    SelectPolicy("standard");
     // Test the CScript::Set* methods
     CBasicKeyStore keystore;
     CKey key[4];
