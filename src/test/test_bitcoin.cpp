@@ -5,6 +5,7 @@
 #define BOOST_TEST_MODULE Bitcoin Test Suite
 
 #include "main.h"
+#include "policy.h"
 #include "random.h"
 #include "txdb.h"
 #include "ui_interface.h"
@@ -32,6 +33,7 @@ struct TestingSetup {
     TestingSetup() {
         fPrintToDebugLog = false; // don't want to write to debug.log file
         SelectParams(CBaseChainParams::UNITTEST);
+        SelectPolicy("standard");
         noui_connect();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
