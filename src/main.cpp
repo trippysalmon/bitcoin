@@ -11,9 +11,11 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "consensus/consensus.h"
 #include "init.h"
 #include "merkleblock.h"
 #include "net.h"
+#include "policy/policy.h"
 #include "pow.h"
 #include "txdb.h"
 #include "txmempool.h"
@@ -54,7 +56,6 @@ bool fReindex = false;
 bool fTxIndex = false;
 bool fHavePruned = false;
 bool fPruneMode = false;
-bool fIsBareMultisigStd = true;
 bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = true;
 unsigned int nCoinCacheSize = 5000;
