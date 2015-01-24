@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_STANDARD_H
 #define BITCOIN_SCRIPT_STANDARD_H
 
+#include "consensus/consensus.h"
 #include "script/interpreter.h"
 #include "uint256.h"
 
@@ -27,17 +28,6 @@ public:
 
 static const unsigned int MAX_OP_RETURN_RELAY = 40;      //! bytes
 extern unsigned nMaxDatacarrierBytes;
-
-/**
- * Mandatory script verification flags that all new blocks must comply with for
- * them to be valid. (but old blocks may not comply with) Currently just P2SH,
- * but in the future other flags may be added, such as a soft-fork to enforce
- * strict DER encoding.
- * 
- * Failing one of these tests may trigger a DoS ban - see CheckInputs() for
- * details.
- */
-static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 
 /**
  * Standard script verification flags that standard transactions will comply
