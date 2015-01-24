@@ -15,6 +15,9 @@
 
 class CCoinsViewCache;
 class CFeeRate;
+class CTransaction;
+class CTxOut;
+class CValidationState;
 
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
@@ -53,7 +56,7 @@ public:
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
-    virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const = 0;
+    virtual bool ApproveTx(const CTransaction&, CValidationState&) const = 0;
     /**
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
