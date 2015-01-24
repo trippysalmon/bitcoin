@@ -623,6 +623,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (Params().RequireStandard() && !policy.ApproveTx(tx, state))
         return error("%s: CPolicy::ApproveTx: %s", __func__, state.GetRejectReason().c_str());
 
+    int nHeight = chainActive.Height();
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
@@ -638,7 +639,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     // Timestamps on the other hand don't get any special treatment, because we
     // can't know what timestamp the next block will have, and there aren't
     // timestamp applications where it matters.
-    if (!IsFinalTx(tx, chainActive.Height() + 1))
+    if (!IsFinalTx(tx, nHeight + 1))
         return state.DoS(0,
                          error("AcceptToMemoryPool: non-final"),
                          REJECT_NONSTANDARD, "non-final");
@@ -723,9 +724,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         CAmount nValueOut = Consensus::GetValueOut(tx);
         CAmount nFees = nValueIn-nValueOut;
-        double dPriority = view.GetPriority(tx, chainActive.Height());
-
-        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height());
+        double dPriority = view.GetPriority(tx, nHeight);
+        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, nHeight);
         unsigned int nSize = entry.GetTxSize();
 
         bool fValidateFee = nFees >= ::minRelayTxFee.GetFee(nSize);
@@ -768,7 +768,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
 
         // Require that free transactions have sufficient priority to be mined in the next block.
-        if (GetBoolArg("-relaypriority", true) && !fValidateFee && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1)))
+        if (GetBoolArg("-relaypriority", true) && !fValidateFee && !AllowFree(view.GetPriority(tx, nHeight + 1)))
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
 
         if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
