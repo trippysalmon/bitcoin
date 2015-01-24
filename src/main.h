@@ -242,9 +242,6 @@ struct CDiskTxPos : public CDiskBlockPos
     }
 };
 
-
-CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree);
-
 /**
  * Check whether all inputs of this transaction are valid (scripts and sigs)
  * This does not modify the UTXO set. This does not check double spends and amounts.
