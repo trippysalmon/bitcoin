@@ -29,7 +29,7 @@ static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 
-/** 
+/**
  * Consensus validations:
  * Check_ means checking everything possible with the data provided.
  * Verify_ means all data provided was enough for this level and its "consensus-verified".
