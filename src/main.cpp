@@ -1313,8 +1313,6 @@ int GetSpendHeight(const CCoinsViewEfficient& inputs)
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
 {
-    if (!tx.IsCoinBase())
-    {
         if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
             return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
 
@@ -1363,7 +1361,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 }
             }
         }
-    }
 
     return true;
 }
