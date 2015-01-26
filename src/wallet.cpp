@@ -1255,7 +1255,7 @@ CAmount CWalletTx::GetChange() const
 bool CWalletTx::IsTrusted() const
 {
     // Quick answer in most cases
-    if (!IsFinalTx(*this))
+    if (!IsFinalTx(*this, GetHeight()))
         return false;
     int nDepth = GetDepthInMainChain();
     if (nDepth >= 1)
@@ -1352,7 +1352,7 @@ CAmount CWallet::GetUnconfirmedBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0))
+            if (!IsFinalTx(*pcoin, GetHeight()) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0))
                 nTotal += pcoin->GetAvailableCredit();
         }
     }
@@ -1397,7 +1397,7 @@ CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0))
+            if (!IsFinalTx(*pcoin, GetHeight()) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0))
                 nTotal += pcoin->GetAvailableWatchOnlyCredit();
         }
     }
@@ -1432,7 +1432,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
             const uint256& wtxid = it->first;
             const CWalletTx* pcoin = &(*it).second;
 
-            if (!IsFinalTx(*pcoin))
+            if (!IsFinalTx(*pcoin, GetHeight()))
                 continue;
 
             if (fOnlyConfirmed && !pcoin->IsTrusted())
@@ -2173,7 +2173,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
         {
             CWalletTx *pcoin = &walletEntry.second;
 
-            if (!IsFinalTx(*pcoin) || !pcoin->IsTrusted())
+            if (!IsFinalTx(*pcoin, GetHeight()) || !pcoin->IsTrusted())
                 continue;
 
             if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)

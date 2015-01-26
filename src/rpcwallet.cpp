@@ -542,7 +542,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !IsFinalTx(wtx))
+        if (wtx.IsCoinBase() || !IsFinalTx(wtx, GetHeight()))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -593,7 +593,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !IsFinalTx(wtx))
+        if (wtx.IsCoinBase() || !IsFinalTx(wtx, GetHeight()))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -617,7 +617,7 @@ CAmount GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMi
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (!IsFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
+        if (!IsFinalTx(wtx, GetHeight()) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
             continue;
 
         CAmount nReceived, nSent, nFee;
@@ -1021,7 +1021,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     {
         const CWalletTx& wtx = (*it).second;
 
-        if (wtx.IsCoinBase() || !IsFinalTx(wtx))
+        if (wtx.IsCoinBase() || !IsFinalTx(wtx, GetHeight()))
             continue;
 
         int nDepth = wtx.GetDepthInMainChain();
