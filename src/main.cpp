@@ -245,12 +245,6 @@ CNodeState *State(NodeId pnode) {
     return &it->second;
 }
 
-int GetHeight()
-{
-    LOCK(cs_main);
-    return chainActive.Height();
-}
-
 void UpdatePreferredDownload(CNode* node, CNodeState* state)
 {
     nPreferredDownload -= state->fPreferredDownload;
@@ -588,14 +582,19 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     return nEvicted;
 }
 
+int GetHeight()
+{
+    LOCK(cs_main);
+    return chainActive.Height();
+}
+
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
-    AssertLockHeld(cs_main);
     // Time based nLockTime implemented in 0.1.6
     if (tx.nLockTime == 0)
         return true;
     if (nBlockHeight == 0)
-        nBlockHeight = chainActive.Height();
+        nBlockHeight = GetHeight();
     if (nBlockTime == 0)
         nBlockTime = GetAdjustedTime();
     return CheckFinalTx(tx, nBlockHeight, nBlockTime);
