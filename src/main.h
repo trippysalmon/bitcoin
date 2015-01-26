@@ -434,4 +434,10 @@ protected:
     friend void ::UnregisterAllValidationInterfaces();
 };
 
+/** 
+ * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
+ * This is also true for mempool checks.
+ */
+int GetSpendHeight(const CCoinsViewEfficient& inputs);
+
 #endif // BITCOIN_MAIN_H
