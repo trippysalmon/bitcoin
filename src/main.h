@@ -246,7 +246,7 @@ struct CDiskTxPos : public CDiskBlockPos
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
 
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
+bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime = 0);
 
 /**
  * Closure representing one script verification

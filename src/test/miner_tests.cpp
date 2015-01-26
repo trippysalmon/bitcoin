@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx2.nLockTime = GetMedianTimePast(chainActive.Tip(), GetPrevIndex)+1;
     hash = tx2.GetHash();
     mempool.addUnchecked(hash, CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
-    BOOST_CHECK(!IsFinalTx(tx2));
+    BOOST_CHECK(!IsFinalTx(tx2, GetHeight()));
 
     BOOST_CHECK(pblocktemplate = CreateNewBlock(policy, chainparams, scriptPubKey));
 
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(GetMedianTimePast(chainActive.Tip(), GetPrevIndex)+2);
 
     BOOST_CHECK(IsFinalTx(tx, chainActive.Tip()->nHeight + 1));
-    BOOST_CHECK(IsFinalTx(tx2));
+    BOOST_CHECK(IsFinalTx(tx2, GetHeight()));
 
     BOOST_CHECK(pblocktemplate = CreateNewBlock(policy, chainparams, scriptPubKey));
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
