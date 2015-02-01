@@ -25,7 +25,7 @@ static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20
  * but in the future other flags may be added, such as a soft-fork to enforce
  * strict DER encoding.
  * 
- * Failing one of these tests may trigger a DoS ban - see CheckInputsScripts() for
+ * Failing one of these tests may trigger a DoS ban - see Consensus::CheckTxInputsScripts() for
  * details.
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
@@ -46,6 +46,13 @@ bool CheckTx(const CTransaction& tx, CValidationState &state);
  * This does not modify the UTXO set. This does not check scripts and sigs.
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, int nSpendHeight);
+/**
+ * Preconditions: tx.IsCoinBase() is false.
+ * Check whether all inputs of this transaction are valid (scripts and sigs)
+ * This does not modify the UTXO set. This does not check double spends and amounts.
+ * This is the more expensive consensus check for a transaction, do it last.
+ */
+bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, bool cacheStore, unsigned int flags=MANDATORY_SCRIPT_VERIFY_FLAGS);
 
 } // namespace Consensus
 
