@@ -275,7 +275,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             // Note that flags: we don't want to set mempool/IsStandard()
             // policy here, but we still have to ensure that the block we
             // create only contains transactions that are valid in new blocks.
-            if (!CheckInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true)) {
+            if (!Consensus::CheckTxInputsScripts(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS)) {
                 error("%s: CheckInputsScripts failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
                 continue;
             }

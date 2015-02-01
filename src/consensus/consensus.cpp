@@ -8,6 +8,7 @@
 #include "coins.h"
 #include "consensus/validation.h"
 #include "primitives/transaction.h"
+#include "script/sigcache.h"
 #include "tinyformat.h"
 #include "utilmoneystr.h"
 #include "version.h"
@@ -95,5 +96,22 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         if (!MoneyRange(nFees))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
 
+    return true;
+}
+
+bool Consensus::CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, bool cacheStore, unsigned int flags)
+{
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const COutPoint& prevout = tx.vin[i].prevout;
+        const CCoins* coins = inputs.AccessCoins(prevout.hash);
+        assert(coins);
+
+        const CScript& scriptPubKey = coins->vout[prevout.n].scriptPubKey;
+        CachingTransactionSignatureChecker checker(&tx, i, cacheStore);
+        ScriptError scriptError(SCRIPT_ERR_UNKNOWN_ERROR);
+        if (!VerifyScript(scriptPubKey, tx.vin[i].scriptSig, flags, checker, &scriptError))
+            return state.DoS(100, false, REJECT_INVALID, 
+                             strprintf("mandatory-script-verify-flag-failed (in input %d: %s)", i, ScriptErrorString(scriptError)));
+    }
     return true;
 }

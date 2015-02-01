@@ -1017,7 +1017,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+        if (!Consensus::CheckTxInputsScripts(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
             return error("%s: BUG! PLEASE REPORT THIS! CheckInputsScripts failed against MANDATORY but not STANDARD flags %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Store transaction in memory
