@@ -1131,11 +1131,8 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
     return pindexPrev->nHeight + 1;
 }
 
-bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, unsigned int flags, bool cacheStore, std::vector<CScriptCheck>* pvChecks)
+bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, unsigned int flags, bool cacheStore)
 {
-        if (pvChecks)
-            pvChecks->reserve(tx.vin.size());
-
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
                 const CCoins* coins = inputs.AccessCoins(prevout.hash);
@@ -1143,10 +1140,7 @@ bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const C
 
                 // Verify signature
                 CScriptCheck check(*coins, tx, i, flags, cacheStore);
-                if (pvChecks) {
-                    pvChecks->push_back(CScriptCheck());
-                    check.swap(pvChecks->back());
-                } else if (!check()) {
+                if (!check()) {
                     if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                         // Check whether the failure was caused by a
                         // non-mandatory script verification check, such as
@@ -1449,10 +1443,26 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const CChainPara
             // Skip ECDSA signature verification when connecting blocks
             // before the last block chain checkpoint. This is safe because block merkle hashes are
             // still computed and checked, and any change will be caught at the next checkpoint.
-            std::vector<CScriptCheck> vChecks;
-            if (fScriptChecks && !CheckInputsScripts(tx, state, view, flags, false, nScriptCheckThreads ? &vChecks : NULL))
-                return error("%s: CheckInputsScripts failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
-            control.Add(vChecks);
+            if (fScriptChecks) {
+                // If nScriptCheckThreads, script checks are pushed onto it instead of being performed inline. 
+                if (nScriptCheckThreads) {
+                    std::vector<CScriptCheck> vChecks;
+                    vChecks.reserve(tx.vin.size());
+
+                    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+                        const COutPoint &prevout = tx.vin[i].prevout;
+                        const CCoins* coins = view.AccessCoins(prevout.hash);
+                        assert(coins);
+
+                        // Verify signature
+                        CScriptCheck check(*coins, tx, i, flags, false);
+                        vChecks.push_back(CScriptCheck());
+                        check.swap(vChecks.back());
+                    }
+                    control.Add(vChecks);
+                } else if (!CheckInputsScripts(tx, state, view, flags, false))
+                    return error("%s: CheckInputsScripts failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
+            }
         }
 
         CTxUndo undoDummy;
