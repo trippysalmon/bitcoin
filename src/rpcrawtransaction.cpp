@@ -4,6 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
+#include "coinscache.h"
+#include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
 #include "keystore.h"
@@ -15,6 +17,7 @@
 #include "script/script.h"
 #include "script/sign.h"
 #include "script/standard.h"
+#include "txmempool.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"

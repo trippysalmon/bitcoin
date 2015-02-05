@@ -5,7 +5,11 @@
 
 #include "txmempool.h"
 
+#include "chain.h"
 #include "clientversion.h"
+#include "coinscache.h"
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
 #include "main.h"
 #include "streams.h"
 #include "util.h"

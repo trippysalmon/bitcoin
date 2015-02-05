@@ -4,6 +4,8 @@
 
 #define BOOST_TEST_MODULE Bitcoin Test Suite
 
+#include "chainparams.h"
+#include "coinscache.h"
 #include "main.h"
 #include "policy.h"
 #include "random.h"

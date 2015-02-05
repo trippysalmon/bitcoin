@@ -8,9 +8,6 @@
 
 #include "amount.h"
 #include "crypter.h"
-#include "key.h"
-#include "keystore.h"
-#include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "tinyformat.h"
 #include "ui_interface.h"

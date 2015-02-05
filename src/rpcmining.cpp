@@ -5,14 +5,18 @@
 
 #include "amount.h"
 #include "chainparams.h"
+#include "consensus/consensus.h"
 #include "consensus/pow.h"
+#include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
 #include "main.h"
 #include "miner.h"
 #include "net.h"
 #include "rpcserver.h"
+#include "txmempool.h"
 #include "util.h"
+#include "validationinterface.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"

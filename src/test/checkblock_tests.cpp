@@ -2,15 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//
-// Unit tests for block.CheckBlock()
-//
-
-
-
 #include "chainparams.h"
 #include "clientversion.h"
-#include "main.h"
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
+#include "primitives/block.h"
+#include "streams.h"
 #include "timedata.h"
 #include "utiltime.h"
 
