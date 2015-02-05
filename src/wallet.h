@@ -7,13 +7,15 @@
 #define BITCOIN_WALLET_H
 
 #include "amount.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
 #include "crypter.h"
 #include "key.h"
 #include "keystore.h"
-#include "main.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
+#include "tinyformat.h"
 #include "ui_interface.h"
+#include "utilstrencodings.h"
+#include "validationinterface.h"
 #include "wallet_ismine.h"
 #include "walletdb.h"
 
@@ -48,10 +50,12 @@ static const CAmount nHighTransactionMaxFeeWarning = 100 * nHighTransactionFeeWa
 static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
 
 class CAccountingEntry;
+class CBlockIndex;
 class CCoinControl;
 class COutput;
 class CReserveKey;
 class CScript;
+class CTxMemPool;
 class CWalletTx;
 
 /** (client) version numbers for particular wallet features */

@@ -7,6 +7,8 @@
 
 #include "chainparams.h"
 #include "consensus/pow.h"
+#include "hash.h"
+#include "main.h"
 #include "uint256.h"
 
 #include <stdint.h>
