@@ -23,6 +23,7 @@
 #include "rpcserver.h"
 #include "script/standard.h"
 #include "txdb.h"
+#include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "utilmoneystr.h"

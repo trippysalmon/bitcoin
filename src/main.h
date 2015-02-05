@@ -12,12 +12,9 @@
 
 #include "amount.h"
 #include "chain.h"
-#include "coins.h"
 #include "net.h"
 #include "script/script_error.h"
-#include "script/standard.h"
 #include "sync.h"
-#include "txmempool.h"
 
 #include <algorithm>
 #include <exception>
@@ -31,13 +28,13 @@
 #include <boost/unordered_map.hpp>
 
 class CBlock;
-class CBlockIndex;
 class CBlockTreeDB;
-class CBloomFilter;
 class CChainParams;
-class CInv;
+class CCoins;
+class CCoinsView;
+class CCoinsViewCache;
 class CScriptCheck;
-class CValidationInterface;
+class CTxMemPool;
 class CValidationState;
 
 namespace Consensus { class Params; };
@@ -278,10 +275,7 @@ private:
 
 public:
     CScriptCheck(): ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
-    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
-        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
-        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
-
+    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn);
     bool operator()();
 
     void swap(CScriptCheck &check) {

@@ -8,6 +8,7 @@
 #include "consensus/validation.h"
 // #include "main.h" // CheckBlock
 #include "primitives/block.h"
+#include "streams.h"
 #include "test/test_bitcoin.h"
 #include "timedata.h"
 #include "utiltime.h"

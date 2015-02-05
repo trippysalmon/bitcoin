@@ -23,6 +23,7 @@
 #include "walletmodel.h"
 #endif
 
+#include "chainparams.h"
 #include "init.h"
 #include "rpcserver.h"
 #include "ui_interface.h"

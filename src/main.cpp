@@ -12,11 +12,11 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "coins.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "init.h"
 #include "merkleblock.h"
-#include "net.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/block.h"
@@ -1134,6 +1134,10 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
     CTxUndo txundo;
     UpdateCoins(tx, state, inputs, txundo, nHeight);
 }
+
+CScriptCheck::CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
+    scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+    ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
 
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;

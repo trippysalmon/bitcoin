@@ -5,6 +5,7 @@
 
 #include "txmempool.h"
 
+#include "chain.h"
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
