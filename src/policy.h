@@ -79,6 +79,7 @@ public:
     virtual bool ValidateScript(const CScript&, txnouttype&) const = 0;
     virtual bool ValidateOutput(const CTxOut& txout) const = 0;
     virtual bool ValidateFee(const CAmount&, size_t) const = 0;
+    virtual bool ValidateFeeRate(const CFeeRate&) const = 0;
     /** Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
