@@ -97,6 +97,7 @@ public:
     virtual bool ApproveOutput(const CTxOut& txout) const;
     virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewCache&, CTxMemPool&, CValidationState&) const;
     virtual bool ApproveFee(const CAmount&, size_t) const;
+    virtual bool ApproveFeeRate(const CFeeRate&) const;
 };
 
 /** Default Policy for testnet and regtest */
@@ -437,4 +438,9 @@ bool CStandardPolicy::ValidateTxFee(const CAmount& nFees, size_t nSize, const CT
 bool CStandardPolicy::ApproveFee(const CAmount& nFees, size_t nSize) const
 {
     return nFees >= minRelayTxFee.GetFee(nSize);
+}
+
+bool CStandardPolicy::ApproveFeeRate(const CFeeRate& rate) const
+{
+    return rate >= minRelayTxFee;
 }
