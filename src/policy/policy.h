@@ -59,6 +59,7 @@ public:
     virtual CAmount GetDustThreshold(const CTxOut& txout) const = 0;
     virtual bool ApproveOutput(const CTxOut& txout) const = 0;
     virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewCache&, CTxMemPool&, CValidationState&) const = 0;
+    virtual bool ApproveFee(const CAmount&, size_t) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */
