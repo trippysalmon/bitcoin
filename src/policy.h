@@ -15,6 +15,7 @@
 class CCoinsViewEfficient;
 class CFeeRate;
 class CTransaction;
+class CTxMemPool;
 class CTxOut;
 class CValidationState;
 
@@ -75,6 +76,7 @@ public:
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
     virtual bool ValidateTxInputs(const CTransaction&, const CCoinsViewEfficient&) const = 0;
+    virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewEfficient&, CTxMemPool&, CValidationState&) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */
