@@ -13,6 +13,7 @@
 #include "policy/fees.h"
 #include "primitives/transaction.h"
 #include "tinyformat.h"
+#include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "utilmoneystr.h"
@@ -43,6 +44,7 @@ protected:
      * blocks and we must accept those blocks.
      */
     unsigned int policyScriptFlags;
+    bool fAllowFree;
 public:
     CStandardPolicy() :
         fIsBareMultisigStd(true),
@@ -53,7 +55,8 @@ public:
                                           SCRIPT_VERIFY_MINIMALDATA |
                                           SCRIPT_VERIFY_NULLDUMMY |
                                           SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
-                                          SCRIPT_VERIFY_CLEANSTACK)
+                                          SCRIPT_VERIFY_CLEANSTACK),
+                        fAllowFree(true)
     {};
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
@@ -92,6 +95,7 @@ public:
      */
     virtual CAmount GetDustThreshold(const CTxOut& txout) const;
     virtual bool ApproveOutput(const CTxOut& txout) const;
+    virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewCache&, CTxMemPool&, CValidationState&) const;
 };
 
 /** Default Policy for testnet and regtest */
@@ -373,6 +377,58 @@ bool CStandardPolicy::ApproveTxInputsScripts(const CTransaction& tx, CValidation
     // CHECKSIG NOT scripts to pass, even though they were invalid.
     if (!Consensus::CheckTxInputsScripts(tx, state, inputs, cacheStore, mandatoryScriptFlags | policyScriptFlags))
         return state.Invalid(false, REJECT_NONSTANDARD, strprintf("with flags: STANDARD_NOT_MANDATORY (%s)", state.GetRejectReason()));
+
+    return true;
+}
+
+bool CStandardPolicy::ValidateTxFee(const CAmount& nFees, size_t nSize, const CTransaction& tx, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewCache& view, CTxMemPool& mempool, CValidationState& state) const
+{
+    bool fValidateFee = nFees >= minRelayTxFee.GetFee(nSize);
+    if (fLimitFree && !fValidateFee) {
+        double dPriorityDelta = 0;
+        CAmount nFeeDelta = 0;
+        mempool.ApplyDeltas(tx.GetHash(), dPriorityDelta, nFeeDelta);
+        if (!(dPriorityDelta > 0 || nFeeDelta > 0 ||
+              // There is a free transaction area in blocks created by most miners,
+              // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
+              //   to be considered to fall into this category. We don't want to encourage sending
+              //   multiple transactions instead of one big transaction to avoid fees.
+              (fAllowFree && nSize < DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
+            return state.DoS(0, error("%s: not enough fees, %d < %d",
+                                      __func__, nFees, minRelayTxFee.GetFee(nSize)),
+                             REJECT_INSUFFICIENTFEE, "insufficient fee");
+
+        // Continuously rate-limit free (really, very-low-fee) transactions
+        // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+        // be annoying or make others' transactions take longer to confirm.
+        {
+            static CCriticalSection csFreeLimiter;
+            static double dFreeCount;
+            static int64_t nLastTime;
+            int64_t nNow = GetTime();
+
+            LOCK(csFreeLimiter);
+
+            // Use an exponentially decaying ~10-minute window:
+            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+            nLastTime = nNow;
+            // -limitfreerelay unit is thousand-bytes-per-minute
+            // At default rate it would take over a month to fill 1GB
+            if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
+                return state.DoS(0, error("%s: free transaction rejected by rate limiter", __func__),
+                                 REJECT_INSUFFICIENTFEE, "rate limited free transaction");
+            LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+            dFreeCount += nSize;
+        }
+    }
+
+    // Require that free transactions have sufficient priority to be mined in the next block.
+    if (GetBoolArg("-relaypriority", true) && !fValidateFee && !AllowFree(view.GetPriority(tx, nHeight + 1)))
+        return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
+
+    if (fRejectAbsurdFee && nFees > minRelayTxFee.GetFee(nSize) * 10000)
+        return error("%s: absurdly high fees %s, %d > %d", __func__,
+                     nFees, minRelayTxFee.GetFee(nSize) * 10000);
 
     return true;
 }
