@@ -48,6 +48,7 @@ public:
     // so dust is a txout less than 546 satoshis 
     // with default minRelayTxFee.
     virtual bool ValidateOutput(const CTxOut& txout) const;
+    virtual bool ValidateFee(const CAmount&, size_t) const;
     virtual bool ValidateTx(const CTransaction&, CValidationState&) const;
     /**
      * Check transaction inputs to mitigate two
@@ -189,6 +190,11 @@ bool CStandardPolicy::ValidateOutput(const CTxOut& txout) const
 {
     size_t nSize = txout.GetSerializeSize(SER_DISK,0) + 148u;
     return (txout.nValue < 3 * minRelayTxFee.GetFee(nSize));
+}
+
+bool CStandardPolicy::ValidateFee(const CAmount& nFees, size_t nSize) const
+{
+    return nFees >= minRelayTxFee.GetFee(nSize);
 }
 
 bool CStandardPolicy::ValidateTx(const CTransaction& tx, CValidationState& state) const
