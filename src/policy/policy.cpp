@@ -45,6 +45,8 @@ protected:
      */
     unsigned int policyScriptFlags;
     bool fAllowFree;
+    /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
+    CFeeRate minRelayTxFee;
 public:
     CStandardPolicy() :
         fIsBareMultisigStd(true),
@@ -56,7 +58,8 @@ public:
                                           SCRIPT_VERIFY_NULLDUMMY |
                                           SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
                                           SCRIPT_VERIFY_CLEANSTACK),
-                        fAllowFree(true)
+                        fAllowFree(true),
+                        minRelayTxFee(1000)
     {};
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
@@ -98,6 +101,7 @@ public:
     virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewCache&, CTxMemPool&, CValidationState&) const;
     virtual bool ApproveFee(const CAmount&, size_t) const;
     virtual bool ApproveFeeRate(const CFeeRate&) const;
+    virtual const CFeeRate& GetMinRelayFeeRate() const;
 };
 
 /** Default Policy for testnet and regtest */
@@ -443,4 +447,9 @@ bool CStandardPolicy::ApproveFee(const CAmount& nFees, size_t nSize) const
 bool CStandardPolicy::ApproveFeeRate(const CFeeRate& rate) const
 {
     return rate >= minRelayTxFee;
+}
+
+const CFeeRate& CStandardPolicy::GetMinRelayFeeRate() const
+{
+    return minRelayTxFee;
 }

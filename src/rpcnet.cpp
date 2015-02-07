@@ -10,6 +10,7 @@
 #include "net.h"
 #include "netbase.h"
 #include "policy/fees.h"
+#include "policy/policy.h"
 #include "protocol.h"
 #include "sync.h"
 #include "timedata.h"
@@ -429,7 +430,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("networks",      GetNetworksInfo()));
-    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(Policy().GetMinRelayFeeRate().GetFeePerK())));
     Array localAddresses;
     {
         LOCK(cs_mapLocalHost);

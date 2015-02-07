@@ -10,6 +10,7 @@
 #include "net.h"
 #include "netbase.h"
 #include "policy/fees.h"
+#include "policy/policy.h"
 #include "rpcserver.h"
 #include "timedata.h"
 #include "util.h"
@@ -103,7 +104,7 @@ Value getinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
 #endif
-    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(Policy().GetMinRelayFeeRate().GetFeePerK())));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
