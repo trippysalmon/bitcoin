@@ -55,10 +55,6 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
-/** GLOBALS: These variables are supposed to become CStandardPolicy attributes */
-
-extern CFeeRate minRelayTxFee;
-
 inline double AllowFreeThreshold()
 {
     return COIN * 144 / 250;
@@ -80,6 +76,7 @@ public:
     virtual bool ValidateOutput(const CTxOut& txout) const = 0;
     virtual bool ValidateFee(const CAmount&, size_t) const = 0;
     virtual bool ValidateFeeRate(const CFeeRate&) const = 0;
+    virtual const CFeeRate& GetMinRelayFeeRate() const = 0;
     /** Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */

@@ -738,7 +738,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         payTxFee = CFeeRate(nFeePerK, 1000);
         if (!Policy().ValidateFeeRate(payTxFee))
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-                                       mapArgs["-paytxfee"], ::minRelayTxFee.ToString()));
+                                       mapArgs["-paytxfee"], Policy().GetMinRelayFeeRate().ToString()));
     }
     if (mapArgs.count("-maxtxfee"))
     {
@@ -750,7 +750,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         maxTxFee = nMaxFee;
         if (!Policy().ValidateFeeRate(CFeeRate(maxTxFee, 1000)))
             return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-                                       mapArgs["-maxtxfee"], ::minRelayTxFee.ToString()));
+                                       mapArgs["-maxtxfee"], Policy().GetMinRelayFeeRate().ToString()));
     }
     nTxConfirmTarget = GetArg("-txconfirmtarget", 1);
     bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
