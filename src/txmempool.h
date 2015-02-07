@@ -9,11 +9,9 @@
 #include <list>
 
 #include "coins.h"
-#include "policy/fees.h"
 #include "primitives/transaction.h"
 #include "sync.h"
-
-class CAutoFile;
+#include "txmempoolentry.h"
 
 /** An inpoint - a combination of a transaction and an index n into its vin */
 class CInPoint
@@ -43,9 +41,7 @@ class CTxMemPool
 private:
     bool fSanityCheck; //! Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;
-    CFeesPolicy* minerPolicyEstimator;
 
-    CFeeRate minRelayFee; //! Passed to constructor to avoid dependency on main
     uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
 
 public:
@@ -54,7 +50,7 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
-    CTxMemPool(const CFeeRate& _minRelayFee);
+    CTxMemPool();
     ~CTxMemPool();
 
     /**
@@ -71,7 +67,7 @@ public:
     void removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
     void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
-                        std::list<CTransaction>& conflicts);
+                        std::list<CTransaction>& conflicts, std::vector<CTxMemPoolEntry>& entries);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
@@ -101,16 +97,6 @@ public:
     }
 
     bool lookup(uint256 hash, CTransaction& result) const;
-
-    /** Estimate fee rate needed to get into the next nBlocks */
-    CFeeRate estimateFee(int nBlocks) const;
-
-    /** Estimate priority needed to get into the next nBlocks */
-    double estimatePriority(int nBlocks) const;
-    
-    /** Write/Read estimates to disk */
-    bool WriteFeeEstimates(CAutoFile& fileout) const;
-    bool ReadFeeEstimates(CAutoFile& filein);
 };
 
 /** 

@@ -12,6 +12,7 @@
 #include "main.h" // chainActive
 #include "miner.h"
 #include "net.h"
+#include "policy/estimator.h"
 #include "rpcserver.h"
 #include "txmempool.h"
 #include "util.h"
@@ -693,7 +694,7 @@ Value estimatefee(const Array& params, bool fHelp)
     if (nBlocks < 1)
         nBlocks = 1;
 
-    CFeeRate feeRate = mempool.estimateFee(nBlocks);
+    CFeeRate feeRate = minerPolicyEstimator.estimateFee(nBlocks);
     if (feeRate == CFeeRate(0))
         return -1.0;
 
@@ -725,5 +726,5 @@ Value estimatepriority(const Array& params, bool fHelp)
     if (nBlocks < 1)
         nBlocks = 1;
 
-    return mempool.estimatePriority(nBlocks);
+    return minerPolicyEstimator.estimatePriority(nBlocks);
 }
