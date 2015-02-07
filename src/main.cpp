@@ -17,6 +17,7 @@
 #include "consensus/validation.h"
 #include "init.h"
 #include "merkleblock.h"
+#include "miner_policy_estimator.h"
 #include "policy.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
@@ -63,7 +64,7 @@ bool fReindex = false;
 bool fTxIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
-CTxMemPool mempool(::minRelayTxFee);
+CTxMemPool mempool;
 
 struct COrphanTx {
     CTransaction tx;
@@ -1651,7 +1652,9 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     LogPrint("bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
     // Remove conflicting transactions from the mempool.
     list<CTransaction> txConflicted;
-    mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted);
+    std::vector<CTxMemPoolEntry> entries;
+    mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted, entries);
+    minerPolicyEstimator.seenBlock(entries, pindexNew->nHeight);
     mempool.check(pcoinsTip);
     // Update chainActive & related variables.
     UpdateTip(pindexNew);

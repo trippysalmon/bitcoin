@@ -7,23 +7,12 @@
 #define BITCOIN_MINER_POLICY_ESTIMATOR_H
 
 #include "amount.h"
+#include "sync.h"
 #include "txmempoolentry.h"
 
 #include <boost/circular_buffer.hpp>
 
 class CAutoFile;
-
-inline double AllowFreeThreshold()
-{
-    return COIN * 144 / 250;
-}
-
-inline bool AllowFree(double dPriority)
-{
-    // Large (in bytes) low-priority (new, small-coin) transactions
-    // need a fee.
-    return dPriority > AllowFreeThreshold();
-}
 
 /**
  * Keep track of fee/priority for transactions confirmed within N blocks
@@ -65,6 +54,7 @@ public:
 class CMinerPolicyEstimator
 {
 private:
+    mutable CCriticalSection cs;
     /**
      * Records observed averages transactions that confirmed within one block, two blocks,
      * three blocks etc.
@@ -83,14 +73,18 @@ private:
 
 public:
     CMinerPolicyEstimator(int nEntries);
-    void seenBlock(const std::vector<CTxMemPoolEntry>& entries, int nBlockHeight, const CFeeRate minRelayFee);
+    void seenBlock(const std::vector<CTxMemPoolEntry>& entries, int nBlockHeight);
     /**
+     * Estimate fee rate needed to get into the next nBlocks.
      * Can return CFeeRate(0) if we don't have any data for that many blocks back. nBlocksToConfirm is 1 based.
      */
     CFeeRate estimateFee(int nBlocksToConfirm);
+    /** Estimate priority needed to get into the next nBlocks */
     double estimatePriority(int nBlocksToConfirm);
-    void Write(CAutoFile& fileout) const;
-    void Read(CAutoFile& filein, const CFeeRate& minRelayFee);
+    bool Write(CAutoFile& fileout) const;
+    bool Read(CAutoFile& filein);
 };
+
+extern CMinerPolicyEstimator minerPolicyEstimator;
 
 #endif // BITCOIN_MINER_POLICY_ESTIMATOR_H

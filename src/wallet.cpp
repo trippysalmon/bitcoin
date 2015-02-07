@@ -12,6 +12,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h" // cs_main
+#include "miner_policy_estimator.h"
 #include "net.h"
 #include "policy.h"
 #include "primitives/block.h"
@@ -1802,7 +1803,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 if (fSendFreeTransactions && nBytes <= MAX_FREE_TRANSACTION_CREATE_SIZE)
                 {
                     // Not enough fee: enough priority?
-                    double dPriorityNeeded = mempool.estimatePriority(nTxConfirmTarget);
+                    double dPriorityNeeded = minerPolicyEstimator.estimatePriority(nTxConfirmTarget);
                     // Not enough mempool history to estimate: use hard-coded AllowFree.
                     if (dPriorityNeeded <= 0 && AllowFree(dPriority))
                         break;
@@ -1900,7 +1901,7 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
         nFeeNeeded = payTxFee.GetFeePerK();
     // User didn't set: use -txconfirmtarget to estimate...
     if (nFeeNeeded == 0)
-        nFeeNeeded = mempool.estimateFee(nConfirmTarget).GetFee(nTxBytes);
+        nFeeNeeded = minerPolicyEstimator.estimateFee(nConfirmTarget).GetFee(nTxBytes);
     // ... unless we don't have enough mempool data, in which case fall
     // back to a hard-coded fee
     if (nFeeNeeded == 0)
