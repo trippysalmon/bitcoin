@@ -8,8 +8,10 @@
 
 
 
+#include "chainparams.h"
 #include "clientversion.h"
 #include "main.h"
+#include "timedata.h"
 #include "utiltime.h"
 
 #include <cstdio>
@@ -60,7 +62,7 @@ BOOST_AUTO_TEST_CASE(May15)
 
         // After May 15'th, big blocks are OK:
         forkingBlock.nTime = tMay15; // Invalidates PoW
-        BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
+        BOOST_CHECK(Consensus::CheckBlock(forkingBlock, GetAdjustedTime(), state, Params().GetConsensus(), false, false));
     }
 
     SetMockTime(0);

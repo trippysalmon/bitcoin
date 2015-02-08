@@ -9,6 +9,7 @@
 #include "consensus/params.h"
 #include "script/interpreter.h"
 
+class CBlock;
 class CBlockHeader;
 class CCoinsViewEfficient;
 class CValidationState;
@@ -32,6 +33,7 @@ namespace Consensus {
 /** Context-independent validity checks */
 bool CheckTx(const CTransaction& tx, CValidationState &state);
 bool CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW = true);
+bool CheckBlock(const CBlock& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
 /** Context-dependent validity checks */
 /**
