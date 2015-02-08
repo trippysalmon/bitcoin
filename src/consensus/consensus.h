@@ -6,8 +6,10 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#include "consensus/params.h"
 #include "script/interpreter.h"
 
+class CBlockHeader;
 class CCoinsViewEfficient;
 class CValidationState;
 
@@ -39,6 +41,7 @@ namespace Consensus {
 
 /** Context-independent validity checks */
 bool CheckTx(const CTransaction& tx, CValidationState &state);
+bool CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW = true);
 
 /** Context-dependent validity checks */
 /**
