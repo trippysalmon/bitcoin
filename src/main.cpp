@@ -2409,19 +2409,6 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
     return true;
 }
 
-bool Consensus::CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW)
-{
-    // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, params))
-        return state.DoS(50, false, REJECT_INVALID, "high-hash");
-
-    // Check timestamp
-    if (block.GetBlockTime() > nTime + 2 * 60 * 60)
-        return state.Invalid(false, REJECT_INVALID, "time-too-new");
-
-    return true;
-}
-
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
