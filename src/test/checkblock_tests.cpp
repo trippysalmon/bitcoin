@@ -2,11 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "clientversion.h"
+#include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "main.h" // CheckBlock
+// #include "main.h" // CheckBlock
 #include "primitives/block.h"
 #include "test/test_bitcoin.h"
+#include "timedata.h"
 #include "utiltime.h"
 
 #include <cstdio>
@@ -43,6 +46,7 @@ bool read_block(const std::string& filename, CBlock& block)
 
 BOOST_AUTO_TEST_CASE(May15)
 {
+    const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
     // Putting a 1MB binary file in the git repository is not a great
     // idea, so this test is only run if you manually download
     // test/data/Mar12Fork.dat from
@@ -57,7 +61,7 @@ BOOST_AUTO_TEST_CASE(May15)
 
         // After May 15'th, big blocks are OK:
         forkingBlock.nTime = tMay15; // Invalidates PoW
-        BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
+        BOOST_CHECK(Consensus::CheckBlock(forkingBlock, state, consensusParams, GetAdjustedTime(), false, false));
     }
 
     SetMockTime(0);

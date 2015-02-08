@@ -65,14 +65,14 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
  */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
 
-} // namespace Consensus
-
 /** Block validation functions */
 
 /**
  * Context-independent CBlock validity checks
  */
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+bool CheckBlock(const CBlock& block, CValidationState& state, const Params& params, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+
+} // namespace Consensus
 /**
  * Context-dependent CBlock validity checks
  */
