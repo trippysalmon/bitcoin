@@ -7,6 +7,8 @@
 
 #include "coins.h"
 #include "consensus/validation.h"
+#include "pow.h"
+#include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "script/sigcache.h"
 #include "tinyformat.h"
@@ -55,6 +57,19 @@ bool Consensus::CheckTx(const CTransaction& tx, CValidationState &state)
             if (tx.vin[i].prevout.IsNull())
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
     }
+    return true;
+}
+
+bool Consensus::CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW)
+{
+    // Check proof of work matches claimed amount
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, params))
+        return state.DoS(50, false, REJECT_INVALID, "high-hash");
+
+    // Check timestamp
+    if (block.GetBlockTime() > nTime + 2 * 60 * 60)
+        return state.Invalid(false, REJECT_INVALID, "time-too-new");
+
     return true;
 }
 
