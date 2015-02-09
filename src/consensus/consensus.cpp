@@ -131,6 +131,18 @@ bool Consensus::CheckTxInputsScripts(const CTransaction& tx, CValidationState& s
     return true;
 }
 
+unsigned int Consensus::GetLegacySigOpCount(const CTransaction& tx)
+{
+    unsigned int nSigOps = 0;
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+        nSigOps += tx.vin[i].scriptSig.GetSigOpCount(false);
+
+    for (unsigned int i = 0; i < tx.vout.size(); i++)
+        nSigOps += tx.vout[i].scriptPubKey.GetSigOpCount(false);
+
+    return nSigOps;
+}
+
 CAmount Consensus::GetBlockValue(int nHeight, const Consensus::Params& params, const CAmount& nFees)
 {
     CAmount nSubsidy = 50 * COIN;
