@@ -48,6 +48,12 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, bool cacheStore, unsigned int flags);
 
 /** Utility functions */
+/**
+ * Count ECDSA signature operations the old-fashioned (pre-0.6) way
+ * @return number of sigops this transaction's outputs will produce when spent
+ * @see CTransaction::FetchInputs
+ */
+unsigned int GetLegacySigOpCount(const CTransaction& tx);
 CAmount GetBlockValue(int nHeight, const Consensus::Params& params, const CAmount& nFees);
 
 } // namespace Consensus
