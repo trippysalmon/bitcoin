@@ -51,6 +51,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
  */
 bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, bool cacheStore, unsigned int flags);
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex* pindexPrev, const Consensus::Params& params);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindexPrev, const int nHeight, const Consensus::Params& params);
 
 /** Utility functions */
 /**
