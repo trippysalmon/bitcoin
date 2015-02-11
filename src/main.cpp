@@ -2362,27 +2362,6 @@ int GetHeight(const CBlockIndex* pindexPrev)
     return pindexPrev == NULL ? chainActive.Height() : pindexPrev->nHeight + 1;
 }
 
-bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindexPrev, const int nHeight, const Consensus::Params& params)
-{
-    // Check that all transactions are finalized
-    for (unsigned int i = 1; i < block.vtx.size(); i++)
-        if (!Consensus::IsFinalTx(block.vtx[i], nHeight, block.GetBlockTime()))
-            return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal");
-
-    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-    // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, params.nMajorityEnforceBlockUpgrade, params.nMajorityWindow))
-    {
-        CScript expect = CScript() << nHeight;
-        if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
-            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height");
-        }
-    }
-
-    return true;
-}
-
 bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
