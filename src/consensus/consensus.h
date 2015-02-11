@@ -76,6 +76,4 @@ CAmount GetBlockValue(int nHeight, const Consensus::Params& params, const CAmoun
 
 } // namespace Consensus
 
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck);
-
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
