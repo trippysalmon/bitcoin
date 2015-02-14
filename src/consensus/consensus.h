@@ -11,6 +11,7 @@
 
 class CBlock;
 class CBlockHeader;
+class CBlockIndex;
 class CCoinsViewEfficient;
 class CValidationState;
 
@@ -76,5 +77,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewEfficient
 CAmount GetBlockValue(int nHeight, const Consensus::Params& params, const CAmount& nFees);
 
 } // namespace Consensus
+
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
