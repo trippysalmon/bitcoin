@@ -5,6 +5,7 @@
 
 #include "consensus/consensus.h"
 
+#include "chain.h"
 #include "coins.h"
 #include "consensus/validation.h"
 #include "pow.h"
@@ -179,6 +180,23 @@ bool Consensus::CheckTxInputsScripts(const CTransaction& tx, CValidationState& s
                              strprintf("mandatory-script-verify-flag-failed (in input %d: %s)", i, ScriptErrorString(scriptError)));
     }
     return true;
+}
+
+/**
+ * Returns true if there are nRequired or more blocks of minVersion or above
+ * nRequired or more times in the last nToCheck blocks, starting at pstart 
+ * and going backwards.
+ */
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck)
+{
+    unsigned int nFound = 0;
+    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
+    {
+        if (pstart->nVersion >= minVersion)
+            ++nFound;
+        pstart = pstart->pprev;
+    }
+    return (nFound >= nRequired);
 }
 
 unsigned int Consensus::GetLegacySigOpCount(const CTransaction& tx)
