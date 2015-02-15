@@ -54,6 +54,9 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
  */
 bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, bool cacheStore, unsigned int flags=MANDATORY_SCRIPT_VERIFY_FLAGS);
 
+/** Utility functions */
+CAmount GetBlockValue(int nHeight, const Consensus::Params& params, const CAmount& nFees);
+
 } // namespace Consensus
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
