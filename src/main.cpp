@@ -696,16 +696,6 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     return Consensus::IsFinalTx(tx, nBlockHeight, nBlockTime);
 }
 
-bool Consensus::IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
-{
-    if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
-        return true;
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-        if (!tx.vin[i].IsFinal())
-            return false;
-    return true;
-}
-
 /**
  * Check transaction inputs to mitigate two
  * potential denial-of-service attacks:

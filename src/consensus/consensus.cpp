@@ -125,6 +125,16 @@ bool Consensus::CheckBlock(const CBlock& block, int64_t nTime, CValidationState&
     return true;
 }
 
+bool Consensus::IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
+{
+    if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
+        return true;
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+        if (!tx.vin[i].IsFinal())
+            return false;
+    return true;
+}
+
 bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, int nSpendHeight)
 {
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
