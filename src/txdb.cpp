@@ -6,7 +6,7 @@
 #include "txdb.h"
 
 #include "chainparams.h"
-#include "pow.h"
+#include "consensus/pow.h"
 #include "uint256.h"
 
 #include <stdint.h>
