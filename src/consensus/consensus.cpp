@@ -328,3 +328,8 @@ CAmount Consensus::GetBlockValue(int nHeight, const Consensus::Params& params, c
 
     return nSubsidy + nFees;
 }
+
+bool Consensus::IsGenesisBlock(const uint256& hash, const Consensus::Params& params)
+{
+    return hash == params.hashGenesisBlock;
+}

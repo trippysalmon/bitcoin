@@ -88,6 +88,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
  */
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewEfficient& mapInputs);
 CAmount GetBlockValue(int nHeight, const Consensus::Params& params, const CAmount& nFees);
+bool IsGenesisBlock(const uint256& hash, const Consensus::Params& params);
 
 } // namespace Consensus
 
