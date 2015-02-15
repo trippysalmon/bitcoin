@@ -199,6 +199,17 @@ bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequir
     return (nFound >= nRequired);
 }
 
+unsigned Consensus::GetFlags(const CBlock& block, CBlockIndex* pindex, const Consensus::Params& params)
+{
+    int64_t nBIP16SwitchTime = 1333238400;
+    bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
+    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+
+    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, params.nMajorityEnforceBlockUpgrade, params.nMajorityWindow))
+        flags |= SCRIPT_VERIFY_DERSIG;
+    return flags;
+}
+
 unsigned int Consensus::GetLegacySigOpCount(const CTransaction& tx)
 {
     unsigned int nSigOps = 0;
