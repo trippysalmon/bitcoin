@@ -268,7 +268,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 continue;
             }
 
-            nTxSigOps += GetP2SHSigOpCount(tx, view);
+            nTxSigOps += Consensus::GetP2SHSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
