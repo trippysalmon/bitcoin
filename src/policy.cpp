@@ -10,7 +10,10 @@
 #include "amount.h"
 #include "chainparams.h"
 #include "coins.h"
+#include "coinscache.h"
 #include "consensus/validation.h"
+#include "main.h"
+#include "miner.h"
 #include "primitives/transaction.h"
 #include "tinyformat.h"
 #include "txmempool.h"
@@ -66,6 +69,7 @@ public:
      */
     virtual bool ValidateTxInputs(const CTransaction& tx, const CCoinsViewEfficient& mapInputs) const;
     virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewEfficient&, CTxMemPool&, CValidationState&) const;
+    virtual bool BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex&, CCoinsViewCache&) const;
 };
 
 /** Default Policy for testnet and regtest */
@@ -368,6 +372,224 @@ bool CStandardPolicy::ValidateTxFee(const CAmount& nFees, size_t nSize, const CT
     if (fRejectAbsurdFee && nFees > minRelayTxFee.GetFee(nSize) * 10000)
         return error("%s: absurdly high fees %s, %d > %d", __func__,
                      nFees, minRelayTxFee.GetFee(nSize) * 10000);
+
+    return true;
+}
+
+//
+// Unconfirmed transactions in the memory pool often depend on other
+// transactions in the memory pool. When we select transactions from the
+// pool, we select by highest priority or fee rate, so we might consider
+// transactions that depend on transactions that aren't yet in the block.
+// The COrphan class keeps track of these 'temporary orphans' while
+// CreateBlock is figuring out which transactions to include.
+//
+class COrphan
+{
+public:
+    const CTransaction* ptx;
+    std::set<uint256> setDependsOn;
+    CFeeRate feeRate;
+    double dPriority;
+
+    COrphan(const CTransaction* ptxIn) : ptx(ptxIn), feeRate(0), dPriority(0)
+    {
+    }
+};
+
+// We want to sort transactions by priority and fee rate, so:
+typedef boost::tuple<double, CFeeRate, const CTransaction*> TxPriority;
+class TxPriorityCompare
+{
+    bool byFee;
+
+public:
+    TxPriorityCompare(bool _byFee) : byFee(_byFee) { }
+
+    bool operator()(const TxPriority& a, const TxPriority& b)
+    {
+        if (byFee)
+        {
+            if (a.get<1>() == b.get<1>())
+                return a.get<0>() < b.get<0>();
+            return a.get<1>() < b.get<1>();
+        }
+        else
+        {
+            if (a.get<0>() == b.get<0>())
+                return a.get<1>() < b.get<1>();
+            return a.get<0>() < b.get<0>();
+        }
+    }
+};
+
+bool CStandardPolicy::BuildNewBlock(CBlockTemplate& blocktemplate, const CTxMemPool& pool, const CBlockIndex& indexPrev, CCoinsViewCache& view) const
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(pool.cs);
+
+    const int nNewBlockHeight = blocktemplate.nHeight;
+    const uint64_t nBlockSize = blocktemplate.nBlockSize;
+
+    // Largest block you're willing to create:
+    unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+    // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
+    nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
+
+    // How much of the block should be dedicated to high-priority transactions,
+    // included regardless of the fees they pay
+    unsigned int nBlockPrioritySize = GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
+    nBlockPrioritySize = std::min(nBlockMaxSize, nBlockPrioritySize);
+
+    // Minimum block size you want to create; block will be filled with free transactions
+    // until there are no more or the block reaches this size:
+    unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
+    nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
+
+    // Priority order to process transactions
+    std::list<COrphan> vOrphan; // list memory doesn't move
+    std::map<uint256, std::vector<COrphan*> > mapDependers;
+    bool fPrintPriority = GetBoolArg("-printpriority", false);
+
+    // This vector will be sorted into a priority queue:
+    std::vector<TxPriority> vecPriority;
+    vecPriority.reserve(mempool.mapTx.size());
+    for (std::map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin();
+         mi != mempool.mapTx.end(); ++mi)
+    {
+        const CTransaction& tx = mi->second.GetTx();
+        if (tx.IsCoinBase() || !IsFinalTx(tx, nNewBlockHeight))
+            continue;
+
+        COrphan* porphan = NULL;
+        double dPriority = 0;
+        CAmount nTotalIn = 0;
+        bool fMissingInputs = false;
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            // Read prev transaction
+            if (!view.HaveCoins(txin.prevout.hash))
+            {
+                // This should never happen; all transactions in the memory
+                // pool should connect to either transactions in the chain
+                // or other transactions in the memory pool.
+                if (!mempool.mapTx.count(txin.prevout.hash))
+                {
+                    LogPrintf("ERROR: mempool transaction missing input\n");
+                    if (fDebug) assert("mempool transaction missing input" == 0);
+                    fMissingInputs = true;
+                    if (porphan)
+                        vOrphan.pop_back();
+                    break;
+                }
+
+                // Has to wait for dependencies
+                if (!porphan)
+                {
+                    // Use list for automatic deletion
+                    vOrphan.push_back(COrphan(&tx));
+                    porphan = &vOrphan.back();
+                }
+                mapDependers[txin.prevout.hash].push_back(porphan);
+                porphan->setDependsOn.insert(txin.prevout.hash);
+                nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
+                continue;
+            }
+            const CCoins* coins = view.AccessCoins(txin.prevout.hash);
+            assert(coins);
+
+            CAmount nValueIn = coins->vout[txin.prevout.n].nValue;
+            nTotalIn += nValueIn;
+
+            int nConf = nNewBlockHeight - coins->nHeight;
+
+            dPriority += (double)nValueIn * nConf;
+        }
+        if (fMissingInputs) continue;
+
+        // Priority is sum(valuein * age) / modified_txsize
+        unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        dPriority = tx.ComputePriority(dPriority, nTxSize);
+
+        uint256 hash = tx.GetHash();
+        mempool.ApplyDeltas(hash, dPriority, nTotalIn);
+
+        CFeeRate feeRate(nTotalIn-tx.GetValueOut(), nTxSize);
+
+        if (porphan)
+        {
+            porphan->dPriority = dPriority;
+            porphan->feeRate = feeRate;
+        }
+        else
+            vecPriority.push_back(TxPriority(dPriority, feeRate, &mi->second.GetTx()));
+    }
+
+    // Collect memory pool transactions into the block
+    bool fSortedByFee = (nBlockPrioritySize <= 0);
+
+    TxPriorityCompare comparer(fSortedByFee);
+    std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
+
+    while (!vecPriority.empty())
+    {
+        // Take highest priority transaction off the priority queue:
+        double dPriority = vecPriority.front().get<0>();
+        CFeeRate feeRate = vecPriority.front().get<1>();
+        const CTransaction& tx = *(vecPriority.front().get<2>());
+
+        std::pop_heap(vecPriority.begin(), vecPriority.end(), comparer);
+        vecPriority.pop_back();
+
+        // Size limits
+        unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        if (nBlockSize + nTxSize >= nBlockMaxSize)
+            continue;
+
+        // Skip free transactions if we're past the minimum block size:
+        const uint256& hash = tx.GetHash();
+        double dPriorityDelta = 0;
+        CAmount nFeeDelta = 0;
+        mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
+        if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && (feeRate < minRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
+            continue;
+
+        if (!blocktemplate.AddTransaction(tx, view))
+            continue;
+
+        if (fPrintPriority)
+        {
+            LogPrintf("priority %.1f fee %s txid %s\n",
+                      dPriority, feeRate.ToString(), tx.GetHash().ToString());
+        }
+
+        // Add transactions that depend on this one to the priority queue
+        if (mapDependers.count(hash))
+        {
+            for (unsigned i = 0; i < mapDependers[hash].size(); i++) {
+                COrphan* porphan = mapDependers[hash][i];
+                if (!porphan->setDependsOn.empty())
+                {
+                    porphan->setDependsOn.erase(hash);
+                    if (porphan->setDependsOn.empty())
+                    {
+                        vecPriority.push_back(TxPriority(porphan->dPriority, porphan->feeRate, porphan->ptx));
+                        std::push_heap(vecPriority.begin(), vecPriority.end(), comparer);
+                    }
+                }
+            }
+        }
+
+        // Prioritise by fee once past the priority size or we run out of high-priority
+        // transactions:
+        if (!fSortedByFee &&
+            ((nBlockSize + nTxSize >= nBlockPrioritySize) || !AllowFree(dPriority)))
+        {
+            fSortedByFee = true;
+            comparer = TxPriorityCompare(fSortedByFee);
+            std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
+        }
+    }
 
     return true;
 }

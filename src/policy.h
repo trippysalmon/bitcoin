@@ -12,6 +12,9 @@
 #include <map>
 #include <string>
 
+class CBlockIndex;
+class CBlockTemplate;
+class CCoinsViewCache;
 class CCoinsViewEfficient;
 class CFeeRate;
 class CTransaction;
@@ -88,6 +91,11 @@ public:
      */
     virtual bool ValidateTxInputs(const CTransaction&, const CCoinsViewEfficient&) const = 0;
     virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewEfficient&, CTxMemPool&, CValidationState&) const = 0;
+    /**
+     * Collect transactions (probably from the mempool) into a new block template
+     *  @return Total amount of transaction fees collected by transactions
+     */
+    virtual bool BuildNewBlock(CBlockTemplate&, const CTxMemPool&, const CBlockIndex&, CCoinsViewCache&) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */
