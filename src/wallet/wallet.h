@@ -25,6 +25,8 @@
 #include <utility>
 #include <vector>
 
+class CFeeRate;
+
 /**
  * Settings
  */

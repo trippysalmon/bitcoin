@@ -13,6 +13,7 @@
 #include "hash.h"
 #include "main.h" // cs_main
 #include "net.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"

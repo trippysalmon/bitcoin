@@ -188,6 +188,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
+  policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \
   rest.cpp \
@@ -246,7 +247,6 @@ univalue_libbitcoin_univalue_a_SOURCES = \
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
-  amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
   chainparams.cpp \

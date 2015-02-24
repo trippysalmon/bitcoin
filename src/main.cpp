@@ -69,9 +69,6 @@ bool fCheckpointsEnabled = true;
 unsigned int nCoinCacheSize = 5000;
 uint64_t nPruneTarget = 0;
 
-/** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
-CFeeRate minRelayTxFee = CFeeRate(1000);
-
 CTxMemPool mempool(::minRelayTxFee);
 
 struct COrphanTx {
