@@ -720,7 +720,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                                    hash.ToString(), nSigOps, MAX_STANDARD_TX_SIGOPS),
                              REJECT_NONSTANDARD, "bad-txns-too-many-sigops");
 
-        CAmount nValueOut = tx.GetValueOut();
+        CAmount nValueOut = Consensus::GetValueOut(tx);
         CAmount nFees = nValueIn-nValueOut;
         double dPriority = view.GetPriority(tx, chainActive.Height());
 
@@ -1438,7 +1438,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const CChainPara
             if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view)))
                 return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
 
-            nFees += view.GetValueIn(tx)-tx.GetValueOut();
+            nFees += view.GetValueIn(tx) - Consensus::GetValueOut(tx);
 
             // Skip ECDSA signature verification when connecting blocks
             // before the last block chain checkpoint. This is safe because block merkle hashes are
@@ -1478,10 +1478,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const CChainPara
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs-1), nTimeConnect * 0.000001);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
-    if (block.vtx[0].GetValueOut() > blockReward)
+    CAmount nValueOut = Consensus::GetValueOut(block.vtx[0]);
+    if (nValueOut > blockReward)
         return state.DoS(100,
                          error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0].GetValueOut(), blockReward),
+                               nValueOut, blockReward),
                                REJECT_INVALID, "bad-cb-amount");
 
     if (!control.Wait())

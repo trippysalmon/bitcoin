@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#include "amount.h"
 #include "consensus/types.h"
 
 #include <stdint.h>
@@ -59,6 +60,9 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
  * This is the more expensive consensus check for a transaction, do it last.
  */
 bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, bool cacheStore, unsigned int flags);
+
+/** Transaction validation utility functions */
+CAmount GetValueOut(const CTransaction& tx);
 
 /** Block header validation functions */
 
