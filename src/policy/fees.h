@@ -8,11 +8,11 @@
 
 #include "amount.h"
 #include "serialize.h"
+#include "txmempoolentry.h"
 
 #include <string>
 
 class CAutoFile;
-class CTxMemPoolEntry;
 
 /** Type-safe wrapper class to for fee rates
  * (how much to pay based on transaction size)
@@ -46,6 +46,18 @@ public:
 };
 
 extern CFeeRate minRelayTxFee;
+
+inline double AllowFreeThreshold()
+{
+    return COIN * 144 / 250;
+}
+
+inline bool AllowFree(double dPriority)
+{
+    // Large (in bytes) low-priority (new, small-coin) transactions
+    // need a fee.
+    return dPriority > AllowFreeThreshold();
+}
 
 class CFeesPolicy
 {

@@ -108,6 +108,7 @@ BITCOIN_CORE_H = \
   netbase.h \
   net.h \
   noui.h \
+  policy/estimator.h \
   policy/fees.h \
   policy/policy.h \
   pow.h \
@@ -137,6 +138,7 @@ BITCOIN_CORE_H = \
   tinyformat.h \
   txdb.h \
   txmempool.h \
+  txmempoolentry.h \
   ui_interface.h \
   uint256.h \
   undo.h \
@@ -188,6 +190,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
+  policy/estimator.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \
@@ -202,6 +205,7 @@ libbitcoin_server_a_SOURCES = \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
+  txmempoolentry.cpp \
   validationinterface.cpp \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
