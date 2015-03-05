@@ -777,20 +777,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!Consensus::CheckTxInputsScripts(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS))
-            return error("%s: Consensus::CheckTxInputsScripts failed with STANDARD flags %s %s", __func__, state.GetRejectReason(), hash.ToString());
-
-        // Check again against just the consensus-critical mandatory script
-        // verification flags, in case of bugs in the standard flags that cause
-        // transactions to pass as valid when they're actually invalid. For
-        // instance the STRICTENC flag was incorrectly allowing certain
-        // CHECKSIG NOT scripts to pass, even though they were invalid.
-        //
-        // There is a similar check in CreateNewBlock() to prevent creating
-        // invalid blocks, however allowing such transactions into the mempool
-        // can be exploited as a DoS attack.
-        if (!Consensus::CheckTxInputsScripts(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
-            return error("%s: BUG! PLEASE REPORT THIS! Consensus::CheckTxInputsScripts failed against MANDATORY but not STANDARD flags %s %s", __func__, state.GetRejectReason(), hash.ToString());
+        if (!CheckInputsScripts(tx, state, view, true))
+            return error("%s: CheckInputsScripts failed with STANDARD flags %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry);
@@ -1131,27 +1119,31 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
     return pindexPrev->nHeight + 1;
 }
 
-bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, unsigned int flags, bool cacheStore)
+bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, bool cacheStore)
 {
-    if (!Consensus::CheckTxInputsScripts(tx, state, inputs, true, flags)) {
-                        // Check whether the failure was caused by a
-                        // non-mandatory script verification check, such as
-                        // non-standard DER encodings or non-null dummy
-                        // arguments; if so, don't trigger DoS protection to
-                        // avoid splitting the network between upgraded and
-                        // non-upgraded nodes.
-        if ((flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) &&
-            Consensus::CheckTxInputsScripts(tx, state, inputs, true, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS))
-            return state.Invalid(false, REJECT_NONSTANDARD, strprintf("with flags: STANDARD_NOT_MANDATORY (%s)", state.GetRejectReason()));
-                    // Failures of other flags indicate a transaction that is
-                    // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
-                    // such nodes as they are not following the protocol. That
-                    // said during an upgrade careful thought should be taken
-                    // as to the correct behavior - we may want to continue
-                    // peering with non-upgraded nodes even after a soft-fork
-                    // super-majority vote has passed.
+    // Failures of non-policy flags indicate a transaction that is
+    // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
+    // such nodes as they are not following the protocol. That
+    // said during an upgrade careful thought should be taken
+    // as to the correct behavior - we may want to continue
+    // peering with non-upgraded nodes even after a soft-fork
+    // super-majority vote has passed.
+    if (!Consensus::CheckTxInputsScripts(tx, state, inputs, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
         return state.DoS(100,false, REJECT_INVALID, strprintf("with flags: MANDATORY (%s)", state.GetRejectReason()));
-    }
+
+    // Check again against just the non-consensus-critical policy but
+    // not mandatory script verification flags, such as
+    // non-standard DER encodings or non-null dummy
+    // arguments; if so, don't trigger DoS protection to
+    // avoid splitting the network between upgraded and
+    // non-upgraded nodes.
+    // This is done later in case of bugs in the standard flags that cause
+    // transactions to pass as valid when they're actually invalid. For
+    // instance the STRICTENC flag was incorrectly allowing certain
+    // CHECKSIG NOT scripts to pass, even though they were invalid.
+    if (!Consensus::CheckTxInputsScripts(tx, state, inputs, true, MANDATORY_SCRIPT_VERIFY_FLAGS | STANDARD_NOT_MANDATORY_VERIFY_FLAGS))
+        return state.Invalid(false, REJECT_NONSTANDARD, strprintf("with flags: STANDARD_NOT_MANDATORY (%s)", state.GetRejectReason()));
+
     return true;
 }
 
