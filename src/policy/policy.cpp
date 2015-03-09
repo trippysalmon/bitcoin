@@ -55,6 +55,7 @@ public:
      *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
+    virtual bool ApproveTxInputsScripts(const CTransaction&, CValidationState&, const CCoinsViewCache&, bool cacheStore) const;
     /**
      * "Dust" is defined in terms of CTransaction::minRelayTxFee,
      * which has units satoshis-per-kilobyte.
@@ -292,4 +293,32 @@ CAmount CStandardPolicy::GetDustThreshold(const CTxOut& txout) const
 bool CStandardPolicy::ApproveOutput(const CTxOut& txout) const
 {
     return txout.nValue < GetDustThreshold(txout);
+}
+
+bool CStandardPolicy::ApproveTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, bool cacheStore) const
+{
+    // Failures of non-policy flags indicate a transaction that is
+    // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
+    // such nodes as they are not following the protocol. That
+    // said during an upgrade careful thought should be taken
+    // as to the correct behavior - we may want to continue
+    // peering with non-upgraded nodes even after a soft-fork
+    // super-majority vote has passed.
+    if (!Consensus::CheckTxInputsScripts(tx, state, inputs, cacheStore, MANDATORY_SCRIPT_VERIFY_FLAGS))
+        return state.DoS(100,false, REJECT_INVALID, strprintf("with flags: MANDATORY (%s)", state.GetRejectReason()));
+
+    // Check again against just the non-consensus-critical policy but
+    // not mandatory script verification flags, such as
+    // non-standard DER encodings or non-null dummy
+    // arguments; if so, don't trigger DoS protection to
+    // avoid splitting the network between upgraded and
+    // non-upgraded nodes.
+    // This is done later in case of bugs in the standard flags that cause
+    // transactions to pass as valid when they're actually invalid. For
+    // instance the STRICTENC flag was incorrectly allowing certain
+    // CHECKSIG NOT scripts to pass, even though they were invalid.
+    if (!Consensus::CheckTxInputsScripts(tx, state, inputs, cacheStore, MANDATORY_SCRIPT_VERIFY_FLAGS | STANDARD_NOT_MANDATORY_VERIFY_FLAGS))
+        return state.Invalid(false, REJECT_NONSTANDARD, strprintf("with flags: STANDARD_NOT_MANDATORY (%s)", state.GetRejectReason()));
+
+    return true;
 }

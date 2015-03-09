@@ -63,6 +63,12 @@ public:
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
+    /**
+     * Check whether all inputs of this transaction are valid (scripts and sigs)
+     * This does not modify the UTXO set. This does not check double spends and amounts.
+     * Preconditions: tx.IsCoinBase() is false
+     */
+    virtual bool ApproveTxInputsScripts(const CTransaction&, CValidationState&, const CCoinsViewCache&, bool cacheStore) const = 0;
     virtual CAmount GetDustThreshold(const CTxOut& txout) const = 0;
     virtual bool ApproveOutput(const CTxOut& txout) const = 0;
 };

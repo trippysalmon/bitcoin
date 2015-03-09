@@ -242,13 +242,6 @@ struct CDiskTxPos : public CDiskBlockPos
     }
 };
 
-/**
- * Check whether all inputs of this transaction are valid (scripts and sigs)
- * This does not modify the UTXO set. This does not check double spends and amounts.
- * Preconditions: tx.IsCoinBase() is false
- */
-bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& view, bool cacheStore);
-
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
 
