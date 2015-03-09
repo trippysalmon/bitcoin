@@ -26,10 +26,32 @@ class CStandardPolicy : public CPolicy
 protected:
     bool fIsBareMultisigStd;
     unsigned nMaxDatacarrierBytes;
+    /**
+     * Mandatory script verification flags that all new blocks must comply with for
+     * them to be valid. (but old blocks may not comply with) Currently just P2SH,
+     * but in the future other flags may be added, such as a soft-fork to enforce
+     * strict DER encoding.
+     * Failing one of these tests may trigger a DoS ban - see ApproveTxInputsScripts() for
+     * details.
+     */
+    unsigned int mandatoryScriptFlags;
+    /**
+     * Standard script verification flags that standard transactions will comply
+     * with. However scripts violating these flags may still be present in valid
+     * blocks and we must accept those blocks.
+     */
+    unsigned int policyScriptFlags;
 public:
     CStandardPolicy() :
         fIsBareMultisigStd(true),
-        nMaxDatacarrierBytes(MAX_OP_RETURN_RELAY)
+        nMaxDatacarrierBytes(MAX_OP_RETURN_RELAY),
+                        mandatoryScriptFlags(SCRIPT_VERIFY_P2SH),
+                        policyScriptFlags(SCRIPT_VERIFY_DERSIG |
+                                          SCRIPT_VERIFY_STRICTENC |
+                                          SCRIPT_VERIFY_MINIMALDATA |
+                                          SCRIPT_VERIFY_NULLDUMMY |
+                                          SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
+                                          SCRIPT_VERIFY_CLEANSTACK)
     {};
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
@@ -304,7 +326,7 @@ bool CStandardPolicy::ApproveTxInputsScripts(const CTransaction& tx, CValidation
     // as to the correct behavior - we may want to continue
     // peering with non-upgraded nodes even after a soft-fork
     // super-majority vote has passed.
-    if (!Consensus::CheckTxInputsScripts(tx, state, inputs, cacheStore, MANDATORY_SCRIPT_VERIFY_FLAGS))
+    if (!Consensus::CheckTxInputsScripts(tx, state, inputs, cacheStore, mandatoryScriptFlags))
         return state.DoS(100,false, REJECT_INVALID, strprintf("with flags: MANDATORY (%s)", state.GetRejectReason()));
 
     // Check again against just the non-consensus-critical policy but
@@ -317,7 +339,7 @@ bool CStandardPolicy::ApproveTxInputsScripts(const CTransaction& tx, CValidation
     // transactions to pass as valid when they're actually invalid. For
     // instance the STRICTENC flag was incorrectly allowing certain
     // CHECKSIG NOT scripts to pass, even though they were invalid.
-    if (!Consensus::CheckTxInputsScripts(tx, state, inputs, cacheStore, MANDATORY_SCRIPT_VERIFY_FLAGS | STANDARD_NOT_MANDATORY_VERIFY_FLAGS))
+    if (!Consensus::CheckTxInputsScripts(tx, state, inputs, cacheStore, mandatoryScriptFlags | policyScriptFlags))
         return state.Invalid(false, REJECT_NONSTANDARD, strprintf("with flags: STANDARD_NOT_MANDATORY (%s)", state.GetRejectReason()));
 
     return true;
