@@ -84,6 +84,11 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
  * @see CTransaction::FetchInputs
  */
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+/**
+ * Count ECDSA signature operations.
+ * @see GetLegacySigOpCount and GetP2SHSigOpCount
+ */
+unsigned int GetSigOpCount(const CTransaction&, const CCoinsViewCache&);
 
 /** Block header validation utility functions */
 
