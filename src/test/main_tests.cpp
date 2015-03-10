@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
+#include "consensus/consensus.h"
 #include "main.h" // GetBlockValue
 
 #include "test/test_bitcoin.h"
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
         BOOST_CHECK(nSubsidy <= 50 * COIN);
         nSum += nSubsidy * 1000;
-        BOOST_CHECK(MoneyRange(nSum));
+        BOOST_CHECK(Consensus::VerifyAmount(nSum));
     }
     BOOST_CHECK_EQUAL(nSum, 2099999997690000ULL);
 }

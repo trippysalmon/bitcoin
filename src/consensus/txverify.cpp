@@ -61,7 +61,7 @@ CAmount Consensus::GetValueOut(const CTransaction& tx)
     for (std::vector<CTxOut>::const_iterator it(tx.vout.begin()); it != tx.vout.end(); ++it)
     {
         nValueOut += it->nValue;
-        if (!MoneyRange(it->nValue) || !MoneyRange(nValueOut))
+        if (!Consensus::VerifyAmount(it->nValue) || !Consensus::VerifyAmount(nValueOut))
             throw std::runtime_error("CTransaction::GetValueOut(): value out of range");
     }
     return nValueOut;
@@ -86,7 +86,7 @@ bool Consensus::CheckTx(const CTransaction& tx, CValidationState &state)
         if (tx.vout[i].nValue > MAX_MONEY)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
         nValueOut += tx.vout[i].nValue;
-        if (!MoneyRange(nValueOut))
+        if (!Consensus::VerifyAmount(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
     }
 
@@ -132,7 +132,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
             // Check for negative or overflow input values
             nValueIn += coins->vout[prevout.n].nValue;
-            if (!MoneyRange(coins->vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+            if (!Consensus::VerifyAmount(coins->vout[prevout.n].nValue) || !Consensus::VerifyAmount(nValueIn))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         }
 
@@ -146,7 +146,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
 
         nFees += nTxFee;
-        if (!MoneyRange(nFees))
+        if (!Consensus::VerifyAmount(nFees))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
 
     return true;
