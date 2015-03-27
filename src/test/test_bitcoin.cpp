@@ -54,7 +54,7 @@ TestingSetup::TestingSetup()
         InitBlockIndex();
 #ifdef ENABLE_WALLET
         bool fFirstRun;
-        pwalletMain = new CWallet("wallet.dat");
+        pwalletMain = new CWallet(Policy("standard"), "wallet.dat");
         pwalletMain->LoadWallet(fFirstRun);
         RegisterValidationInterface(pwalletMain);
 #endif
