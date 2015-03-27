@@ -1569,9 +1569,8 @@ void static UpdateTip(CBlockIndex *pindexNew) {
 }
 
 /** Disconnect chainActive's tip. */
-bool static DisconnectTip(CValidationState& state, const Consensus::Params& consensusParams)
+bool static DisconnectTip(const CPolicy& policy, CValidationState& state, const Consensus::Params& consensusParams)
 {
-    const CPolicy& policy = Policy();
     CBlockIndex *pindexDelete = chainActive.Tip();
     assert(pindexDelete);
     mempool.check(pcoinsTip);
@@ -1757,7 +1756,7 @@ static void PruneBlockIndexCandidates() {
  * Try to make some progress towards making pindexMostWork the active block.
  * pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
  */
-static bool ActivateBestChainStep(CValidationState &state, const CChainParams& chainparams, CBlockIndex *pindexMostWork, CBlock *pblock)
+static bool ActivateBestChainStep(const CPolicy& policy, CValidationState &state, const CChainParams& chainparams, CBlockIndex *pindexMostWork, CBlock *pblock)
 {
     AssertLockHeld(cs_main);
     bool fInvalidFound = false;
@@ -1766,7 +1765,7 @@ static bool ActivateBestChainStep(CValidationState &state, const CChainParams& c
 
     // Disconnect active blocks which are no longer in the best chain.
     while (chainActive.Tip() && chainActive.Tip() != pindexFork) {
-        if (!DisconnectTip(state, chainparams.GetConsensus()))
+        if (!DisconnectTip(policy, state, chainparams.GetConsensus()))
             return false;
     }
 
@@ -1827,7 +1826,7 @@ static bool ActivateBestChainStep(CValidationState &state, const CChainParams& c
  * or an activated best chain. pblock is either NULL or a pointer to a block
  * that is already loaded (to avoid loading it again from disk).
  */
-bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams, CBlock *pblock)
+bool ActivateBestChain(const CPolicy& policy, CValidationState &state, const CChainParams& chainparams, CBlock *pblock)
 {
     CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
@@ -1844,7 +1843,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             if (pindexMostWork == NULL || pindexMostWork == chainActive.Tip())
                 return true;
 
-            if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL))
+            if (!ActivateBestChainStep(policy, state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL))
                 return false;
 
             pindexNewTip = chainActive.Tip();
@@ -1881,7 +1880,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
     return true;
 }
 
-bool InvalidateBlock(CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex *pindex)
+bool InvalidateBlock(const CPolicy& policy, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex *pindex)
 {
     AssertLockHeld(cs_main);
 
@@ -1897,7 +1896,7 @@ bool InvalidateBlock(CValidationState& state, const Consensus::Params& consensus
         setBlockIndexCandidates.erase(pindexWalk);
         // ActivateBestChain considers blocks already in chainActive
         // unconditionally valid already, so force disconnect away from it.
-        if (!DisconnectTip(state, consensusParams)) {
+        if (!DisconnectTip(policy, state, consensusParams)) {
             return false;
         }
     }
@@ -2229,7 +2228,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, const CChainParams& cha
     return true;
 }
 
-bool ProcessNewBlock(CValidationState &state, const CChainParams& chainparams, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
+bool ProcessNewBlock(const CPolicy& policy, CValidationState &state, const CChainParams& chainparams, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
 {
     // Preliminary checks
     bool checked = Consensus::CheckBlock(*pblock, state, chainparams.GetConsensus(), GetAdjustedTime());
@@ -2251,7 +2250,7 @@ bool ProcessNewBlock(CValidationState &state, const CChainParams& chainparams, C
             return error("%s: AcceptBlock FAILED", __func__);
     }
 
-    if (!ActivateBestChain(state, chainparams, pblock))
+    if (!ActivateBestChain(policy, state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
     return true;
@@ -2691,7 +2690,7 @@ bool LoadBlockIndex()
     return true;
 }
 
-bool InitBlockIndex(const CChainParams& chainparams) 
+bool InitBlockIndex(const CPolicy& policy, const CChainParams& chainparams) 
 {
     LOCK(cs_main);
     // Check whether we're already initialized
@@ -2718,7 +2717,7 @@ bool InitBlockIndex(const CChainParams& chainparams)
             CBlockIndex *pindex = AddToBlockIndex(block);
             if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
                 return error("LoadBlockIndex(): genesis block not accepted");
-            if (!ActivateBestChain(state, chainparams, &block))
+            if (!ActivateBestChain(policy, state, chainparams, &block))
                 return error("LoadBlockIndex(): genesis block cannot be activated");
             // Force a chainstate write so that when we VerifyDB in a moment, it doesn't check stale data
             return FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
@@ -2730,7 +2729,7 @@ bool InitBlockIndex(const CChainParams& chainparams)
     return true;
 }
 
-bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskBlockPos *dbp)
+bool LoadExternalBlockFile(const CPolicy& policy, const CChainParams& chainparams, FILE* fileIn, CDiskBlockPos *dbp)
 {
     // Map of disk positions for blocks with unknown parent (only used for reindex)
     static std::multimap<uint256, CDiskBlockPos> mapBlocksUnknownParent;
@@ -2788,7 +2787,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 // process in case the block isn't known yet
                 if (mapBlockIndex.count(hash) == 0 || (mapBlockIndex[hash]->nStatus & BLOCK_HAVE_DATA) == 0) {
                     CValidationState state;
-                    if (ProcessNewBlock(state, chainparams, NULL, &block, dbp))
+                    if (ProcessNewBlock(policy, state, chainparams, NULL, &block, dbp))
                         nLoaded++;
                     if (state.IsError())
                         break;
@@ -2810,7 +2809,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                             LogPrintf("%s: Processing out of order child %s of %s\n", __func__, block.GetHash().ToString(),
                                     head.ToString());
                             CValidationState dummy;
-                            if (ProcessNewBlock(dummy, chainparams, NULL, &block, &it->second))
+                            if (ProcessNewBlock(policy, dummy, chainparams, NULL, &block, &it->second))
                             {
                                 nLoaded++;
                                 queue.push_back(block.GetHash());
@@ -3237,9 +3236,8 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams)
+bool static ProcessMessage(const CPolicy& policy, CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams)
 {
-    const CPolicy& policy = Policy();
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->id);
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
@@ -3673,7 +3671,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                     if (setMisbehaving.count(fromPeer))
                         continue;
-                    if (AcceptToMemoryPool(Policy(), mempool, stateDummy, orphanTx, true, &fMissingInputs2))
+                    if (AcceptToMemoryPool(policy, mempool, stateDummy, orphanTx, true, &fMissingInputs2))
                     {
                         LogPrint("mempool", "   accepted orphan tx %s\n", orphanHash.ToString());
                         RelayTransaction(orphanTx);
@@ -3793,7 +3791,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->AddInventoryKnown(inv);
 
         CValidationState state;
-        ProcessNewBlock(state, chainparams, pfrom, &block);
+        ProcessNewBlock(policy, state, chainparams, pfrom, &block);
         int nDoS;
         if (state.IsInvalid(nDoS)) {
             pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
@@ -4043,6 +4041,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 bool ProcessMessages(CNode* pfrom)
 {
     const CChainParams& chainparams = Params();
+    const CPolicy& policy = Policy();
     //if (fDebug)
     //    LogPrintf("%s(%u messages)\n", __func__, pfrom->vRecvMsg.size());
 
@@ -4117,7 +4116,7 @@ bool ProcessMessages(CNode* pfrom)
         bool fRet = false;
         try
         {
-            fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime, chainparams);
+            fRet = ProcessMessage(policy, pfrom, strCommand, vRecv, msg.nTime, chainparams);
             boost::this_thread::interruption_point();
         }
         catch (const std::ios_base::failure& e)

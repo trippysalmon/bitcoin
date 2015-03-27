@@ -8,6 +8,7 @@
 #include "checkpoints.h"
 #include "consensus/validation.h"
 #include "main.h" // chainActive
+#include "policy/policy.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "rpcserver.h"
@@ -653,11 +654,11 @@ Value invalidateblock(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
         CBlockIndex* pblockindex = mapBlockIndex[hash];
-        InvalidateBlock(state, Params().GetConsensus(), pblockindex);
+        InvalidateBlock(Policy(), state, Params().GetConsensus(), pblockindex);
     }
 
     if (state.IsValid()) {
-        ActivateBestChain(state, Params());
+        ActivateBestChain(Policy(), state, Params());
     }
 
     if (!state.IsValid()) {
@@ -696,7 +697,7 @@ Value reconsiderblock(const Array& params, bool fHelp)
     }
 
     if (state.IsValid()) {
-        ActivateBestChain(state, Params());
+        ActivateBestChain(Policy(), state, Params());
     }
 
     if (!state.IsValid()) {

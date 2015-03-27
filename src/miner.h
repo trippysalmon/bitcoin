@@ -12,6 +12,7 @@
 
 class CBlockIndex;
 class CChainParams;
+class CPolicy;
 class CReserveKey;
 class CScript;
 class CWallet;
@@ -25,10 +26,10 @@ struct CBlockTemplate
 };
 
 /** Run the miner threads */
-void GenerateBitcoins(const CChainParams& params, bool fGenerate, CWallet* pwallet, int nThreads);
+void GenerateBitcoins(const CPolicy& policy, const CChainParams& params, bool fGenerate, CWallet* pwallet, int nThreads);
 /** Generate a new block, without valid proof-of-work */
-CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& scriptPubKeyIn);
-CBlockTemplate* CreateNewBlockWithKey(const CChainParams& chainparams, CReserveKey& reservekey);
+CBlockTemplate* CreateNewBlock(const CPolicy& policy, const CChainParams& chainparams, const CScript& scriptPubKeyIn);
+CBlockTemplate* CreateNewBlockWithKey(const CPolicy& policy, const CChainParams& chainparams, CReserveKey& reservekey);
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);

@@ -110,7 +110,7 @@ void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, 
         pblock->nBits = GetNextWorkRequiredLog(pindexPrev, pblock, consensusParams);
 }
 
-CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& scriptPubKeyIn)
+CBlockTemplate* CreateNewBlock(const CPolicy& policy, const CChainParams& chainparams, const CScript& scriptPubKeyIn)
 {
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
@@ -270,7 +270,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             double dPriorityDelta = 0;
             CAmount nFeeDelta = 0;
             mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-            if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && !Policy().ApproveFeeRate(feeRate) && (nBlockSize + nTxSize >= nBlockMinSize))
+            if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && !policy.ApproveFeeRate(feeRate) && (nBlockSize + nTxSize >= nBlockMinSize))
                 continue;
 
             // Prioritise by fee once past the priority size or we run out of high-priority
@@ -417,17 +417,17 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
     }
 }
 
-CBlockTemplate* CreateNewBlockWithKey(const CChainParams& chainparams, CReserveKey& reservekey)
+CBlockTemplate* CreateNewBlockWithKey(const CPolicy& policy, const CChainParams& chainparams, CReserveKey& reservekey)
 {
     CPubKey pubkey;
     if (!reservekey.GetReservedKey(pubkey))
         return NULL;
 
     CScript scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
-    return CreateNewBlock(chainparams, scriptPubKey);
+    return CreateNewBlock(policy, chainparams, scriptPubKey);
 }
 
-static bool ProcessBlockFound(CBlock* pblock, const CChainParams& chainparams, CWallet& wallet, CReserveKey& reservekey)
+static bool ProcessBlockFound(const CPolicy& policy, CBlock* pblock, const CChainParams& chainparams, CWallet& wallet, CReserveKey& reservekey)
 {
     LogPrintf("%s\n", pblock->ToString());
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
@@ -450,13 +450,13 @@ static bool ProcessBlockFound(CBlock* pblock, const CChainParams& chainparams, C
 
     // Process this block the same as if we had received it from another node
     CValidationState state;
-    if (!ProcessNewBlock(state, chainparams, NULL, pblock))
+    if (!ProcessNewBlock(policy, state, chainparams, NULL, pblock))
         return error("BitcoinMiner: ProcessNewBlock, block not accepted");
 
     return true;
 }
 
-void static BitcoinMiner(const CChainParams& chainparams, CWallet *pwallet)
+void static BitcoinMiner(const CPolicy& policy, const CChainParams& chainparams, CWallet *pwallet)
 {
     LogPrintf("BitcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -481,7 +481,7 @@ void static BitcoinMiner(const CChainParams& chainparams, CWallet *pwallet)
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = chainActive.Tip();
 
-            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(chainparams, reservekey));
+            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(policy, chainparams, reservekey));
             if (!pblocktemplate.get())
             {
                 LogPrintf("Error in BitcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
@@ -513,7 +513,7 @@ void static BitcoinMiner(const CChainParams& chainparams, CWallet *pwallet)
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
                         LogPrintf("BitcoinMiner:\n");
                         LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-                        ProcessBlockFound(pblock, chainparams, *pwallet, reservekey);
+                        ProcessBlockFound(policy, pblock, chainparams, *pwallet, reservekey);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
                         // In regression test mode, stop mining after a block is found.
@@ -553,7 +553,7 @@ void static BitcoinMiner(const CChainParams& chainparams, CWallet *pwallet)
     }
 }
 
-void GenerateBitcoins(const CChainParams& chainparams, bool fGenerate, CWallet* pwallet, int nThreads)
+void GenerateBitcoins(const CPolicy& policy, const CChainParams& chainparams, bool fGenerate, CWallet* pwallet, int nThreads)
 {
     static boost::thread_group* minerThreads = NULL;
 
@@ -577,7 +577,7 @@ void GenerateBitcoins(const CChainParams& chainparams, bool fGenerate, CWallet* 
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, boost::cref(chainparams), pwallet));
+        minerThreads->create_thread(boost::bind(&BitcoinMiner, boost::cref(policy), boost::cref(chainparams), pwallet));
 }
 
 #endif // ENABLE_WALLET

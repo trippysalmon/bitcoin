@@ -13,6 +13,7 @@
 #include "miner.h"
 #include "net.h"
 #include "policy/estimator.h"
+#include "policy/policy.h"
 #include "rpcserver.h"
 #include "txmempool.h"
 #include "util.h"
@@ -152,7 +153,7 @@ Value generate(const Array& params, bool fHelp)
     Array blockHashes;
     while (nHeight < nHeightEnd)
     {
-        auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(Params(), reservekey));
+        auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(Policy(), Params(), reservekey));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
         CBlock *pblock = &pblocktemplate->block;
@@ -166,7 +167,7 @@ Value generate(const Array& params, bool fHelp)
             ++pblock->nNonce;
         }
         CValidationState state;
-        if (!ProcessNewBlock(state, Params(), NULL, pblock))
+        if (!ProcessNewBlock(Policy(), state, Params(), NULL, pblock))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
@@ -216,7 +217,7 @@ Value setgenerate(const Array& params, bool fHelp)
 
     mapArgs["-gen"] = (fGenerate ? "1" : "0");
     mapArgs ["-genproclimit"] = itostr(nGenProcLimit);
-    GenerateBitcoins(Params(), fGenerate, pwalletMain, nGenProcLimit);
+    GenerateBitcoins(Policy(), Params(), fGenerate, pwalletMain, nGenProcLimit);
 
     return Value::null;
 }
@@ -509,7 +510,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             pblocktemplate = NULL;
         }
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = CreateNewBlock(Params(), scriptDummy);
+        pblocktemplate = CreateNewBlock(Policy(), Params(), scriptDummy);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -652,7 +653,7 @@ Value submitblock(const Array& params, bool fHelp)
     CValidationState state;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, Params(), NULL, &block);
+    bool fAccepted = ProcessNewBlock(Policy(), state, Params(), NULL, &block);
     UnregisterValidationInterface(&sc);
     if (fBlockPresent)
     {
