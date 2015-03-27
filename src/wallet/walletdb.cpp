@@ -8,6 +8,7 @@
 #include "base58.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "policy/policy.h"
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
@@ -939,7 +940,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
         LogPrintf("Cannot create database file %s\n", filename);
         return false;
     }
-    CWallet dummyWallet;
+    CWallet dummyWallet(Policy());
     CWalletScanState wss;
 
     DbTxn* ptxn = dbenv.TxnBegin();
