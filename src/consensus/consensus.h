@@ -75,6 +75,10 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 /** Block validation functions */
 
 /**
+ * Fully verify a block.
+ */
+bool VerifyBlock(const CBlock&, CValidationState&, const Consensus::Params&, int64_t nTime, const CBlockIndexBase*, PrevIndexGetter);
+/**
  * Context-independent CBlock validity checks
  */
 bool CheckBlock(const CBlock& block, CValidationState& state, const Params& params, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
