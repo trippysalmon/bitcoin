@@ -37,6 +37,10 @@ class Params;
 /** Transaction validation functions */
 
 /**
+ * Fully verify a transaction.
+ */
+bool VerifyTx(const CTransaction& tx, CValidationState &state, int nBlockHeight, int64_t nBlockTime, const CCoinsViewCache& inputs, int nSpendHeight, bool cacheStore, unsigned int flags);
+/**
  * Context-independent CTransaction validity checks
  */
 bool CheckTx(const CTransaction& tx, CValidationState& state);
