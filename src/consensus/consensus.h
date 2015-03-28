@@ -56,6 +56,7 @@ bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const
 
 /** Block header validation functions */
 
+bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, CBlockIndex* pindexPrev);
 /**
  * Context-independent CBlockHeader validity checks
  */
