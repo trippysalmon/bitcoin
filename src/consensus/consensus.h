@@ -88,6 +88,6 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
  * Returns true if there are nRequired or more blocks of minVersion or above
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired);
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
