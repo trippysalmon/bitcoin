@@ -78,13 +78,13 @@ public:
     }
 };
 
-void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
+void UpdateTime(CBlockHeader* pblock, const Consensus::Params& params, const CBlockIndex* pindexPrev)
 {
     pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
 
     // Updating time can change work required on testnet:
-    if (Params().AllowMinDifficultyBlocks())
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
+    if (params.fPowAllowMinDifficultyBlocks)
+        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, params);
 }
 
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CBlockIndex*& pindexPrev)
@@ -94,10 +94,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CBlockIndex*& pind
     if(!pblocktemplate.get())
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
+    const CChainParams& params = Params();
 
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
-    if (Params().MineBlocksOnDemand())
+    if (params.MineBlocksOnDemand())
         pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
 
     // Create coinbase tx
@@ -325,8 +326,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CBlockIndex*& pind
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-        UpdateTime(pblock, pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
+        UpdateTime(pblock, params.GetConsensus(), pindexPrev);
+        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, params.GetConsensus());
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
@@ -426,7 +427,7 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
 
 bool static ScanLoop(CBlock *pblock, CBlockIndex *pindexPrev, CWallet *pwallet, CReserveKey& reservekey)
 {
-    UpdateTime(pblock, pindexPrev);
+    UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
     arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
 
     uint256 hash;

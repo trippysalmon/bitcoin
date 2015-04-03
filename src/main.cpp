@@ -75,7 +75,7 @@ void EraseOrphansFor(NodeId peer);
  * and going backwards.
  */
 static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired);
-static void CheckBlockIndex();
+static void CheckBlockIndex(const Consensus::Params& params);
 
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
@@ -1682,7 +1682,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const CChainPara
 {
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
-    if (!CheckBlock(block, state, !fJustCheck, !fJustCheck))
+    if (!CheckBlock(block, state, params.GetConsensus(), !fJustCheck, !fJustCheck))
         return false;
 
     // verify that the view's current state corresponds to the previous block
@@ -2194,6 +2194,7 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
 bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
     CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
+    const CChainParams& params = Params();
     do {
         boost::this_thread::interruption_point();
 
@@ -2229,7 +2230,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
             uiInterface.NotifyBlockTip(hashNewTip);
         }
     } while(pindexMostWork != chainActive.Tip());
-    CheckBlockIndex();
+    CheckBlockIndex(params.GetConsensus());
 
     // Write changes periodically to disk, after relay.
     if (!FlushStateToDisk(state, FLUSH_STATE_PERIODIC)) {
@@ -2465,10 +2466,10 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
     return true;
 }
 
-bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW)
+bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus()))
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, params))
         return state.DoS(50, error("CheckBlockHeader(): proof of work failed"),
                          REJECT_INVALID, "high-hash");
 
@@ -2480,13 +2481,13 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     return true;
 }
 
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot)
+bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (!CheckBlockHeader(block, state, fCheckPOW))
+    if (!CheckBlockHeader(block, state, params, fCheckPOW))
         return false;
 
     // Check the merkle root.
@@ -2540,10 +2541,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     return true;
 }
 
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex * const pindexPrev)
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, const CBlockIndex* pindexPrev)
 {
     uint256 hash = block.GetHash();
-    if (hash == Params().HashGenesisBlock())
+    if (hash == params.hashGenesisBlock)
         return true;
 
     assert(pindexPrev);
@@ -2551,7 +2552,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     int nHeight = pindexPrev->nHeight+1;
 
     // Check proof of work
-    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, Params().GetConsensus()))
+    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, params))
         return state.DoS(100, error("%s: incorrect proof of work", __func__),
                          REJECT_INVALID, "bad-diffbits");
 
@@ -2571,14 +2572,14 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.DoS(100, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
     // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, Params().RejectBlockOutdatedMajority()))
+    if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, params.nMajorityRejectBlockOutdated))
     {
         return state.Invalid(error("%s: rejected nVersion=1 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
     }
 
     // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 3 && IsSuperMajority(3, pindexPrev, Params().RejectBlockOutdatedMajority()))
+    if (block.nVersion < 3 && IsSuperMajority(3, pindexPrev, params.nMajorityRejectBlockOutdated))
     {
         return state.Invalid(error("%s : rejected nVersion=2 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
@@ -2587,7 +2588,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     return true;
 }
 
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex * const pindexPrev)
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, CBlockIndex * const pindexPrev)
 {
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
 
@@ -2599,7 +2600,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, Params().EnforceBlockUpgradeMajority()))
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, params.nMajorityEnforceBlockUpgrade))
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -2614,6 +2615,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
+    const CChainParams& params = Params();
     // Check for duplicate
     uint256 hash = block.GetHash();
     BlockMap::iterator miSelf = mapBlockIndex.find(hash);
@@ -2628,12 +2630,12 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
         return true;
     }
 
-    if (!CheckBlockHeader(block, state))
+    if (!CheckBlockHeader(block, state, params.GetConsensus()))
         return false;
 
     // Get prev block index
     CBlockIndex* pindexPrev = NULL;
-    if (hash != Params().HashGenesisBlock()) {
+    if (hash != params.GetConsensus().hashGenesisBlock) {
         BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
         if (mi == mapBlockIndex.end())
             return state.DoS(10, error("%s: prev block not found", __func__), 0, "bad-prevblk");
@@ -2642,7 +2644,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
             return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
     }
 
-    if (!ContextualCheckBlockHeader(block, state, pindexPrev))
+    if (!ContextualCheckBlockHeader(block, state, params.GetConsensus(), pindexPrev))
         return false;
 
     if (pindex == NULL)
@@ -2657,6 +2659,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
 bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, CDiskBlockPos* dbp)
 {
     AssertLockHeld(cs_main);
+    const CChainParams& params = Params();
 
     CBlockIndex *&pindex = *ppindex;
 
@@ -2669,7 +2672,8 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
         return true;
     }
 
-    if ((!CheckBlock(block, state)) || !ContextualCheckBlock(block, state, pindex->pprev)) {
+    if (!CheckBlock(block, state, params.GetConsensus()) || 
+        !ContextualCheckBlock(block, state, params.GetConsensus(), pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
@@ -2716,7 +2720,8 @@ static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned 
 bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
 {
     // Preliminary checks
-    bool checked = CheckBlock(*pblock, state);
+    const CChainParams& params = Params();
+    bool checked = CheckBlock(*pblock, state, params.GetConsensus());
 
     {
         LOCK(cs_main);
@@ -2731,7 +2736,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         if (pindex && pfrom) {
             mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
         }
-        CheckBlockIndex();
+        CheckBlockIndex(params.GetConsensus());
         if (!ret)
             return error("%s: AcceptBlock FAILED", __func__);
     }
@@ -2754,11 +2759,11 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, pindexPrev))
+    if (!ContextualCheckBlockHeader(block, state, params.GetConsensus(), pindexPrev))
         return false;
-    if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
+    if (!CheckBlock(block, state, params.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return false;
-    if (!ContextualCheckBlock(block, state, pindexPrev))
+    if (!ContextualCheckBlock(block, state, params.GetConsensus(), pindexPrev))
         return false;
     if (!ConnectBlock(block, state, params, &indexDummy, viewNew, true))
         return false;
@@ -2993,7 +2998,7 @@ bool CVerifyDB::VerifyDB(CCoinsView *coinsview, int nCheckLevel, int nCheckDepth
         if (!ReadBlockFromDisk(block, pindex))
             return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 1: verify block validity
-        if (nCheckLevel >= 1 && !CheckBlock(block, state))
+        if (nCheckLevel >= 1 && !CheckBlock(block, state, params.GetConsensus()))
             return error("VerifyDB(): *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
@@ -3222,7 +3227,7 @@ bool LoadExternalBlockFile(const CChainParams& params, FILE* fileIn, CDiskBlockP
     return nLoaded > 0;
 }
 
-void static CheckBlockIndex()
+void static CheckBlockIndex(const Consensus::Params& params)
 {
     if (!fCheckBlockIndex) {
         return;
@@ -3266,7 +3271,7 @@ void static CheckBlockIndex()
         // Begin: actual consistency checks.
         if (pindex->pprev == NULL) {
             // Genesis block checks.
-            assert(pindex->GetBlockHash() == Params().HashGenesisBlock()); // Genesis block's hash must match.
+            assert(pindex->GetBlockHash() == params.hashGenesisBlock); // Genesis block's hash must match.
             assert(pindex == chainActive.Genesis()); // The current active chain's genesis block must be this block.
         }
         // HAVE_DATA is equivalent to VALID_TRANSACTIONS and equivalent to nTx > 0 (we stored the number of transactions in the block)
@@ -4119,7 +4124,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexLast), uint256());
         }
 
-        CheckBlockIndex();
+        CheckBlockIndex(params.GetConsensus());
     }
 
     else if (strCommand == "block" && !fImporting && !fReindex) // Ignore blocks received while importing

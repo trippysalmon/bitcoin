@@ -6,6 +6,7 @@
 #ifndef BITCOIN_MINER_H
 #define BITCOIN_MINER_H
 
+#include "consensus/params.h"
 #include "primitives/block.h"
 
 #include <stdint.h>
@@ -31,6 +32,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CBlockIndex*& pind
 CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey, CBlockIndex*& pindexPrev);
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
-void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
+void UpdateTime(CBlockHeader* block, const Consensus::Params& params, const CBlockIndex* pindexPrev);
 
 #endif // BITCOIN_MINER_H
