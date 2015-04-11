@@ -15,6 +15,23 @@
 #include "tinyformat.h"
 #include "uint256.h"
 
+#include <algorithm>  
+
+static const unsigned int MEDIAN_TIME_SPAN = 11;
+
+int64_t GetMedianTimePast(const CBlockIndex* pindex)
+{
+    int64_t pmedian[MEDIAN_TIME_SPAN];
+    int64_t* pbegin = &pmedian[MEDIAN_TIME_SPAN];
+    int64_t* pend = &pmedian[MEDIAN_TIME_SPAN];
+
+    for (unsigned int i = 0; i < MEDIAN_TIME_SPAN && pindex; i++, pindex = pindex->pprev)
+        *(--pbegin) = (int64_t)pindex->nTime;
+
+    std::sort(pbegin, pend);
+    return pbegin[(pend - pbegin)/2];
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
@@ -130,7 +147,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits");
 
     // Check timestamp against prev
-    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
+    if (block.GetBlockTime() <= GetMedianTimePast(pindexPrev))
         return state.Invalid(false, REJECT_INVALID, "time-too-old");
 
     // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
