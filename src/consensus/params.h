@@ -29,6 +29,7 @@ struct Params {
     int BIP34Height;
     uint256 BIP34Hash;
     /** Proof of work parameters */
+    uint32_t nPowMedianTimeSpan;
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;

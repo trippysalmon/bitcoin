@@ -658,6 +658,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRE
 
 bool CheckFinalTx(const CTransaction &tx, int flags)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus(); // TODO Globals: make parameter
     AssertLockHeld(cs_main);
 
     // By convention a negative value for flags indicates that the
@@ -682,7 +683,7 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
     // chain tip, so we use that to calculate the median time passed to
     // IsFinalTx() if LOCKTIME_MEDIAN_TIME_PAST is set.
     const int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST)
-                             ? chainActive.Tip()->GetMedianTimePast()
+                             ? GetMedianTimePast(chainActive.Tip(), consensusParams)
                              : GetAdjustedTime();
 
     return IsFinalTx(tx, nBlockHeight, nBlockTime);

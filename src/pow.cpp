@@ -10,6 +10,21 @@
 #include "primitives/block.h"
 #include "uint256.h"
 
+#include <algorithm>
+
+int64_t GetMedianTimePast(const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+{
+    int64_t pmedian[consensusParams.nPowMedianTimeSpan];
+    int64_t* pbegin = &pmedian[consensusParams.nPowMedianTimeSpan];
+    int64_t* pend = &pmedian[consensusParams.nPowMedianTimeSpan];
+
+    for (unsigned int i = 0; i < consensusParams.nPowMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
+        *(--pbegin) = (int64_t)pindex->GetBlockTime();
+
+    std::sort(pbegin, pend);
+    return pbegin[(pend - pbegin)/2];
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
