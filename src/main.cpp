@@ -1426,9 +1426,8 @@ static int64_t nTimeIndex = 0;
 static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 
-bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
+bool ConnectBlock(const CBlock& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
 {
-    const CChainParams& chainparams = Params();
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
     if (!Consensus::CheckBlock(block, state, chainparams.GetConsensus(), GetAdjustedTime(), !fJustCheck, !fJustCheck))
@@ -1756,7 +1755,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     {
         CCoinsViewCache view(pcoinsTip);
         CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
-        bool rv = ConnectBlock(*pblock, state, pindexNew, view);
+        bool rv = ConnectBlock(*pblock, state, chainparams, pindexNew, view);
         GetMainSignals().BlockChecked(*pblock, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -2392,7 +2391,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
         return error("%s: Consensus::CheckBlock: %s", __func__, state.GetRejectReason().c_str());
     if (!Consensus::ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev, GetPrevIndex))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.GetRejectReason().c_str());
-    if (!ConnectBlock(block, state, &indexDummy, viewNew, true))
+    if (!ConnectBlock(block, state, chainparams, &indexDummy, viewNew, true))
         return false;
     assert(state.IsValid());
 
@@ -2760,7 +2759,7 @@ bool CVerifyDB::VerifyDB(CCoinsView *coinsview, int nCheckLevel, int nCheckDepth
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-            if (!ConnectBlock(block, state, pindex, coins))
+            if (!ConnectBlock(block, state, chainparams, pindex, coins))
                 return error("VerifyDB(): *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         }
     }
@@ -3358,9 +3357,8 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
+bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams)
 {
-    const CChainParams& chainparams = Params();
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->id);
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
@@ -4163,6 +4161,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 // requires LOCK(cs_vRecvMsg)
 bool ProcessMessages(CNode* pfrom)
 {
+    const CChainParams& chainparams = Params();
     //if (fDebug)
     //    LogPrintf("%s(%u messages)\n", __func__, pfrom->vRecvMsg.size());
 
@@ -4177,7 +4176,7 @@ bool ProcessMessages(CNode* pfrom)
     bool fOk = true;
 
     if (!pfrom->vRecvGetData.empty())
-        ProcessGetData(pfrom, Params().GetConsensus());
+        ProcessGetData(pfrom, chainparams.GetConsensus());
 
     // this maintains the order of responses
     if (!pfrom->vRecvGetData.empty()) return fOk;
@@ -4204,7 +4203,7 @@ bool ProcessMessages(CNode* pfrom)
         it++;
 
         // Scan for message start
-        if (memcmp(msg.hdr.pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE) != 0) {
+        if (memcmp(msg.hdr.pchMessageStart, chainparams.MessageStart(), MESSAGE_START_SIZE) != 0) {
             LogPrintf("PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->id);
             fOk = false;
             break;
@@ -4212,7 +4211,7 @@ bool ProcessMessages(CNode* pfrom)
 
         // Read header
         CMessageHeader& hdr = msg.hdr;
-        if (!hdr.IsValid(Params().MessageStart()))
+        if (!hdr.IsValid(chainparams.MessageStart()))
         {
             LogPrintf("PROCESSMESSAGE: ERRORS IN HEADER %s peer=%d\n", SanitizeString(hdr.GetCommand()), pfrom->id);
             continue;
@@ -4237,7 +4236,7 @@ bool ProcessMessages(CNode* pfrom)
         bool fRet = false;
         try
         {
-            fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime);
+            fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime, chainparams);
             boost::this_thread::interruption_point();
         }
         catch (const std::ios_base::failure& e)
