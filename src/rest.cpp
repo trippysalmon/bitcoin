@@ -3,9 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
+#include "main.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
-#include "main.h"
 #include "rpcserver.h"
 #include "streams.h"
 #include "sync.h"
@@ -158,6 +159,7 @@ static bool rest_block(AcceptedConnection* conn,
                        bool fRun,
                        bool showTxDetails)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     vector<string> params;
     const RetFormat rf = ParseDataFormat(params, strReq);
 
@@ -174,7 +176,7 @@ static bool rest_block(AcceptedConnection* conn,
             throw RESTERR(HTTP_NOT_FOUND, hashStr + " not found");
 
         pblockindex = mapBlockIndex[hash];
-        if (!ReadBlockFromDisk(block, pblockindex))
+        if (!ReadBlockFromDisk(block, pblockindex, consensusParams))
             throw RESTERR(HTTP_NOT_FOUND, hashStr + " not found");
     }
 
@@ -267,7 +269,7 @@ static bool rest_tx(AcceptedConnection* conn,
 
     CTransaction tx;
     uint256 hashBlock = uint256();
-    if (!GetTransaction(hash, tx, hashBlock, true))
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
         throw RESTERR(HTTP_NOT_FOUND, hashStr + " not found");
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);

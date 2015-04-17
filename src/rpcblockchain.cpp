@@ -303,7 +303,7 @@ Value getblock(const Array& params, bool fHelp)
     CBlock block;
     CBlockIndex* pblockindex = mapBlockIndex[hash];
 
-    if(!ReadBlockFromDisk(block, pblockindex))
+    if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
 
     if (!fVerbose)
@@ -651,7 +651,7 @@ Value invalidateblock(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
         CBlockIndex* pblockindex = mapBlockIndex[hash];
-        InvalidateBlock(state, pblockindex);
+        InvalidateBlock(state, Params().GetConsensus(), pblockindex);
     }
 
     if (state.IsValid()) {
