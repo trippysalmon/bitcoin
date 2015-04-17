@@ -462,7 +462,7 @@ Value verifychain(const Array& params, bool fHelp)
     if (params.size() > 1)
         nCheckDepth = params[1].get_int();
 
-    return CVerifyDB().VerifyDB(pcoinsTip, nCheckLevel, nCheckDepth);
+    return CVerifyDB().VerifyDB(Params(), pcoinsTip, nCheckLevel, nCheckDepth);
 }
 
 Value getblockchaininfo(const Array& params, bool fHelp)
@@ -655,7 +655,7 @@ Value invalidateblock(const Array& params, bool fHelp)
     }
 
     if (state.IsValid()) {
-        ActivateBestChain(state);
+        ActivateBestChain(state, Params());
     }
 
     if (!state.IsValid()) {
@@ -694,7 +694,7 @@ Value reconsiderblock(const Array& params, bool fHelp)
     }
 
     if (state.IsValid()) {
-        ActivateBestChain(state);
+        ActivateBestChain(state, Params());
     }
 
     if (!state.IsValid()) {
