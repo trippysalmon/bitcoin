@@ -348,7 +348,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CValidationState state;
-        if (!TestBlockValidity(state, *pblock, pindexPrev, false, false))
+        if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false))
             throw std::runtime_error("CreateNewBlock(): TestBlockValidity failed");
     }
 
@@ -425,6 +425,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
 
 static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
+    const CChainParams& chainparams = Params();
     LogPrintf("%s\n", pblock->ToString());
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
@@ -446,7 +447,7 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
 
     // Process this block the same as if we had received it from another node
     CValidationState state;
-    if (!ProcessNewBlock(state, NULL, pblock))
+    if (!ProcessNewBlock(state, chainparams, NULL, pblock))
         return error("BitcoinMiner: ProcessNewBlock, block not accepted");
 
     return true;
