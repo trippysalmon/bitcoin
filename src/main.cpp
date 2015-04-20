@@ -2570,15 +2570,14 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     if (pcheckpoint && nHeight < pcheckpoint->nHeight)
         return state.DoS(100, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
-    // Reject block.nVersion=1 blocks after the BIP34 switchover point.
-    if (block.nVersion < 2 && nHeight >= Params().GetConsensus().nBIP34Height)
-    {
-        return state.Invalid(error("%s: rejected nVersion=1 block", __func__),
+    // Reject block.nVersion < consensusParams.nLastSoftforkHeightVersion blocks after the last softfork enforced by height
+    if (block.nVersion < consensusParams.nLastSoftforkVersion && nHeight >= consensusParams.nLastSoftforkHeight)
+        return state.Invalid(error("%s: rejected nVersion=%d block at nHeight %d after softfork in %d", __func__, 
+                                   block.nVersion, nHeight, consensusParams.nLastSoftforkHeight),
                              REJECT_OBSOLETE, "bad-version");
-    }
 
     // Reject block.nVersion=n blocks when 95% (75% on testnet) of the network has upgraded (last version=3):
-    for (int i = 3; i <= 3; i++)
+    for (int i = consensusParams.nLastSoftforkVersion + 1; i <= consensusParams.nLastVotedVersion; i++)
         if (block.nVersion < i && IsSuperMajority(i, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
             return state.Invalid(error("%s: rejected nVersion=%d block", __func__, i-1), 
                                  REJECT_OBSOLETE, "bad-version");
@@ -2598,7 +2597,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
         }
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height after the BIP34 switchover point.
-    if (block.nVersion >= 2 && nHeight >= Params().GetConsensus().nBIP34Height)
+    if (block.nVersion >= 2 && nHeight >= consensusParams.nHeightV2)
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||

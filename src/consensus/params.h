@@ -19,8 +19,14 @@ struct Params {
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
     int nMajorityWindow;
-    /** Block height at which BIP34 becomes active */
-    int nBIP34Height;
+    /** Last version being voted */
+    int nLastVotedVersion;
+    /** Version of last confirmed softfork */
+    int nLastSoftforkVersion;
+    /** Block height of last confirmed softfork */
+    int nLastSoftforkHeight;
+    /** Block height at which BIP34 becomes active (block version 2) */
+    int nHeightV2;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
