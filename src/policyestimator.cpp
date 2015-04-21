@@ -497,7 +497,7 @@ void CBlockPolicyEstimator::Write(CAutoFile& fileout)
     priStats.Write(fileout);
 }
 
-void CBlockPolicyEstimator::Read(CAutoFile& filein, const CFeeRate& minRelayFee)
+void CBlockPolicyEstimator::Read(CAutoFile& filein)
 {
     int nFileBestSeenHeight;
     filein >> nFileBestSeenHeight;

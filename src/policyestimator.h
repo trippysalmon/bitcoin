@@ -243,7 +243,7 @@ public:
     void Write(CAutoFile& fileout);
 
     /** Read estimation data from a file */
-    void Read(CAutoFile& filein, const CFeeRate& minRelayFee);
+    void Read(CAutoFile& filein);
 
 private:
     unsigned int nBestSeenHeight;
