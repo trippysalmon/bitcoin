@@ -54,22 +54,22 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
     nTransactionsUpdated += n;
 }
 
-
-bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate)
+bool CTxMemPool::addUnchecked(const CTransaction& tx, const CAmount& nFee, int64_t nTime, double dPriority, unsigned int nHeight, bool fCurrentEstimate)
 {
+    const uint256& hash = tx.GetHash();
     // Add to memory pool without checking anything.
     // Used by main.cpp AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
     LOCK(cs);
     {
-        mapTx[hash] = entry;
-        const CTransaction& tx = mapTx[hash].GetTx();
+        mapTx[hash] = CTxMemPoolEntry(tx, nFee, nTime, dPriority, nHeight, HasNoInputsOf(tx));
+        const CTxMemPoolEntry& entry = mapTx[hash];
         for (unsigned int i = 0; i < tx.vin.size(); i++)
             mapNextTx[tx.vin[i].prevout] = CInPoint(&tx, i);
         nTransactionsUpdated++;
         totalTxSize += entry.GetTxSize();
-    }
     minerPolicyEstimator->processTransaction(entry, fCurrentEstimate);
+    }
     return true;
 }
 
