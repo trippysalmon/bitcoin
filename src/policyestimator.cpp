@@ -11,6 +11,8 @@
 #include "txmempool.h"
 #include "util.h"
 
+#include <boost/foreach.hpp>
+
 extern CFeeRate minRelayTxFee;
 
 void TxConfirmStats::Initialize(std::vector<double> defaultBuckets, unsigned int maxConfirms, double _decay, std::string _dataTypeString)
