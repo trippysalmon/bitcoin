@@ -11,8 +11,6 @@
 #include "txmempool.h"
 #include "util.h"
 
-extern CFeeRate minRelayTxFee;
-
 void TxConfirmStats::Initialize(std::vector<double> defaultBuckets, unsigned int maxConfirms, double _decay, std::string _dataTypeString)
 {
     decay = _decay;
@@ -293,10 +291,11 @@ void CBlockPolicyEstimator::removeTx(uint256 hash)
     mapMemPoolTxs.erase(hash);
 }
 
-CBlockPolicyEstimator::CBlockPolicyEstimator() : nBestSeenHeight(0)
+CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee) 
+    : minRelayFee(_minRelayFee), nBestSeenHeight(0)
 {
     std::vector<double> vfeelist;
-    for (double bucketBoundary = minRelayTxFee.GetFeePerK(); bucketBoundary <= MAX_FEERATE; bucketBoundary *= FEE_SPACING) {
+    for (double bucketBoundary = minRelayFee.GetFeePerK(); bucketBoundary <= MAX_FEERATE; bucketBoundary *= FEE_SPACING) {
         vfeelist.push_back(bucketBoundary);
     }
     vfeelist.push_back(INF_FEERATE);
@@ -317,7 +316,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator() : nBestSeenHeight(0)
 
 bool CBlockPolicyEstimator::isFeeDataPoint(const CFeeRate &fee, double pri)
 {
-    if ((pri < AllowFreeThreshold() && fee >= minRelayTxFee) ||
+    if ((pri < AllowFreeThreshold() && fee >= minRelayFee) ||
         (pri < priUnlikely && fee > feeLikely)) {
         return true;
     }
@@ -326,7 +325,7 @@ bool CBlockPolicyEstimator::isFeeDataPoint(const CFeeRate &fee, double pri)
 
 bool CBlockPolicyEstimator::isPriDataPoint(const CFeeRate &fee, double pri)
 {
-    if ((fee < minRelayTxFee && pri >= AllowFreeThreshold()) ||
+    if ((fee < minRelayFee && pri >= AllowFreeThreshold()) ||
         (fee < feeUnlikely && pri > priLikely)) {
         return true;
     }

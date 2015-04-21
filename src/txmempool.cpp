@@ -46,8 +46,7 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 }
 
 CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
-    nTransactionsUpdated(0),
-    minRelayFee(_minRelayFee)
+    nTransactionsUpdated(0)
 {
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
@@ -59,7 +58,7 @@ CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
     // to wait a day or two to save a fraction of a penny in fees.
     // Confirmation times for very-low-fee transactions that take more
     // than an hour or three to confirm are highly variable.
-    minerPolicyEstimator = new CBlockPolicyEstimator();
+    minerPolicyEstimator = new CBlockPolicyEstimator(_minRelayFee);
 }
 
 CTxMemPool::~CTxMemPool()

@@ -213,7 +213,7 @@ class CBlockPolicyEstimator
 {
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator();
+    CBlockPolicyEstimator(const CFeeRate& minRelayFee);
 
     /** Process all the transactions that have been included in a block */
     void processBlock(unsigned int nBlockHeight, std::vector<CTxMemPoolEntry>& entries);
@@ -246,6 +246,7 @@ public:
     void Read(CAutoFile& filein);
 
 private:
+    const CFeeRate minRelayFee; //! Passed to constructor to avoid dependency on main
     unsigned int nBestSeenHeight;
     struct TxStatsInfo
     {
