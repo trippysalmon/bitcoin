@@ -49,7 +49,7 @@ private:
 
 public:
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
-                    int64_t _nTime, double _dPriority, unsigned int _nHeight);
+                    int64_t _nTime, double _dPriority, unsigned int _nHeight, bool poolHasNoInputsOf = false);
     CTxMemPoolEntry();
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
@@ -60,7 +60,6 @@ public:
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
-    bool HasNoInputsInPool(const CTxMemPool& pool) const;
 };
 
 class CBlockPolicyEstimator;
@@ -127,6 +126,11 @@ public:
     void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
+    /**
+     * Check that none of this transactions inputs are in the mempool, and thus
+     * the tx is not dependent on other mempool transactions to be included in a block.
+     */
+    bool HasNoInputsOf(const CTransaction& tx) const;
 
     /** Affect CreateNewBlock prioritisation of transactions */
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
