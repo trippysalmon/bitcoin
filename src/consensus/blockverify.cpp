@@ -9,7 +9,7 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "consensus/params.h"
-#include "main.h"
+#include "consensus/validation.h"
 #include "primitives/block.h"
 #include "timedata.h"
 #include "tinyformat.h"

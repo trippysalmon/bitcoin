@@ -6,7 +6,7 @@
 #include "consensus/consensus.h"
 
 #include "coins.h"
-#include "main.h"
+#include "consensus/validation.h"
 #include "primitives/transaction.h"
 #include "script/sigcache.h"
 #include "tinyformat.h"
