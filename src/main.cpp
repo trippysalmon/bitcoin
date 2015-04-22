@@ -777,13 +777,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    if (!CheckTransaction(tx, state))
-        return error("%s: CheckTransaction: ", __func__, state.GetRejectReason().c_str());
-
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.DoS(100, error("AcceptToMemoryPool: coinbase as individual tx"),
                          REJECT_INVALID, "coinbase");
+
+    if (!Consensus::CheckTx(tx, state))
+        return error("%s: Consensus::CheckTx: ", __func__, state.GetRejectReason().c_str());
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
@@ -2449,8 +2449,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        if (!CheckTransaction(tx, state))
-            return error("%s: CheckTransaction: ", __func__, state.GetRejectReason().c_str());
+        if (!Consensus::CheckTx(tx, state))
+            return error("%s: Consensus::CheckTx: ", __func__, state.GetRejectReason().c_str());
 
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, block.vtx)

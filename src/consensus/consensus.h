@@ -24,13 +24,6 @@ static const int COINBASE_MATURITY = 100;
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
 
-/** Transaction validation functions */
-
-/**
- * Context-independent CTransaction validity checks
- */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state);
-
 /**
  * Consensus validations:
  * Check_ means checking everything possible with the data provided.
@@ -40,6 +33,12 @@ namespace Consensus {
 
 class Params;
 
+/** Transaction validation functions */
+
+/**
+ * Context-independent CTransaction validity checks
+ */
+bool CheckTx(const CTransaction& tx, CValidationState& state);
 /**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
  * This does not modify the UTXO set. This does not check scripts and sigs.

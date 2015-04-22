@@ -371,8 +371,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CWalletTx wtx;
             ssValue >> wtx;
             CValidationState state;
-            if (!(CheckTransaction(wtx, state) && (wtx.GetHash() == hash) && state.IsValid())) {
-                strErr = strprintf("%s: CheckTransaction: ", __func__, state.GetRejectReason().c_str());
+            if (!(Consensus::CheckTx(wtx, state) && (wtx.GetHash() == hash) && state.IsValid())) {
+                strErr = strprintf("%s: Consensus::CheckTx: ", __func__, state.GetRejectReason().c_str());
                 return false;
             }
 
