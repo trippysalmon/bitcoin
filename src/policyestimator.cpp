@@ -11,8 +11,6 @@
 #include "txmempool.h"
 #include "util.h"
 
-#include <boost/foreach.hpp>
-
 extern CFeeRate minRelayTxFee;
 
 void TxConfirmStats::Initialize(std::vector<double> defaultBuckets, unsigned int maxConfirms, double _decay, std::string _dataTypeString)
@@ -458,8 +456,8 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight, std::vector<
     priStats.ClearCurrent(nBlockHeight);
 
     // Repopulate the current block states
-    BOOST_FOREACH (const CTxMemPoolEntry& entry, entries)
-        processBlockTx(nBlockHeight, entry);
+    for (unsigned int i = 0; i < entries.size(); i++)
+        processBlockTx(nBlockHeight, entries[i]);
 
     // Update all exponential averages with the current block states
     feeStats.UpdateMovingAverages();
