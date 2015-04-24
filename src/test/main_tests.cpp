@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "main.h" // GetBlockValue
 #include "primitives/transaction.h"
-#include "main.h"
 
 #include "test/test_bitcoin.h"
 

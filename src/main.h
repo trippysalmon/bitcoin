@@ -12,19 +12,13 @@
 
 #include "amount.h"
 #include "chain.h"
-#include "chainparams.h"
 #include "coins.h"
 #include "consensus/consensus.h"
 #include "net.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "script/sigcache.h"
+#include "script/script_error.h"
 #include "script/standard.h"
 #include "sync.h"
-#include "tinyformat.h"
 #include "txmempool.h"
-#include "uint256.h"
 
 #include <algorithm>
 #include <exception>
@@ -37,6 +31,7 @@
 
 #include <boost/unordered_map.hpp>
 
+class CBlock;
 class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
@@ -45,6 +40,7 @@ class CScriptCheck;
 class CValidationInterface;
 class CValidationState;
 
+namespace Consensus { class Params; };
 struct CNodeStateStats;
 
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/

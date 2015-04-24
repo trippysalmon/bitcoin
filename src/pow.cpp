@@ -7,6 +7,7 @@
 
 #include "arith_uint256.h"
 #include "chain.h"
+#include "consensus/params.h"
 
 arith_uint256 GetBlockProof(const CBlockIndex& block)
 {

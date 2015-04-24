@@ -13,13 +13,15 @@
 
 #include "base58.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "sync.h"
 #include "ui_interface.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h" // for BackupWallet
 
 #include <stdint.h>
+
+#include <boost/foreach.hpp>
 
 #include <QDebug>
 #include <QSet>
