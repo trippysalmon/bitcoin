@@ -6,8 +6,7 @@
 
 #include "test_bitcoin.h"
 
-#include "key.h"
-#include "main.h"
+#include "chainparams.h"
 #include "random.h"
 #include "txdb.h"
 #include "ui_interface.h"

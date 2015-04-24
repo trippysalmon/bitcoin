@@ -11,11 +11,12 @@
 
 #include "addrman.h"
 #include "amount.h"
+#include "chainparams.h"
 #include "checkpoints.h"
 #include "compat/sanity.h"
 #include "consensus/validation.h"
 #include "key.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "miner.h"
 #include "net.h"
 #include "policy/policy.h"

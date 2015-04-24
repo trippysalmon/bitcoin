@@ -6,13 +6,11 @@
 #ifndef BITCOIN_POW_H
 #define BITCOIN_POW_H
 
-#include "consensus/consensus.h"
-#include "consensus/params.h"
-
 #include <stdint.h>
 
 class CBlockIndex;
 class arith_uint256;
+namespace Consensus { struct Params; };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);
 

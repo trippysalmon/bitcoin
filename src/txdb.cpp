@@ -7,8 +7,7 @@
 
 #include "chainparams.h"
 #include "hash.h"
-#include "main.h"
-#include "pow.h"
+#include "main.h" // mapBlockIndex
 #include "uint256.h"
 
 #include <stdint.h>

@@ -8,7 +8,7 @@
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "main.h"
+#include "main.h" // CheckInputs
 #include "policy/fees.h"
 #include "streams.h"
 #include "util.h"

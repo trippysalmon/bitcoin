@@ -14,7 +14,8 @@
 
 #include "coincontrol.h"
 #include "init.h"
-#include "main.h"
+#include "main.h" // minRelayTxFee
+#include "txmempool.h"
 #include "wallet/wallet.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
