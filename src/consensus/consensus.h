@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+class CBlock;
 class CBlockHeader;
 class CBlockIndex;
 class CCoinsViewCache;
@@ -65,6 +66,17 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
 
 } // namespace Consensus
+
+/** Block validation functions */
+
+/**
+ * Context-independent CBlock validity checks
+ */
+bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+/**
+ * Context-dependent CBlock validity checks
+ */
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex *pindexPrev);
 
 /** Transaction validation utility functions */
 
