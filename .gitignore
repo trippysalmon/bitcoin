@@ -113,3 +113,12 @@ qa/pull-tester/test.*/*
 /doc/doxygen/
 
 libbitcoinconsensus.pc
+
+bitcoin-0.10.99/
+src/build-aux/compile
+src/build-aux/config.guess
+src/build-aux/config.sub
+src/build-aux/depcomp
+src/build-aux/install-sh
+src/build-aux/missing
+src/build-aux/test-driver
