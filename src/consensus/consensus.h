@@ -53,12 +53,12 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
  * Context-independent CBlockHeader validity checks
  */
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true);
-
-} // namespace Consensus
 /**
  * Context-dependent CBlockHeader validity checks
  */
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex *pindexPrev);
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
+
+} // namespace Consensus
 
 /** Transaction validation utility functions */
 

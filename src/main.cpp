@@ -2554,7 +2554,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
     if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash, mapBlockIndex))
         return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
 
-    if (!ContextualCheckBlockHeader(block, state, pindexPrev))
+    if (!Consensus::ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
 
     if (pindex == NULL)
@@ -2660,7 +2660,7 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, pindexPrev))
+    if (!Consensus::ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
     if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
         return false;
