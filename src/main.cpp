@@ -2417,7 +2417,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, fCheckPOW))
-        return false;
+        return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -2532,7 +2532,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
     }
 
     if (!CheckBlockHeader(block, state))
-        return false;
+        return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
 
     // Get prev block index
     CBlockIndex* pindexPrev = NULL;
@@ -2549,7 +2549,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
         return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
 
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
-        return false;
+        return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
 
     if (pindex == NULL)
         pindex = AddToBlockIndex(block);
@@ -2655,7 +2655,7 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
 
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
-        return false;
+        return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
     if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
         return false;
     if (!ContextualCheckBlock(block, state, pindexPrev))
