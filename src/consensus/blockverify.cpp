@@ -160,13 +160,10 @@ bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidatio
     if (block.GetBlockTime() <= GetMedianTimePast(pindexPrev))
         return state.Invalid(false, REJECT_INVALID, "time-too-old");
 
-    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-        return state.Invalid(false, REJECT_OBSOLETE, "bad-version nVersion=1");
-
-    // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 3 && IsSuperMajority(3, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-        return state.Invalid(false, REJECT_OBSOLETE, "bad-version nVersion=2");
+    // Reject block.nVersion=n blocks when 95% (75% on testnet) of the network has upgraded (last version=3):
+    for (int i = 2; i <= 3; i++)
+        if (block.nVersion < i && IsSuperMajority(i, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version nVersion=%d", i-1));
 
     return true;
 }
