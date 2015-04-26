@@ -47,14 +47,14 @@ class Params;
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight);
 
-} // namespace Consensus
-
 /** Block header validation functions */
 
 /**
  * Context-independent CBlockHeader validity checks
  */
-bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
+bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true);
+
+} // namespace Consensus
 /**
  * Context-dependent CBlockHeader validity checks
  */
