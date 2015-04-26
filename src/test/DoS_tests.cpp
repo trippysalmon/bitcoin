@@ -7,6 +7,7 @@
 //
 
 #include "chainparams.h"
+#include "consensus/consensus.h"
 #include "keystore.h"
 #include "main.h" // SendMessages
 #include "net.h"

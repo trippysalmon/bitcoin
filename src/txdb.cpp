@@ -6,6 +6,7 @@
 #include "txdb.h"
 
 #include "chainparams.h"
+#include "consensus/consensus.h"
 #include "hash.h"
 #include "main.h" // mapBlockIndex
 #include "uint256.h"
