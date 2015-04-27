@@ -13,6 +13,7 @@
 #include <map>
 #include <string>
 
+class CCoinsViewCache;
 class CFeeRate;
 
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
@@ -53,6 +54,17 @@ public:
     virtual void InitFromArgs(const std::map<std::string, std::string>&) = 0;
     virtual bool ApproveScript(const CScript&, txnouttype&) const = 0;
 };
+    /**
+     * Check for standard transaction types
+     * @return True if all outputs (scriptPubKeys) use only standard transaction forms
+     */
+    bool IsStandardTx(const CTransaction& tx, std::string& reason);
+    /**
+     * Check for standard transaction types
+     * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
+     * @return True if all inputs (scriptSigs) use only standard transaction forms
+     */
+    bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 
 /** Return a CPolicy of the type described in the parameter string */
 CPolicy& Policy(std::string);

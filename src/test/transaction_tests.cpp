@@ -13,6 +13,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h" // cs_main, AreInputsStandard
+#include "policy/policy.h"
 #include "script/script.h"
 #include "script/script_error.h"
 #include "utilstrencodings.h"
