@@ -842,7 +842,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif // ENABLE_WALLET
 
     fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
-    nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
+    if (GetArg("-datacarrier", true))
+        nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
+    else
+        nMaxDatacarrierBytes = 0;
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 

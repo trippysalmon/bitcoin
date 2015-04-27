@@ -70,14 +70,15 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
     // So long as script passes the IsUnspendable() test and all but the first
     // byte passes the IsPushOnly() test we don't care what exactly is in the
     // script.
-    if (scriptPubKey.size() >= 1 && scriptPubKey[0] == OP_RETURN
-                                 && scriptPubKey.size() <= nMaxDatacarrierBytes+3) // to account for the pushdata opcodes
-    {
-        if (scriptPubKey.IsPushOnly(scriptPubKey.begin()+1))
-        {
+    if (scriptPubKey.size() >= 1 && scriptPubKey[0] == OP_RETURN) {
+        if (scriptPubKey.IsPushOnly(scriptPubKey.begin()+1)) {
             typeRet = TX_NULL_DATA;
-            return true;
         }
+        // +3 to account for the pushdata opcodes needed below 256 data bytes
+        if (!nMaxDatacarrierBytes || scriptPubKey.size() > nMaxDatacarrierBytes + 3) {
+            return false;
+        }
+        return true;
     }
 
     // Scan templates
