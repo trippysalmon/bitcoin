@@ -15,8 +15,6 @@
 
 #include <boost/foreach.hpp>
 
-using namespace std;
-
 bool fIsBareMultisigStd = true;
 
 /** Declaration of Standard Policy implementing CPolicy */
@@ -125,7 +123,7 @@ bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whi
     return whichType != TX_NONSTANDARD;
 }
 
-bool CStandardPolicy::ApproveTx(const CTransaction& tx, string& reason) const
+bool CStandardPolicy::ApproveTx(const CTransaction& tx, std::string& reason) const
 {
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
         reason = "version";
@@ -198,7 +196,7 @@ bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCa
     {
         const CTxOut& prev = mapInputs.GetOutputFor(tx.vin[i]);
 
-        vector<vector<unsigned char> > vSolutions;
+        std::vector<std::vector<unsigned char> > vSolutions;
         txnouttype whichType;
         // get the scriptPubKey corresponding to this input:
         const CScript& prevScript = prev.scriptPubKey;
@@ -214,7 +212,7 @@ bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCa
         // beside "push data" in the scriptSig
         // IsStandardTx() will have already returned false
         // and this method isn't called.
-        vector<vector<unsigned char> > stack;
+        std::vector<std::vector<unsigned char> > stack;
         if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker()))
             return false;
 
@@ -223,7 +221,7 @@ bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCa
             if (stack.empty())
                 return false;
             CScript subscript(stack.back().begin(), stack.back().end());
-            vector<vector<unsigned char> > vSolutions2;
+            std::vector<std::vector<unsigned char> > vSolutions2;
             txnouttype whichType2;
             if (Solver(subscript, whichType2, vSolutions2))
             {
