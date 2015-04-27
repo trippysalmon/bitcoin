@@ -26,6 +26,7 @@ public:
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
     virtual bool ApproveScript(const CScript&, txnouttype&) const;
+    virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const;
     /**
      * Check transaction inputs to mitigate two
      * potential denial-of-service attacks:
@@ -45,6 +46,7 @@ public:
      * expensive-to-check-upon-redemption script like:
      *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
      */
+    virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
 };
 
 /** Global variables and their interfaces */
@@ -123,7 +125,7 @@ bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whi
     return whichType != TX_NONSTANDARD;
 }
 
-bool IsStandardTx(const CTransaction& tx, string& reason)
+bool CStandardPolicy::ApproveTx(const CTransaction& tx, string& reason) const
 {
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
         reason = "version";
@@ -162,7 +164,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
     unsigned int nDataOut = 0;
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-        if (!Policy().ApproveScript(txout.scriptPubKey, whichType)) {
+        if (!ApproveScript(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
         }
@@ -187,7 +189,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
     return true;
 }
 
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
