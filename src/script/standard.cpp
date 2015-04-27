@@ -198,8 +198,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
             return false;
     }
     else if (whichType == TX_NULL_DATA) {
-        // +3 to account for the pushdata opcodes needed below 256 data bytes
-        if (!nMaxDatacarrierBytes || scriptPubKey.size() > nMaxDatacarrierBytes + 3) {
+        if (!nMaxDatacarrierBytes || scriptPubKey.size() > nMaxDatacarrierBytes) {
             return false;
         }
     }
