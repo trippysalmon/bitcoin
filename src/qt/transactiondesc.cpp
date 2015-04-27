@@ -10,16 +10,18 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
+#include "coins.h"
 #include "consensus/consensus.h"
 #include "main.h" // cs_main
 #include "script/script.h"
 #include "timedata.h"
 #include "util.h"
-#include "wallet/db.h"
 #include "wallet/wallet.h"
 
 #include <stdint.h>
 #include <string>
+
+#include <boost/foreach.hpp>
 
 using namespace std;
 
