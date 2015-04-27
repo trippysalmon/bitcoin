@@ -287,6 +287,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 
 BOOST_AUTO_TEST_CASE(test_Get)
 {
+    const CPolicy& policy = Policy("standard");
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
@@ -307,20 +308,21 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
 
-    BOOST_CHECK(AreInputsStandard(t1, coins));
+    BOOST_CHECK(policy.ApproveTxInputs(t1, coins));
     BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
 
     // Adding extra junk to the scriptSig should make it non-standard:
     t1.vin[0].scriptSig << OP_11;
-    BOOST_CHECK(!AreInputsStandard(t1, coins));
+    BOOST_CHECK(!policy.ApproveTxInputs(t1, coins));
 
     // ... as should not having enough:
     t1.vin[0].scriptSig = CScript();
-    BOOST_CHECK(!AreInputsStandard(t1, coins));
+    BOOST_CHECK(!policy.ApproveTxInputs(t1, coins));
 }
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
+    const CPolicy& policy = Policy("standard");
     LOCK(cs_main);
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
@@ -339,43 +341,43 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
     string reason;
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(policy.ApproveTx(t, reason));
 
     t.vout[0].nValue = 501; // dust
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, reason));
 
     t.vout[0].nValue = 601; // not dust
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(policy.ApproveTx(t, reason));
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, reason));
 
     // 80-byte TX_NULL_DATA (standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(policy.ApproveTx(t, reason));
 
     // 81-byte TX_NULL_DATA (non-standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, reason));
 
     // TX_NULL_DATA w/o PUSHDATA
     t.vout.resize(1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(policy.ApproveTx(t, reason));
 
     // Only one TX_NULL_DATA permitted in all cases
     t.vout.resize(2);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, reason));
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, reason));
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, reason));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

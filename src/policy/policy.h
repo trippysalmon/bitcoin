@@ -53,18 +53,18 @@ public:
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const = 0;
     virtual void InitFromArgs(const std::map<std::string, std::string>&) = 0;
     virtual bool ApproveScript(const CScript&, txnouttype&) const = 0;
-};
     /**
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
-    bool IsStandardTx(const CTransaction& tx, std::string& reason);
+    virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const = 0;
     /**
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
-    bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+    virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
+};
 
 /** Return a CPolicy of the type described in the parameter string */
 CPolicy& Policy(std::string);
