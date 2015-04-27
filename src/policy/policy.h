@@ -42,10 +42,6 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
-/** GLOBALS: These variables are supposed to become CStandardPolicy attributes */
-
-extern bool fIsBareMultisigStd;
-
 /** Abstract interface for Policy */
 class CPolicy
 {

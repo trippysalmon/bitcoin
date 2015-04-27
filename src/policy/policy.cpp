@@ -15,12 +15,14 @@
 
 #include <boost/foreach.hpp>
 
-bool fIsBareMultisigStd = true;
-
 /** Declaration of Standard Policy implementing CPolicy */
 class CStandardPolicy : public CPolicy
 {
+    bool fIsBareMultisigStd;
 public:
+    CStandardPolicy() :
+        fIsBareMultisigStd(true)
+    {};
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
     virtual bool ApproveScript(const CScript&, txnouttype&) const;
@@ -96,11 +98,13 @@ void InitPolicyFromArgs(const std::map<std::string, std::string>& mapArgs, std::
 std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHelp() const
 {
     std::vector<std::pair<std::string, std::string> > optionsHelp;
+    optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), 1)));
     return optionsHelp;
 }
 
 void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
+    fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
 }
 
 bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) const
