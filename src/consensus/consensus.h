@@ -71,12 +71,12 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
  * Context-independent CBlock validity checks
  */
 bool CheckBlock(const CBlock& block, CValidationState& state, const Params& params, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
-
-} // namespace Consensus
 /**
  * Context-dependent CBlock validity checks
  */
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex *pindexPrev);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& params, const CBlockIndex* pindexPrev);
+
+} // namespace Consensus
 
 /** Transaction validation utility functions */
 
