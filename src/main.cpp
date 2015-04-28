@@ -2464,7 +2464,7 @@ static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidati
     return true;
 }
 
-bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndexBase* pindexPrev, PrevIndexGetter indexGetter)
 {
     const int nHeight = pindexPrev->nHeight + 1;
     // Check that all transactions are finalized
@@ -2474,7 +2474,7 @@ bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& stat
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams, GetPrevIndex))
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams, indexGetter))
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -2553,7 +2553,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     }
 
     if (!Consensus::CheckBlock(block, state, chainparams.GetConsensus(), GetAdjustedTime()) || 
-        !Consensus::ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
+        !Consensus::ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev, GetPrevIndex)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
@@ -2633,7 +2633,7 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
         return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
     if (!Consensus::CheckBlock(block, state, chainparams.GetConsensus(), GetAdjustedTime(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, state.GetRejectReason().c_str());
-    if (!Consensus::ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
+    if (!Consensus::ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev, GetPrevIndex))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.GetRejectReason().c_str());
     if (!ConnectBlock(block, state, &indexDummy, viewNew, true))
         return false;

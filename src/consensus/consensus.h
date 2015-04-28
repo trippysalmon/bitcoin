@@ -81,7 +81,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Params& para
 /**
  * Context-dependent CBlock validity checks
  */
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& params, const CBlockIndex* pindexPrev);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& params, const CBlockIndexBase* pindexPrev, PrevIndexGetter);
 
 /** Block validation utilities */
 
