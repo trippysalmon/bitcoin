@@ -11,7 +11,7 @@
 #include "consensus/params.h"
 #include "consensus/validation.h"
 #include "primitives/block.h"
-#include "timedata.h"
+#include "script/interpreter.h"
 #include "tinyformat.h"
 #include "uint256.h"
 
@@ -137,6 +137,17 @@ bool Consensus::CheckBlockHeader(const CBlockHeader& block, CValidationState& st
         return state.Invalid(false, REJECT_INVALID, "time-too-new");
 
     return true;
+}
+
+unsigned Consensus::GetFlags(const CBlock& block, const Consensus::Params& consensusParams, CBlockIndex* pindex)
+{
+    int64_t nBIP16SwitchTime = 1333238400;
+    bool fStrictPayToScriptHash = ((int64_t)pindex->nTime >= nBIP16SwitchTime);
+    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+
+    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+        flags |= SCRIPT_VERIFY_DERSIG;
+    return flags;
 }
 
 bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)

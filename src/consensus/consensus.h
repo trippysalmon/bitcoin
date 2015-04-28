@@ -81,6 +81,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Params& para
  */
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& params, const CBlockIndex* pindexPrev);
 
+/** Block validation utilities */
+
+/**
+ * BIP16 didn't become active until Apr 1 2012
+ * Starts enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks, when 75% of the network has upgraded
+ */
+unsigned int GetFlags(const CBlock&, const Consensus::Params&, CBlockIndex* pindex);
+
 } // namespace Consensus
 
 /** Transaction validation utility functions */
