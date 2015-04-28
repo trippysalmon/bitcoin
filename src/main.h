@@ -139,7 +139,7 @@ void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
 void UnregisterNodeSignals(CNodeSignals& nodeSignals);
 
-/** 
+/**
  * Process an incoming block. This only returns after the best known valid
  * block is made active. Note that it does not, however, guarantee that the
  * specific block passed to it has been checked for validity!
@@ -273,7 +273,7 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
  *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
  */
 
-/** 
+/**
  * Check for standard transaction types
  * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
  * @return True if all inputs (scriptSigs) use only standard transaction forms
@@ -297,7 +297,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason);
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
 
-/** 
+/**
  * Closure representing one script verification
  * Note that this stores references to the spending transaction 
  */
@@ -438,7 +438,7 @@ extern CCoinsViewCache *pcoinsTip;
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
 
-/** 
+/**
  * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
  * This is also true for mempool checks.
  */
