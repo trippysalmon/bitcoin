@@ -14,6 +14,7 @@
 #include "sync.h"
 
 class CAutoFile;
+class CFeesPolicy;
 
 inline double AllowFreeThreshold()
 {
@@ -58,8 +59,6 @@ public:
     unsigned int GetHeight() const { return nHeight; }
 };
 
-class CMinerPolicyEstimator;
-
 /** An inpoint - a combination of a transaction and an index n into its vin */
 class CInPoint
 {
@@ -88,7 +87,7 @@ class CTxMemPool
 private:
     bool fSanityCheck; //! Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;
-    CMinerPolicyEstimator* minerPolicyEstimator;
+    CFeesPolicy* minerPolicyEstimator;
 
     CFeeRate minRelayFee; //! Passed to constructor to avoid dependency on main
     uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
