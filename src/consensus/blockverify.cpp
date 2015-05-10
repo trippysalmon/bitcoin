@@ -6,7 +6,6 @@
 #include "consensus/consensus.h"
 
 #include "arith_uint256.h"
-#include "chain.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
 #include "primitives/block.h"
@@ -138,13 +137,13 @@ bool Consensus::CheckBlockHeader(const CBlockHeader& block, CValidationState& st
     return true;
 }
 
-unsigned Consensus::GetFlags(const CBlock& block, const Consensus::Params& consensusParams, CBlockIndex* pindex)
+unsigned Consensus::GetFlags(const CBlock& block, const Consensus::Params& consensusParams, CBlockIndexBase* pindex, PrevIndexGetter indexGetter)
 {
     int64_t nBIP16SwitchTime = 1333238400;
     bool fStrictPayToScriptHash = ((int64_t)pindex->nTime >= nBIP16SwitchTime);
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
-    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams, GetPrevIndex))
+    if (block.nVersion >= 3 && IsSuperMajority(3, indexGetter(pindex), consensusParams.nMajorityEnforceBlockUpgrade, consensusParams, indexGetter))
         flags |= SCRIPT_VERIFY_DERSIG;
     return flags;
 }

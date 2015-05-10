@@ -89,7 +89,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Pa
  * BIP16 didn't become active until Apr 1 2012
  * Starts enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks, when 75% of the network has upgraded
  */
-unsigned int GetFlags(const CBlock&, const Consensus::Params&, CBlockIndex* pindex);
+unsigned int GetFlags(const CBlock&, const Consensus::Params&, CBlockIndexBase* pindex, PrevIndexGetter);
 
 } // namespace Consensus
 

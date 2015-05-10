@@ -1625,7 +1625,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
 
-    unsigned int flags = Consensus::GetFlags(block, chainparams.GetConsensus(), pindex);
+    unsigned int flags = Consensus::GetFlags(block, chainparams.GetConsensus(), pindex, GetPrevIndex);
     int64_t nTimeStart = GetTimeMicros();
     CAmount nFees = 0;
     int nInputs = 0;

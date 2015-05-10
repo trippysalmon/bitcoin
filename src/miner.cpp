@@ -242,7 +242,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         TxPriorityCompare comparer(fSortedByFee);
         std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-        unsigned int flags = Consensus::GetFlags(*pblock, chainparams.GetConsensus(), pindexPrev);
+        unsigned int flags = Consensus::GetFlags(*pblock, chainparams.GetConsensus(), pindexPrev, GetPrevIndex);
 
         while (!vecPriority.empty())
         {
