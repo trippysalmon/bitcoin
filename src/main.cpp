@@ -1448,8 +1448,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const CChainPara
                         check.swap(vChecks.back());
                     }
                     control.Add(vChecks);
-                } else if (!CheckInputsScripts(tx, state, view, flags, false))
-                    return error("%s: CheckInputsScripts failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
+                } else if (!Consensus::CheckTxInputsScripts(tx, state, view, flags, false))
+                    return error("%s: Consensus::CheckTxInputsScripts failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
             }
         }
 
