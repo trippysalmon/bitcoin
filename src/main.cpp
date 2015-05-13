@@ -701,9 +701,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         view.SetBackend(dummy);
         }
 
-        // Check inputs (without checking the scripts)
         if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view)))
-            return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
+            return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Check for non-standard pay-to-script-hash in inputs
         if (Params().RequireStandard() && !policy.ApproveTxInputs(tx, view))
