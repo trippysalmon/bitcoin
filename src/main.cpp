@@ -669,13 +669,13 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 
 bool CheckFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
-    if (tx.nLockTime == 0)
-        return true;
-    if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
-        return true;
+    bool fFinalized = true;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        if (!tx.vin[i].IsFinal())
-            return false;
+        fFinalized = fFinalized && tx.vin[i].IsFinal();
+
+    if (!fFinalized && (int64_t)tx.nLockTime >= ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
+        return false;
+
     return true;
 }
 
