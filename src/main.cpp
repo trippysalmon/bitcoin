@@ -669,7 +669,6 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 
 bool CheckFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
-    // Time based nLockTime implemented in 0.1.6
     if (tx.nLockTime == 0)
         return true;
     if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
