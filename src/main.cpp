@@ -671,7 +671,7 @@ bool CheckFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     bool fFinalized = true;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        fFinalized = fFinalized && tx.vin[i].IsFinal();
+        fFinalized = fFinalized && !~tx.vin[i].nSequence;
 
     if (!fFinalized && (int64_t)tx.nLockTime >= ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
         return false;
