@@ -657,7 +657,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
 }
 
 namespace Consensus {
-int64_t LockTime(const CTransaction &tx, const CCoinsViewCache& inputs, int nBlockHeight, int64_t nBlockTime)
+int64_t LockTime(const CTransaction &tx, const CCoinsViewCache& inputs, const CBlockIndex* pindexPrev, int nBlockHeight, int64_t nBlockTime)
 {
     uint32_t nLockTime;
     int nMinHeight = 0;
@@ -671,13 +671,11 @@ int64_t LockTime(const CTransaction &tx, const CCoinsViewCache& inputs, int nBlo
             fFinalized = false;
 
         const CCoins* coins = inputs.AccessCoins(tx.vin[i].prevout.hash);
-        if (!coins)
-            continue; // Skip this input if it is not in the UTXO set.
-                      // This should only happen in non-consensus code.
+        assert(coins);
         if (nLockTime < LOCKTIME_THRESHOLD)
             nMinHeight = std::max(nMinHeight, coins->nHeight + (int)nLockTime - 1);
         else
-            nMinTime = std::max(nMinTime, (int64_t)pindexBestHeader->GetAncestor(coins->nHeight)->nTime - LOCKTIME_THRESHOLD + nLockTime);
+            nMinTime = std::max(nMinTime, (int64_t)pindexPrev->GetAncestor(coins->nHeight)->nTime - LOCKTIME_THRESHOLD + nLockTime);
     }
 
     if ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD)
@@ -705,7 +703,7 @@ int64_t LockTime(const CTransaction &tx, const CCoinsViewCache* pCoinsView, int 
         nBlockHeight = chainActive.Height();
     if (nBlockTime == 0)
         nBlockTime = GetAdjustedTime();
-    return Consensus::LockTime(tx, *pCoinsView, nBlockHeight, nBlockTime);
+    return Consensus::LockTime(tx, *pCoinsView, pindexBestHeader, nBlockHeight, nBlockTime);
 }
 
 /**
