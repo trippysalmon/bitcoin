@@ -22,7 +22,12 @@ public:
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
-
+    /**
+     * Creates and returns a CBaseChainParams* of the chosen chain. The caller has to delete the object.
+     * @returns A CBaseChainParams* of the chosen chain.
+     * @throws a std::runtime_error if the chain is not supported.
+     */
+    static CBaseChainParams* Factory(const std::string& chain);
 protected:
     CBaseChainParams() {}
 
