@@ -261,12 +261,7 @@ void SelectParams(std::string chain)
     pCurrentParams = &Params(chain);
 }
 
-bool SelectParamsFromCommandLine()
+void SelectParamsFromCommandLine()
 {
-    std::string chain = ChainNameFromCommandLine();
-    if (chain == CBaseChainParams::MAX_NETWORK_TYPES)
-        return false;
-
-    SelectParams(chain);
-    return true;
+    SelectParams(ChainNameFromCommandLine());
 }

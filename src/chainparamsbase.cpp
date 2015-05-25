@@ -15,6 +15,17 @@ const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
 const std::string CBaseChainParams::MAX_NETWORK_TYPES = "unknown_chain";
 
+void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
+{
+    strUsage += HelpMessageGroup(_("Chain selection options:"));
+    strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
+    if (debugHelp) {
+        strUsage += HelpMessageOpt("-regtest", _("Enter regression test mode, which uses a special chain in which blocks can be solved instantly.") + " " +
+                                   _("This is intended for regression testing tools and app development.") + " " +
+                                   _("In this mode -genproclimit controls how many blocks are generated immediately."));
+    }
+}
+
 /**
  * Main network
  */
@@ -94,7 +105,7 @@ std::string ChainNameFromCommandLine()
     bool fTestNet = GetBoolArg("-testnet", false);
 
     if (fTestNet && fRegTest)
-        return CBaseChainParams::MAX_NETWORK_TYPES;
+        throw std::runtime_error(_("Invalid combination of -regtest and -testnet."));
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
@@ -102,14 +113,9 @@ std::string ChainNameFromCommandLine()
     return CBaseChainParams::MAIN;
 }
 
-bool SelectBaseParamsFromCommandLine()
+void SelectBaseParamsFromCommandLine()
 {
-    std::string chain = ChainNameFromCommandLine();
-    if (chain == CBaseChainParams::MAX_NETWORK_TYPES)
-        return false;
-
-    SelectBaseParams(chain);
-    return true;
+    SelectBaseParams(ChainNameFromCommandLine());
 }
 
 bool AreBaseParamsConfigured()
