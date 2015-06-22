@@ -10,6 +10,7 @@
 #include "walletmodel.h"
 
 #include "primitives/transaction.h"
+#include "globals/policy.h" // For .IsDust(::minRelayTxFee)
 #include "init.h"
 #include "main.h"
 #include "policy/policy.h"

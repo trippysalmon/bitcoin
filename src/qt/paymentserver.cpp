@@ -10,6 +10,7 @@
 
 #include "base58.h"
 #include "chainparams.h"
+#include "globals/policy.h" // For .IsDust(::minRelayTxFee)
 #include "main.h"
 #include "policy/policy.h"
 #include "ui_interface.h"

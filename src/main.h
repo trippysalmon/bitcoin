@@ -103,7 +103,6 @@ extern bool fTxIndex;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
-extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
 extern Container<CPolicy> cGlobalPolicy;
 

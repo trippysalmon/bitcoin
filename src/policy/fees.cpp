@@ -7,6 +7,7 @@
 
 #include "amount.h"
 #include "primitives/transaction.h"
+#include "globals/policy.h"
 #include "streams.h"
 #include "txmempool.h"
 #include "util.h"

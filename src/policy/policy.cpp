@@ -7,6 +7,7 @@
 
 #include "policy/policy.h"
 
+#include "globals/policy.h"
 #include "main.h"
 #include "policy/fees.h"
 #include "templates.hpp"

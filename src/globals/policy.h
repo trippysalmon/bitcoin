@@ -8,8 +8,10 @@
 
 #include "templates.hpp"
 
+class CFeeRate;
 class CPolicy;
 
+extern CFeeRate minRelayTxFee;
 extern Container<CPolicy> cGlobalPolicy;
 
 #endif /*BITCOIN_GLOBALS_POLICY_H */
