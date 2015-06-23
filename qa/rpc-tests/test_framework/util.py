@@ -42,12 +42,15 @@ def sync_blocks(rpc_connections, wait=1):
             break
         time.sleep(wait)
 
-def sync_mempools(rpc_connections, wait=1):
+def sync_mempools(rpc_connections, wait=1, max_iterations=5):
     """
     Wait until everybody has the same transactions in their memory
     pools
     """
-    while True:
+    print 'sync_mempools'
+    iteration = 0
+    for i = 0; i < max_iterations && len(self.nodes[0].getrawmempool()) > 0; ++i:
+    while iteration < max_iterations:
         pool = set(rpc_connections[0].getrawmempool())
         num_match = 1
         for i in range(1, len(rpc_connections)):
@@ -56,6 +59,10 @@ def sync_mempools(rpc_connections, wait=1):
         if num_match == len(rpc_connections):
             break
         time.sleep(wait)
+        iteration += 1
+
+    if iteration == max_iterations:
+        print 'sync_mempools: mempools were not synced after %s iterations.\n' % max_iterations
 
 bitcoind_processes = {}
 
@@ -65,6 +72,7 @@ def initialize_datadir(dirname, n):
         os.makedirs(datadir)
     with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
         f.write("regtest=1\n");
+        f.write("policy=test\n");
         f.write("rpcuser=rt\n");
         f.write("rpcpassword=rt\n");
         f.write("port="+str(p2p_port(n))+"\n");
@@ -166,6 +174,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     Start a bitcoind and return RPC connection to it
     """
     datadir = os.path.join(dirname, "node"+str(i))
+    print datadir
     if binary is None:
         binary = os.getenv("BITCOIND", "bitcoind")
     args = [ binary, "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest" ]
@@ -174,6 +183,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     devnull = open("/dev/null", "w+")
     if os.getenv("PYTHON_DEBUG", ""):
         print "start_node: bitcoind started, calling bitcoin-cli -rpcwait getblockcount"
+    print 'starting node %s' % i, args
     subprocess.check_call([ os.getenv("BITCOINCLI", "bitcoin-cli"), "-datadir="+datadir] +
                           _rpchost_to_args(rpchost)  +
                           ["-rpcwait", "getblockcount"], stdout=devnull)

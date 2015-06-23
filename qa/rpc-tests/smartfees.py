@@ -136,6 +136,11 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     return all_estimates
 
 
+def loopMine(node, iterations=100):
+    print 'loopMine'
+    for i = 0; i < iterations && len(self.nodes[0].getrawmempool()) > 0; ++i:
+        self.nodes[0].generate(1)    
+
 class EstimateFeeTest(BitcoinTestFramework):
 
     def setup_network(self):
@@ -157,8 +162,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         split_inputs(self.nodes[0], self.nodes[0].listunspent(0), self.txouts, True)
 
         # Mine
-        while (len(self.nodes[0].getrawmempool()) > 0):
-            self.nodes[0].generate(1)
+        loopMine(self.nodes[0])
 
         # Repeatedly split those 2 outputs, doubling twice for each rep
         # Use txouts to monitor the available utxo, since these won't be tracked in wallet
@@ -167,13 +171,11 @@ class EstimateFeeTest(BitcoinTestFramework):
             #Double txouts to txouts2
             while (len(self.txouts)>0):
                 split_inputs(self.nodes[0], self.txouts, self.txouts2)
-            while (len(self.nodes[0].getrawmempool()) > 0):
-                self.nodes[0].generate(1)
+            loopMine(self.nodes[0])
             #Double txouts2 to txouts
             while (len(self.txouts2)>0):
                 split_inputs(self.nodes[0], self.txouts2, self.txouts)
-            while (len(self.nodes[0].getrawmempool()) > 0):
-                self.nodes[0].generate(1)
+            loopMine(self.nodes[0])
             reps += 1
         print("Finished splitting")
 
@@ -247,8 +249,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         check_estimates(self.nodes[1], self.fees_per_kb, 2)
 
         # Finish by mining a normal-sized block:
-        while len(self.nodes[1].getrawmempool()) > 0:
-            self.nodes[1].generate(1)
+        loopMine(self.nodes[1])
 
         sync_blocks(self.nodes[0:3],.1)
         print("Final estimates after emptying mempools")
