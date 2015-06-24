@@ -6,6 +6,7 @@
 #include "key.h"
 #include "main.h"
 #include "miner.h"
+#include "policy/policy.h"
 #include "pubkey.h"
 #include "txmempool.h"
 #include "random.h"
@@ -21,9 +22,9 @@ static bool
 ToMemPool(CMutableTransaction& tx)
 {
     LOCK(cs_main);
-
+    const CStandardPolicy testPolicy;
     CValidationState state;
-    return AcceptToMemoryPool(mempool, state, tx, false, NULL, false);
+    return AcceptToMemoryPool(testPolicy, mempool, state, tx, false, NULL, false);
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
