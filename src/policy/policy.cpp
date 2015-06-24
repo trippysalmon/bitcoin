@@ -7,7 +7,6 @@
 
 #include "policy/policy.h"
 
-#include "chainparams.h"
 #include "main.h"
 #include "templates.hpp"
 #include "tinyformat.h"
@@ -22,7 +21,7 @@ std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHel
 {
     std::vector<std::pair<std::string, std::string> > optionsHelp;
     optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), fIsBareMultisigStd)));
-    optionsHelp.push_back(std::make_pair("-acceptnonstdtxn", strprintf(_("Relay and mine \"non-standard\" transactions (default: %u)"), Params(CBaseChainParams::MAIN).RequireStandard())));
+    optionsHelp.push_back(std::make_pair("-acceptnonstdtxn", strprintf(_("Relay and mine \"non-standard\" transactions (default: %u)"), fAcceptNonStdTxn)));
     optionsHelp.push_back(std::make_pair("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1)));
     optionsHelp.push_back(std::make_pair("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), nMaxDatacarrierBytes)));
     return optionsHelp;
@@ -31,7 +30,7 @@ std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHel
 void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
     fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
-    fAcceptNonStdTxn = GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard(), mapArgs);
+    fAcceptNonStdTxn = GetBoolArg("-acceptnonstdtxn", fAcceptNonStdTxn, mapArgs);
     nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes, mapArgs);
 }
 
@@ -207,6 +206,8 @@ CPolicy* Policy::Factory(const std::string& policy)
 {
     if (policy == Policy::STANDARD)
         return new CStandardPolicy(true, false);
+    else if (policy == Policy::TEST)
+        return new CStandardPolicy(true, true);
     throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));    
 }
 
