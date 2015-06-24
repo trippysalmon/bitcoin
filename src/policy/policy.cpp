@@ -64,12 +64,28 @@ void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& map
     fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
 }
 
+/** Default Policy for testnet and regtest */
+class CTestPolicy : public CStandardPolicy 
+{
+public:
+    virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const
+    {
+        return true;
+    }
+    virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
+    {
+        return true;
+    }
+};
+
 /** Policy Factory and related utility functions */
 
 CPolicy* Policy::Factory(const std::string& policy)
 {
     if (policy == Policy::STANDARD)
         return new CStandardPolicy();
+    else if (policy == Policy::TEST)
+        return new CTestPolicy();
     throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));    
 }
 
