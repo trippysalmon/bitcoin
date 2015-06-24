@@ -13,12 +13,12 @@
 #include "checkqueue.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "globals/policy.h"
 #include "init.h"
 #include "merkleblock.h"
 #include "net.h"
 #include "policy/policy.h"
 #include "pow.h"
-#include "templates.hpp"
 #include "txdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"
@@ -750,7 +750,6 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
-    Container<CPolicy> cGlobalPolicy(Policy::FactoryFromArgs(mapArgs, Params().DefaultPolicy()));
     const CPolicy& policy = cGlobalPolicy.Get();
     AssertLockHeld(cs_main);
     if (pfMissingInputs)

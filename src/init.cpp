@@ -14,6 +14,7 @@
 #include "checkpoints.h"
 #include "compat/sanity.h"
 #include "consensus/validation.h"
+#include "globals/policy.h"
 #include "key.h"
 #include "main.h"
 #include "miner.h"
@@ -819,6 +820,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             ::minRelayTxFee = CFeeRate(n);
         else
             return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
+    }
+    try {
+        cGlobalPolicy.Set(Policy::FactoryFromArgs(mapArgs, Params().DefaultPolicy()));
+    } catch(const std::exception& e) {
+        return InitError(strprintf(_("Error while initializing policy: %s"), e.what()));
     }
 
 #ifdef ENABLE_WALLET
