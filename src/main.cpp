@@ -59,7 +59,6 @@ bool fReindex = false;
 bool fTxIndex = false;
 bool fHavePruned = false;
 bool fPruneMode = false;
-bool fIsBareMultisigStd = true;
 bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = true;
 size_t nCoinCacheUsage = 5000 * 300;
@@ -751,7 +750,7 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
-    Container<CPolicy> cGlobalPolicy(Policy::Factory(Policy::STANDARD));
+    Container<CPolicy> cGlobalPolicy(Policy::FactoryFromArgs(mapArgs, Policy::STANDARD));
     const CPolicy& policy = cGlobalPolicy.Get();
     AssertLockHeld(cs_main);
     if (pfMissingInputs)

@@ -8,6 +8,7 @@
 #include "policy/policy.h"
 
 #include "main.h"
+#include "templates.hpp"
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
@@ -23,6 +24,8 @@ public:
     CStandardPolicy() :
         fIsBareMultisigStd(true)
     {};
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
+    virtual void InitFromArgs(const std::map<std::string, std::string>&);
     virtual bool ApproveScript(const CScript&, txnouttype&) const;
     virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const;
     /**
@@ -47,6 +50,20 @@ public:
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
 };
 
+/** CStandardPolicy initialization */
+
+std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHelp() const
+{
+    std::vector<std::pair<std::string, std::string> > optionsHelp;
+    optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), 1)));
+    return optionsHelp;
+}
+
+void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
+{
+    fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
+}
+
 /** Policy Factory and related utility functions */
 
 CPolicy* Policy::Factory(const std::string& policy)
@@ -54,6 +71,20 @@ CPolicy* Policy::Factory(const std::string& policy)
     if (policy == Policy::STANDARD)
         return new CStandardPolicy();
     throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));    
+}
+
+CPolicy* Policy::FactoryFromArgs(const std::map<std::string, std::string>& mapArgs, const std::string& defaultPolicy)
+{
+    CPolicy* pPolicy = Policy::Factory(defaultPolicy);
+    pPolicy->InitFromArgs(mapArgs);
+    return pPolicy;
+}
+
+void Policy::AppendHelpMessages(std::string& strUsage, const std::string& selectedPolicy)
+{
+    Container<CPolicy> cPolicy(Policy::Factory(selectedPolicy));
+    strUsage += HelpMessageGroup(strprintf(_("Policy options: (for policy: %s)"), selectedPolicy));
+    AppendMessagesOpt(strUsage, cPolicy.Get().GetOptionsHelp());
 }
 
 /** CStandardPolicy implementation */

@@ -10,6 +10,7 @@
 #include "script/interpreter.h"
 #include "script/standard.h"
 
+#include <map>
 #include <string>
 
 class CCoinsViewCache;
@@ -47,6 +48,20 @@ class CPolicy
 {
 public:
     virtual ~CPolicy() {};
+    /**
+     * @param argMap a map with options to read from.
+     * @return a formatted HelpMessage string with the policy options
+     */
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const
+    {
+        std::vector<std::pair<std::string, std::string> > optionsHelp;
+        return optionsHelp;
+    }
+    /**
+     * @param argMap a map with options to read from.
+     * @return a formatted HelpMessage string with the policy options
+     */
+    virtual void InitFromArgs(const std::map<std::string, std::string>& argMap) {};
     virtual bool ApproveScript(const CScript&, txnouttype&) const { return true; };
     /**
      * Check for standard transaction types
@@ -68,6 +83,14 @@ namespace Policy {
  * @return a CPolicy* of the type described in the parameter string.
  */
 CPolicy* Factory(const std::string& policy);
+CPolicy* FactoryFromArgs(const std::map<std::string, std::string>& mapArgs, const std::string& defaultPolicy);
+/**
+ * Append a help string for the options of the selected policy.
+ * @param strUsage a formatted HelpMessage string with policy options
+ * is appended to this string
+ * @param selectedPolicy select a policy to show its options
+ */
+void AppendHelpMessages(std::string& strUsage, const std::string& selectedPolicy);
 
 /** Supported policies */
 static const std::string STANDARD = "standard";
