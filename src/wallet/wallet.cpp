@@ -10,11 +10,13 @@
 #include "coincontrol.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "globals/policy.h"
 #include "main.h"
 #include "net.h"
 #include "policy/policy.h"
 #include "script/script.h"
 #include "script/sign.h"
+#include "templates.hpp"
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
@@ -2845,7 +2847,8 @@ int CMerkleTx::GetBlocksToMaturity() const
 
 bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectAbsurdFee)
 {
+    const CPolicy& policy = cGlobalPolicy.Get();
     CValidationState state;
-    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, fRejectAbsurdFee);
+    return ::AcceptToMemoryPool(policy, mempool, state, *this, fLimitFree, NULL, fRejectAbsurdFee);
 }
 
