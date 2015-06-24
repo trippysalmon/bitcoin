@@ -17,6 +17,7 @@
 #include "pow.h"
 #include "primitives/transaction.h"
 #include "timedata.h"
+#include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
@@ -150,10 +151,10 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         // This vector will be sorted into a priority queue:
         vector<TxPriority> vecPriority;
         vecPriority.reserve(mempool.mapTx.size());
-        for (map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin();
+        for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
              mi != mempool.mapTx.end(); ++mi)
         {
-            const CTransaction& tx = mi->second.GetTx();
+            const CTransaction& tx = mi->GetTx();
             if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight, pblock->nTime))
                 continue;
 
@@ -188,7 +189,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                     }
                     mapDependers[txin.prevout.hash].push_back(porphan);
                     porphan->setDependsOn.insert(txin.prevout.hash);
-                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
+                    nTotalIn += mempool.mapTx.find(txin.prevout.hash)->GetTx().vout[txin.prevout.n].nValue;
                     continue;
                 }
                 const CCoins* coins = view.AccessCoins(txin.prevout.hash);
@@ -218,7 +219,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 porphan->feeRate = feeRate;
             }
             else
-                vecPriority.push_back(TxPriority(dPriority, feeRate, &mi->second.GetTx()));
+                vecPriority.push_back(TxPriority(dPriority, feeRate, &(mi->GetTx())));
         }
 
         // Collect transactions into block
