@@ -42,17 +42,36 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
+/** Interface for Policy */
+class CPolicy
+{
+public:
+    virtual ~CPolicy() {};
+    virtual bool ApproveScript(const CScript&, txnouttype&) const { return true; };
     /**
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
-bool IsStandardTx(const CTransaction& tx, std::string& reason);
+    virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const { return true; };
     /**
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+    virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const { return true; };
+};
+
+namespace Policy {
+
+/**
+ * @param policy the string defining the policy to return.
+ * @return a CPolicy* of the type described in the parameter string.
+ */
+CPolicy* Factory(const std::string& policy);
+
+/** Supported policies */
+static const std::string STANDARD = "standard";
+
+} // namespace Policy
 
 #endif // BITCOIN_POLICY_H
