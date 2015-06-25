@@ -234,6 +234,7 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
                 {
                     SelectParams(CBaseChainParams::TESTNET);
                 }
+                InitGlobalPolicyFromArgs(mapArgs, Params().DefaultPolicy());
             }
         }
         else if (QFile::exists(arg)) // Filename
@@ -251,6 +252,7 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
                 {
                     SelectParams(CBaseChainParams::TESTNET);
                 }
+                InitGlobalPolicyFromArgs(mapArgs, Params().DefaultPolicy());
             }
         }
         else
