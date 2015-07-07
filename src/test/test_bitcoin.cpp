@@ -12,6 +12,7 @@
 #include "key.h"
 #include "main.h"
 #include "miner.h"
+#include "policy/policy.h"
 #include "pubkey.h"
 #include "random.h"
 #include "txdb.h"
@@ -39,6 +40,7 @@ BasicTestingSetup::BasicTestingSetup(CBaseChainParams::Network network)
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(network);
+        cGlobalPolicy.Set(Policy::Factory(Policy::STANDARD));
         noui_connect();
 }
 

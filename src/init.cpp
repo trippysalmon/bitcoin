@@ -401,7 +401,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
     strUsage += HelpMessageOpt("-testnet", _("Use the test network"));
 
-    Policy::AppendHelpMessages(strUsage);
+    Policy::AppendHelpMessages(strUsage, GetArg("-policy", Policy::STANDARD));
+
     strUsage += HelpMessageGroup(_("Block creation options:"));
     strUsage += HelpMessageOpt("-blockminsize=<n>", strprintf(_("Set minimum block size in bytes (default: %u)"), 0));
     strUsage += HelpMessageOpt("-blockmaxsize=<n>", strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE));
@@ -859,7 +860,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
     }
     try {
-        globalPolicy.InitFromArgs(mapArgs);
+        cGlobalPolicy.Set(Policy::Factory(Policy::STANDARD, mapArgs));
     } catch(const std::exception& e) {
         return InitError(strprintf(_("Error while initializing policy: %s"), e.what()));
     }

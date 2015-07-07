@@ -16,6 +16,7 @@
 #include "net.h"
 #include "script/script_error.h"
 #include "sync.h"
+#include "templates.hpp"
 
 #include <algorithm>
 #include <exception>
@@ -33,7 +34,6 @@ class CBlockTreeDB;
 class CBloomFilter;
 class CInv;
 class CPolicy;
-class CStandardPolicy;
 class CScriptCheck;
 class CTxMemPool;
 class CValidationInterface;
@@ -98,7 +98,7 @@ extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
-extern CStandardPolicy globalPolicy;
+extern Container<CPolicy> cGlobalPolicy;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
