@@ -138,6 +138,7 @@ BITCOIN_CORE_H = \
   support/pagelocker.h \
   sync.h \
   threadsafety.h \
+  templates.hpp \
   timedata.h \
   tinyformat.h \
   txdb.h \
