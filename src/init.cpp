@@ -870,6 +870,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", true);
     nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
+    if (nMaxDatacarrierBytes != MAX_OP_RETURN_RELAY && chainparams.RequireStandard())
+        return InitError(strprintf("datacarriersize is not currently supported for %s chain", chainparams.NetworkIDString()));
 
     fAlerts = GetBoolArg("-alerts", DEFAULT_ALERTS);
 
