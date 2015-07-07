@@ -21,7 +21,7 @@ std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHel
 {
     std::vector<std::pair<std::string, std::string> > optionsHelp;
     optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), fIsBareMultisigStd)));
-    optionsHelp.push_back(std::make_pair("-acceptnonstdtxn", strprintf(_("Relay and mine \"non-standard\" transactions (testnet/regtest only; default: %u)"), Params(CBaseChainParams::MAIN).RequireStandard())));
+    optionsHelp.push_back(std::make_pair("-acceptnonstdtxn", strprintf(_("Relay and mine \"non-standard\" transactions (default: %u)"), Params(CBaseChainParams::MAIN).RequireStandard())));
     optionsHelp.push_back(std::make_pair("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1)));
     optionsHelp.push_back(std::make_pair("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), nMaxDatacarrierBytes)));
     return optionsHelp;
@@ -31,8 +31,6 @@ void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& map
 {
     fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
     fAcceptNonStdTxn = GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard(), mapArgs);
-    if (fAcceptNonStdTxn && Params().RequireStandard())
-        throw std::runtime_error(strprintf(_("%s: acceptnonstdtxn is not currently supported for %s chain."), __func__, Params().NetworkIDString()));
     nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes, mapArgs);
 }
 
