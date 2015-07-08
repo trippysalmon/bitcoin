@@ -8,9 +8,11 @@
 #include "policy/policy.h"
 
 #include "main.h"
+#include "policy/fees.h"
 #include "templates.hpp"
 #include "tinyformat.h"
 #include "util.h"
+#include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
@@ -22,18 +24,38 @@ std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHel
     std::vector<std::pair<std::string, std::string> > optionsHelp;
     optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), fIsBareMultisigStd)));
     optionsHelp.push_back(std::make_pair("-acceptnonstdtxn", strprintf(_("Relay and mine \"non-standard\" transactions (default: %u)"), fAcceptNonStdTxn)));
+    optionsHelp.push_back(std::make_pair("-minrelaytxfee=<amt>", strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)"), FormatMoney(minTxRelayFee.GetFeePerK()))));
     return optionsHelp;
 }
 
 void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
     fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
+    // Fee-per-kilobyte amount considered the same as "free"
+    // If you are mining, be careful setting this:
+    // if you set it to zero then
+    // a transaction spammer can cheaply fill blocks using
+    // 1-satoshi-fee transactions. It should be set above the real
+    // cost to you of processing a transaction.
+    if (mapArgs.count("-minrelaytxfee"))
+    {
+        std::string minFeeStr = GetArg("-minrelaytxfee", std::string("1000"), mapArgs);
+        CAmount n = 0;
+        if (ParseMoney(minFeeStr, n) && n > 0)
+            minTxRelayFee = CFeeRate(n);
+
+        else
+            throw std::runtime_error(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), minFeeStr));
+    }
+    // Assing attribute to global minRelayTxFee
+    minRelayTxFee = this->minRelayTxFee;
     fAcceptNonStdTxn = GetBoolArg("-acceptnonstdtxn", fAcceptNonStdTxn, mapArgs);
 }
 
-CStandardPolicy::CStandardPolicy(bool fIsBareMultisigStdIn, bool fAcceptNonStdTxnIn) :
+CStandardPolicy::CStandardPolicy(bool fIsBareMultisigStdIn, bool fAcceptNonStdTxnIn, const CFeeRate& minRelayTxFeeIn) :
     fIsBareMultisigStd(fIsBareMultisigStdIn),
-    fAcceptNonStdTxn(fAcceptNonStdTxnIn)
+    fAcceptNonStdTxn(fAcceptNonStdTxnIn),
+    minRelayTxFee(minRelayTxFeeIn)
 {
 }
 
@@ -203,6 +225,11 @@ CAmount CStandardPolicy::GetMinAmount(const CTxOut& txout) const
 bool CStandardPolicy::ApproveOutputAmount(const CTxOut& txout) const
 {
     return txout.nValue >= GetMinAmount(txout);
+}
+
+CFeeRate CStandardPolicy::GetMinRelayTxFee() const
+{
+    return minRelayTxFee;
 }
 
 /** Policy Factory and related utility functions */

@@ -87,6 +87,8 @@ public:
      * @return True if the CTxOut has an acceptable nValue.
      */
     virtual bool ApproveOutputAmount(const CTxOut& txout) const { return true; };
+    // TODO hide GetMinRelayTxFee
+    virtual CFeeRate GetMinRelayTxFee() const { return CFeeRate(0); };
 };
 
 /**
@@ -97,11 +99,13 @@ class CStandardPolicy : public CPolicy
 {
 protected:
     bool fIsBareMultisigStd;
+    CFeeRate minRelayTxFee;
     bool fAcceptNonStdTxn;
 
     bool ApproveScript(const CScript&, txnouttype&) const;
 public:
     CStandardPolicy(bool fIsBareMultisigStdIn=true, 
+                    const CFeeRate& minRelayTxFeeIn=CFeeRate(1000),
                     bool fAcceptNonStdTxnIn=false);
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
@@ -139,6 +143,7 @@ public:
      */
     virtual CAmount GetMinAmount(const CTxOut& txout) const;
     virtual bool ApproveOutputAmount(const CTxOut& txout) const;
+    virtual CFeeRate GetMinRelayTxFee() const;
 };
 
 namespace Policy {
