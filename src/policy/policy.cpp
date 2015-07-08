@@ -117,7 +117,7 @@ bool CStandardPolicy::ApproveTx(const CTransaction& tx, std::string& reason) con
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (txout.IsDust(::minRelayTxFee)) {
+        } else if (!ApproveOutputAmount(txout)) {
             reason = "dust";
             return false;
         }
@@ -192,6 +192,17 @@ bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCa
     }
 
     return true;
+}
+
+CAmount CStandardPolicy::GetMinAmount(const CTxOut& txout) const
+{
+    size_t nSize = txout.GetSerializeSize(SER_DISK,0) + 148u;
+    return 3 * minRelayTxFee.GetFee(nSize);
+}
+
+bool CStandardPolicy::ApproveOutputAmount(const CTxOut& txout) const
+{
+    return txout.nValue >= GetMinAmount(txout);
 }
 
 /** Policy Factory and related utility functions */

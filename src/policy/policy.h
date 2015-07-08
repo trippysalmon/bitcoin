@@ -77,6 +77,16 @@ public:
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const { return true; };
+    /**
+     * @param txout the CTxOut being considered
+     * @return the minimum acceptable nValue for this CTxOut.
+     */
+    virtual CAmount GetMinAmount(const CTxOut& txout) const { return true; };
+    /**
+     * @param txout the CTxOut being considered
+     * @return True if the CTxOut has an acceptable nValue.
+     */
+    virtual bool ApproveOutputAmount(const CTxOut& txout) const { return true; };
 };
 
 /**
@@ -117,6 +127,18 @@ public:
      *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
+    /**
+     * "Dust" is defined in terms of CStandardPolicy::minRelayTxFee,
+     * which has units satoshis-per-kilobyte.
+     * If you'd pay more than 1/3 in fees
+     * to spend something, then we consider it dust.
+     * A typical txout is 34 bytes big, and will
+     * need a CTxIn of at least 148 bytes to spend:
+     * so dust is a txout less than 546 satoshis 
+     * with default minRelayTxFee.
+     */
+    virtual CAmount GetMinAmount(const CTxOut& txout) const;
+    virtual bool ApproveOutputAmount(const CTxOut& txout) const;
 };
 
 namespace Policy {
