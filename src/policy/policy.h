@@ -64,6 +64,7 @@ public:
                     );
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
+    virtual bool ApproveOutputAmount(const CTxOut& txout) const;
     virtual bool ApproveScript(const CScript& scriptPubKey) const;
     virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const;
     /**

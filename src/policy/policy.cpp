@@ -43,6 +43,11 @@ CStandardPolicy::CStandardPolicy(const CAmount& nMinRelayFeePerK, bool fIsBareMu
 
 /** CStandardPolicy implementation */
 
+bool CStandardPolicy::ApproveOutputAmount(const CTxOut& txout) const
+{
+    return txout.nValue >= GetDustThreshold(txout);
+}
+
 bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) const
 {
     std::vector<std::vector<unsigned char> > vSolutions;
@@ -121,7 +126,7 @@ bool CStandardPolicy::ApproveTx(const CTransaction& tx, std::string& reason) con
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (txout.IsDust(::minRelayTxFee)) {
+        } else if (!ApproveOutputAmount(txout)) {
             reason = "dust";
             return false;
         }

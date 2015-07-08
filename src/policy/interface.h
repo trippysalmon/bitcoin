@@ -6,6 +6,8 @@
 #ifndef BITCOIN_POLICY_INTERFACE_H
 #define BITCOIN_POLICY_INTERFACE_H
 
+#include "amount.h"
+
 #include <map>
 #include <string>
 #include <vector>
@@ -38,6 +40,16 @@ public:
      * @return a formatted HelpMessage string with the policy options
      */
     virtual void InitFromArgs(const std::map<std::string, std::string>& argMap) = 0;
+    /**
+     * @param txout the CTxOut being considered
+     * @return the minimum acceptable nValue for this CTxOut.
+     */
+    virtual CAmount GetDustThreshold(const CTxOut& txout) const = 0;
+    /**
+     * @param txout the CTxOut being considered
+     * @return True if the CTxOut has an acceptable nValue.
+     */
+    virtual bool ApproveOutputAmount(const CTxOut& txout) const = 0;
     virtual bool ApproveScript(const CScript& scriptPubKey) const = 0;
     /**
      * Check for standard transaction types

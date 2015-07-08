@@ -536,3 +536,12 @@ void CBlockPolicyEstimator::Read(CAutoFile& filein)
     priStats.Read(filein);
     nBestSeenHeight = nFileBestSeenHeight;
 }
+
+CAmount CBlockPolicyEstimator::GetDustThreshold(const CTxOut& txout) const
+{
+    if (txout.scriptPubKey.IsUnspendable())
+        return 0;
+
+    size_t nSize = txout.GetSerializeSize(SER_DISK,0) + 148u;
+    return 3 * minRelayFee.GetFee(nSize);
+}
