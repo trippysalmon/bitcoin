@@ -155,6 +155,7 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate = true);
+    void removeUnchecked(const uint256& hash);
     void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
     void removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
@@ -175,6 +176,14 @@ public:
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
     void ClearPrioritisation(const uint256 hash);
+
+    /** Build a list of transaction (hashes) to remove such that:
+     *  - The list is consistent (if a parent is included, all its dependencies are included as well).
+     *  - Removing said list will reduce the DynamicMemoryUsage below sizelimit.
+     *  - At most maxfeeremove worth of fees will be removed.
+     */
+    bool StageTrimToSize(size_t sizelimit, const CAmount& maxfeeremove, std::set<uint256>& stage, CAmount& totalfeeremoved, size_t& sizeremoved);
+    void RemoveStaged(std::set<uint256>& stage);
 
     unsigned long size()
     {
@@ -207,6 +216,7 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+    size_t GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const;
 };
 
 /** 

@@ -49,9 +49,10 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
     return dResult;
 }
 
-CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
-    nTransactionsUpdated(0)
+CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee)
 {
+    clear();
+
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
     // of transactions in the pool
@@ -109,6 +110,19 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     return true;
 }
 
+void CTxMemPool::removeUnchecked(const uint256& hash)
+{
+    indexed_transaction_set::iterator it = mapTx.find(hash);
+
+    BOOST_FOREACH(const CTxIn& txin, it->GetTx().vin)
+        mapNextTx.erase(txin.prevout);
+
+    totalTxSize -= it->GetTxSize();
+    cachedInnerUsage -= it->DynamicMemoryUsage();
+    mapTx.erase(it);
+    nTransactionsUpdated++;
+    minerPolicyEstimator->removeTx(hash);
+}
 
 void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& removed, bool fRecursive)
 {
@@ -144,15 +158,8 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
                     txToRemove.push_back(it->second.ptx->GetHash());
                 }
             }
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                mapNextTx.erase(txin.prevout);
-
             removed.push_back(tx);
-            totalTxSize -= mapTx.find(hash)->GetTxSize();
-            cachedInnerUsage -= mapTx.find(hash)->DynamicMemoryUsage();
-            mapTx.erase(hash);
-            nTransactionsUpdated++;
-            minerPolicyEstimator->removeTx(hash);
+            removeUnchecked(hash);
         }
     }
 }
@@ -434,4 +441,45 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
     // Estimate the overhead of mapTx to be 5 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 5 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + cachedInnerUsage;
+}
+
+size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 5 * sizeof(void*)) + entry.DynamicMemoryUsage() + memusage::IncrementalDynamicUsage(mapNextTx) * entry.GetTx().vin.size();
+}
+
+bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CAmount& maxfeeremove, std::set<uint256>& stage, CAmount& totalfeeremoved, size_t& totalsizeremoved) {
+    size_t expsize = DynamicMemoryUsage();
+    indexed_transaction_set::nth_index<1>::type::reverse_iterator it = mapTx.get<1>().rbegin();
+    while (expsize > sizelimit && it != mapTx.get<1>().rend()) {
+        std::deque<uint256> todo;
+        todo.push_back(it->GetTx().GetHash());
+        while (!todo.empty()) {
+            uint256 donow = todo.front();
+            const CTxMemPoolEntry* origTx = &*mapTx.find(donow);
+            todo.pop_front();
+            if (!stage.count(donow)) {
+                stage.insert(donow);
+                totalfeeremoved += origTx->GetFee();
+                if (totalfeeremoved > maxfeeremove) {
+                    return false;
+                }
+                expsize -= GuessDynamicMemoryUsage(*origTx);
+                totalsizeremoved += origTx->GetTxSize();
+                for (unsigned int i = 0; i < origTx->GetTx().vout.size(); i++) {
+                    std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(origTx->GetTx().GetHash(), i));
+                    if (it == mapNextTx.end())
+                        continue;
+                    todo.push_back(it->second.ptx->GetHash());
+                }
+            }
+        }
+        it++;
+    }
+    return true;
+}
+
+void CTxMemPool::RemoveStaged(std::set<uint256>& stage) {
+    BOOST_FOREACH(const uint256& hash, stage) {
+        removeUnchecked(hash);
+    }
 }
