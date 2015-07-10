@@ -179,6 +179,7 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+    size_t GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const;
 };
 
 /** 

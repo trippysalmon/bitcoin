@@ -438,6 +438,10 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     return memusage::DynamicUsage(mapTx) + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + cachedInnerUsage;
 }
 
+size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 5 * sizeof(void*)) + entry.DynamicMemoryUsage() + memusage::IncrementalDynamicUsage(mapNextTx) * entry.GetTx().vin.size();
+}
+
 bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved)
 {
     nFeesRemoved = 0;
@@ -455,7 +459,10 @@ bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& s
         }
     }
 
-    if (fDoubleSpend) {
+    size_t sizelimit = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    size_t expsize = DynamicMemoryUsage() + GuessDynamicMemoryUsage(toadd); // Track the expected resulting memory usage of the mempool.
+
+    if (fDoubleSpend || expsize > sizelimit) {
         // Disable replacement feature for now
         return false;
     }
