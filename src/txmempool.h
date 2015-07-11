@@ -42,7 +42,7 @@ private:
     CAmount nFee; //! Cached to avoid expensive parent-transaction lookups
     size_t nTxSize; //! ... and avoid recomputing tx size
     size_t nModSize; //! ... and modified size for priority
-    CFeeRate feeRate; //! ... and fee per kB
+    int64_t nScore; //! ... Tx score, which is calculated only once in the ctor
     int64_t nTime; //! Local time when entering the mempool
     double dPriority; //! Priority when entering the mempool
     unsigned int nHeight; //! Chain height when entering the mempool
@@ -57,7 +57,7 @@ public:
     const CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
     CAmount GetFee() const { return nFee; }
-    CFeeRate GetFeeRate() const { return feeRate; }
+    int64_t GetScore() const { return nScore; }
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
@@ -74,14 +74,14 @@ struct mempoolentry_txid
     }
 };
 
-class CompareTxMemPoolEntryByFee
+class CompareTxMemPoolEntry
 {
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
-        if (a.GetFeeRate() == b.GetFeeRate())
+        if (a.GetScore() == b.GetScore())
             return a.GetTime() < b.GetTime();
-        return a.GetFeeRate() > b.GetFeeRate();
+        return a.GetScore() > b.GetScore();
     }
 };
 
@@ -128,7 +128,7 @@ public:
             // sorted by fee rate
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByFee
+                CompareTxMemPoolEntry
             >
         >
     > indexed_transaction_set;
