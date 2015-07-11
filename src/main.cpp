@@ -13,6 +13,7 @@
 #include "checkqueue.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "globals/policy.h"
 #include "init.h"
 #include "merkleblock.h"
 #include "net.h"

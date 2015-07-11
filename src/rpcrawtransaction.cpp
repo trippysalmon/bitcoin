@@ -6,6 +6,7 @@
 #include "base58.h"
 #include "consensus/validation.h"
 #include "core_io.h"
+#include "globals/policy.h"
 #include "init.h"
 #include "keystore.h"
 #include "main.h"
@@ -18,7 +19,9 @@
 #include "script/script_error.h"
 #include "script/sign.h"
 #include "script/standard.h"
+#include "templates.hpp"
 #include "uint256.h"
+#include "util.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif
