@@ -42,6 +42,7 @@ class CBloomFilter;
 class CInv;
 class CPolicy;
 class CScriptCheck;
+class CStandardPolicy;
 class CValidationInterface;
 class CValidationState;
 
@@ -99,14 +100,12 @@ extern bool fImporting;
 extern bool fReindex;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
-extern bool fIsBareMultisigStd;
-extern bool fRequireStandard;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
-extern CPolicy globalPolicy;
+extern CStandardPolicy globalPolicy;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
