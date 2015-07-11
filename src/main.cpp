@@ -66,7 +66,7 @@ bool fAlerts = DEFAULT_ALERTS;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
-CStandardPolicy globalPolicy;
+Container<CPolicy> cGlobalPolicy;
 
 CTxMemPool mempool(::minRelayTxFee);
 
@@ -1992,7 +1992,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
 
 /** Disconnect chainActive's tip. */
 bool static DisconnectTip(CValidationState &state) {
-    const CPolicy& policy = globalPolicy;
+    const CPolicy& policy = cGlobalPolicy.Get();
     CBlockIndex *pindexDelete = chainActive.Tip();
     assert(pindexDelete);
     mempool.check(pcoinsTip);
@@ -4611,7 +4611,7 @@ bool static ProcessMessage(const CPolicy& policy, const CChainParams& chainparam
 bool ProcessMessages(CNode* pfrom)
 {
     const CChainParams& chainparams = Params();
-    const CPolicy& policy = globalPolicy;
+    const CPolicy& policy = cGlobalPolicy.Get();
     //if (fDebug)
     //    LogPrintf("%s(%u messages)\n", __func__, pfrom->vRecvMsg.size());
 

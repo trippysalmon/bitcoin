@@ -21,6 +21,7 @@
 #include "script/sigcache.h"
 #include "script/standard.h"
 #include "sync.h"
+#include "templates.hpp"
 #include "tinyformat.h"
 #include "txmempool.h"
 #include "uint256.h"
@@ -42,7 +43,6 @@ class CBloomFilter;
 class CInv;
 class CPolicy;
 class CScriptCheck;
-class CStandardPolicy;
 class CValidationInterface;
 class CValidationState;
 
@@ -105,7 +105,7 @@ extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
-extern CStandardPolicy globalPolicy;
+extern Container<CPolicy> cGlobalPolicy;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;

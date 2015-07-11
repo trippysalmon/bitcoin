@@ -2866,7 +2866,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 
 bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectAbsurdFee)
 {
-    const CPolicy& policy = globalPolicy;
+    const CPolicy& policy = cGlobalPolicy.Get();
     CValidationState state;
     return ::AcceptToMemoryPool(policy, mempool, state, *this, fLimitFree, NULL, fRejectAbsurdFee);
 }
