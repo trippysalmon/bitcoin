@@ -11,6 +11,7 @@
 #include <set>
 #include <vector>
 
+#undef foreach
 #include <boost/foreach.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
