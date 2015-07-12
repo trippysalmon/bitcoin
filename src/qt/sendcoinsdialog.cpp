@@ -18,6 +18,7 @@
 #include "base58.h"
 #include "coincontrol.h"
 #include "main.h" // For mempool
+#include "policy/fees.h"
 #include "ui_interface.h"
 #include "txmempool.h"
 #include "wallet/wallet.h"

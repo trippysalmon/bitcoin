@@ -11,6 +11,7 @@
 #include "main.h"
 #include "net.h"
 #include "netbase.h"
+#include "policy/fees.h"
 #include "rpcserver.h"
 #include "timedata.h"
 #include "util.h"

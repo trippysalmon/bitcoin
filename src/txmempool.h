@@ -14,6 +14,7 @@
 #include "sync.h"
 
 class CAutoFile;
+class CFeeRate;
 class CPolicy;
 
 inline double AllowFreeThreshold()
