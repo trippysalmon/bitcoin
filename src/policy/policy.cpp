@@ -237,7 +237,7 @@ CFeeRate CStandardPolicy::GetMinRelayTxFee() const
 CPolicy* Policy::Factory(const std::string& policy)
 {
     if (policy == Policy::STANDARD)
-        return new CStandardPolicy(true, false);
+        return new CStandardPolicy();
     else if (policy == Policy::TEST)
         return new CStandardPolicy(true, true);
     throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));    
