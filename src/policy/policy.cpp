@@ -24,7 +24,7 @@ std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHel
     std::vector<std::pair<std::string, std::string> > optionsHelp;
     optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), fIsBareMultisigStd)));
     optionsHelp.push_back(std::make_pair("-acceptnonstdtxn", strprintf(_("Relay and mine \"non-standard\" transactions (default: %u)"), fAcceptNonStdTxn)));
-    optionsHelp.push_back(std::make_pair("-minrelaytxfee=<amt>", strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)"), FormatMoney(minTxRelayFee.GetFeePerK()))));
+    optionsHelp.push_back(std::make_pair("-minrelaytxfee=<amt>", strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)"), FormatMoney(minRelayTxFee.GetFeePerK()))));
     return optionsHelp;
 }
 
@@ -42,8 +42,7 @@ void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& map
         std::string minFeeStr = GetArg("-minrelaytxfee", std::string("1000"), mapArgs);
         CAmount n = 0;
         if (ParseMoney(minFeeStr, n) && n > 0)
-            minTxRelayFee = CFeeRate(n);
-
+            minRelayTxFee = CFeeRate(n);
         else
             throw std::runtime_error(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), minFeeStr));
     }
@@ -52,10 +51,10 @@ void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& map
     fAcceptNonStdTxn = GetBoolArg("-acceptnonstdtxn", fAcceptNonStdTxn, mapArgs);
 }
 
-CStandardPolicy::CStandardPolicy(bool fIsBareMultisigStdIn, bool fAcceptNonStdTxnIn, const CFeeRate& minRelayTxFeeIn) :
+CStandardPolicy::CStandardPolicy(bool fIsBareMultisigStdIn, const CFeeRate& minRelayTxFeeIn, bool fAcceptNonStdTxnIn) :
     fIsBareMultisigStd(fIsBareMultisigStdIn),
-    fAcceptNonStdTxn(fAcceptNonStdTxnIn),
-    minRelayTxFee(minRelayTxFeeIn)
+    minRelayTxFee(minRelayTxFeeIn),
+    fAcceptNonStdTxn(fAcceptNonStdTxnIn)
 {
 }
 
@@ -239,7 +238,7 @@ CPolicy* Policy::Factory(const std::string& policy)
     if (policy == Policy::STANDARD)
         return new CStandardPolicy();
     else if (policy == Policy::TEST)
-        return new CStandardPolicy(true, true);
+        return new CStandardPolicy(true, CFeeRate(1000), true);
     throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));    
 }
 
