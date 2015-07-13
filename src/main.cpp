@@ -730,8 +730,6 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
             return 0;
     }
 
-    CAmount nMinFee = ::minRelayTxFee.GetFee(nBytes);
-
     if (fAllowFree)
     {
         // There is a free transaction area in blocks created by most miners,
@@ -739,12 +737,10 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
         //   to be considered to fall into this category. We don't want to encourage sending
         //   multiple transactions instead of one big transaction to avoid fees.
         if (nBytes < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))
-            nMinFee = 0;
+            return 0;
     }
 
-    if (!MoneyRange(nMinFee))
-        nMinFee = MAX_MONEY;
-    return nMinFee;
+    return ::minRelayTxFee.GetFee(nBytes);
 }
 
 
