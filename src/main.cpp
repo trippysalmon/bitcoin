@@ -823,6 +823,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
+        if (nFees < 0) // Redundant in Consensus::CheckTxInputs called twice later
+            return state.DoS(100, error("CheckInputs(): %s nTxFee < 0", tx.GetHash().ToString()),
+                             REJECT_INVALID, "bad-txns-fee-negative");
         double dPriority = view.GetPriority(tx, chainActive.Height());
 
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), mempool.HasNoInputsOf(tx));
@@ -835,10 +838,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "replacement-rejected");
 
         // Don't accept it if it can't get into a block
-        CAmount txMinFee = GetMinRelayFee(tx, nSize, true);
-        if (fLimitFree && nFees < txMinFee + nFeesDeleted)
+        if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize) + nFeesDeleted && GetMinRelayFee(tx, nSize, true) != 0)
             return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
-                                      hash.ToString(), nFees, txMinFee + nFeesDeleted),
+                                      hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize) + nFeesDeleted),
                              REJECT_INSUFFICIENTFEE, "insufficient fee");
 
         // Require that free transactions have sufficient priority to be mined in the next block.
