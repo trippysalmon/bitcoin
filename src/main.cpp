@@ -835,19 +835,19 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         if (fLimitFree && nFees - nFeesDeleted < ::minRelayTxFee.GetFee(nSize)) {
 
-        // Don't accept it if it can't get into a block
+            // Don't accept it if it can't get into a block
             if (!AllowBelowMinRelayFee(pool, hash, nSize, true))
-            return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
-                                      hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize) + nFeesDeleted),
-                             REJECT_INSUFFICIENTFEE, "insufficient fee");
+                return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
+                                          hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize) + nFeesDeleted),
+                                 REJECT_INSUFFICIENTFEE, "insufficient fee");
 
-        // Require that free transactions have sufficient priority to be mined in the next block.
+            // Require that free transactions have sufficient priority to be mined in the next block.
             if (GetBoolArg("-relaypriority", true) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1)))
-            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
+                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
 
-        // Continuously rate-limit free (really, very-low-fee) transactions
-        // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-        // be annoying or make others' transactions take longer to confirm.
+            // Continuously rate-limit free (really, very-low-fee) transactions
+            // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+            // be annoying or make others' transactions take longer to confirm.
             static CCriticalSection csFreeLimiter;
             static double dFreeCount;
             static int64_t nLastTime;
