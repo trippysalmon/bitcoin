@@ -117,6 +117,7 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate = true);
+    void removeUnchecked(const uint256& hash);
     void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
     void removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
@@ -137,6 +138,15 @@ public:
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
     void ClearPrioritisation(const uint256 hash);
+
+    /**
+     * Build a list of transaction (hashes) to remove such that:
+     *  - The list is consistent (if a parent is included, all its dependencies are included as well).
+     *  - No dependencies of toadd are removed.
+     * @returns false if a replacement necessary (full mempool or spending conflicts) but is rejected.
+     */
+    bool StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved);
+    void RemoveStaged(std::set<uint256>& stage);
 
     unsigned long size()
     {

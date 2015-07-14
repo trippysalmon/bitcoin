@@ -772,20 +772,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pool.exists(hash))
         return false;
 
-    // Check for conflicts with in-memory transactions
-    {
-    LOCK(pool.cs); // protect pool.mapNextTx
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-    {
-        COutPoint outpoint = tx.vin[i].prevout;
-        if (pool.mapNextTx.count(outpoint))
-        {
-            // Disable replacement feature for now
-            return false;
-        }
-    }
-    }
-
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
@@ -841,12 +827,20 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), mempool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
 
-        if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize)) {
+        // Try to make space in mempool
+        std::set<uint256> stagedelete;
+        CAmount nFeesDeleted = 0;
+        if (!mempool.StageReplace(entry, stagedelete, nFeesDeleted)) {
+            LogPrintf("Rejected by local policy: %s: CTxMemPool::StageReplace: %s", __func__, state.GetRejectReason());
+            return false;
+        }
+
+        if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize) + nFeesDeleted) {
 
         // Don't accept it if it can't get into a block
             if (!AllowBelowMinRelayFee(pool, hash, nSize))
             return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
-                                      hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize)),
+                                      hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize) + nFeesDeleted),
                              REJECT_INSUFFICIENTFEE, "insufficient fee");
 
         // Require that free transactions have sufficient priority to be mined in the next block.
@@ -899,6 +893,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         if (!CheckInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
         {
             return error("AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
+        }
+
+        // Make actually space
+        if (!stagedelete.empty()) {
+            LogPrint("mempool", "Removing %u transactions (%d fees) from the mempool to make space for %s\n", stagedelete.size(), nFeesDeleted, tx.GetHash().ToString());
+            pool.RemoveStaged(stagedelete);
         }
 
         // Store transaction in memory
