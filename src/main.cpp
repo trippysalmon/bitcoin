@@ -782,20 +782,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pool.exists(hash))
         return false;
 
-    // Check for conflicts with in-memory transactions
-    {
-    LOCK(pool.cs); // protect pool.mapNextTx
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-    {
-        COutPoint outpoint = tx.vin[i].prevout;
-        if (pool.mapNextTx.count(outpoint))
-        {
-            // Disable replacement feature for now
-            return false;
-        }
-    }
-    }
-
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
@@ -862,9 +848,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // Try to make space in mempool
         std::set<uint256> stagedelete;
         CAmount nFeesDeleted = 0;
-        if (!mempool.StageTrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, entry, stagedelete, nFeesDeleted)) {
-            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
-        }
+        if (!mempool.StageReplace(entry, stagedelete, nFeesDeleted))
+            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "replacement-rejected");
 
         // Don't accept it if it can't get into a block
         CAmount txMinFee = GetMinRelayFee(tx, nSize, true);

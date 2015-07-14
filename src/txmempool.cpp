@@ -446,10 +446,25 @@ size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 5 * sizeof(void*)) + entry.DynamicMemoryUsage() + memusage::IncrementalDynamicUsage(mapNextTx) * entry.GetTx().vin.size();
 }
 
-bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved) {
+bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved)
+{
+    const CTransaction& tx = toadd.GetTx();
+    // Check for conflicts with in-memory transactions
+    {
+        LOCK(cs); // protect pool.mapNextTx
+        for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            COutPoint outpoint = tx.vin[i].prevout;
+            if (mapNextTx.count(outpoint)) {
+                // Disable replacement feature for now
+                return false;
+            }
+        }
+    }
+
+    size_t sizelimit = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     size_t nSizeRemoved = 0;
     std::set<uint256> protect;
-    BOOST_FOREACH(const CTxIn& in, toadd.GetTx().vin) {
+    BOOST_FOREACH(const CTxIn& in, tx.vin) {
         protect.insert(in.prevout.hash);
     }
 
