@@ -108,6 +108,19 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     return true;
 }
 
+void CTxMemPool::removeUnchecked(const uint256& hash)
+{
+    const CTxMemPoolEntry &entry = mapTx.find(hash)->second;
+
+    BOOST_FOREACH(const CTxIn& txin, entry.GetTx().vin)
+        mapNextTx.erase(txin.prevout);
+
+    totalTxSize -= entry.GetTxSize();
+    cachedInnerUsage -= entry.DynamicMemoryUsage();
+    mapTx.erase(hash);
+    nTransactionsUpdated++;
+    minerPolicyEstimator->removeTx(hash);
+}
 
 void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& removed, bool fRecursive)
 {
@@ -143,15 +156,8 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
                     txToRemove.push_back(it->second.ptx->GetHash());
                 }
             }
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                mapNextTx.erase(txin.prevout);
-
             removed.push_back(tx);
-            totalTxSize -= mapTx[hash].GetTxSize();
-            cachedInnerUsage -= mapTx[hash].DynamicMemoryUsage();
-            mapTx.erase(hash);
-            nTransactionsUpdated++;
-            minerPolicyEstimator->removeTx(hash);
+            removeUnchecked(hash);
         }
     }
 }
@@ -430,4 +436,34 @@ bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {
 size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
     return memusage::DynamicUsage(mapTx) + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + cachedInnerUsage;
+}
+
+bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved)
+{
+    nFeesRemoved = 0;
+    const CTransaction& tx = toadd.GetTx();
+    bool fDoubleSpend = false;
+    // Check for conflicts with in-memory transactions
+    {
+        LOCK(cs); // protect pool.mapNextTx
+        for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            COutPoint outpoint = tx.vin[i].prevout;
+            if (mapNextTx.count(outpoint)) {
+                // Disable replacement feature for now
+                fDoubleSpend = true;
+            }
+        }
+    }
+
+    if (fDoubleSpend) {
+        // Disable replacement feature for now
+        return false;
+    }
+    return true;
+}
+
+void CTxMemPool::RemoveStaged(std::set<uint256>& stage) {
+    BOOST_FOREACH(const uint256& hash, stage) {
+        removeUnchecked(hash);
+    }
 }
