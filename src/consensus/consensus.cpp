@@ -158,15 +158,14 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, CAmount& nFees)
 {
     // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
     // for an attacker to attempt to split the network.
     if (!inputs.HaveInputs(tx))
-        return state.Invalid(false, 0, "", "Inputs unavailable");
+        return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
 
     CAmount nValueIn = 0;
-    CAmount nFees = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
 
         const COutPoint &prevout = tx.vin[i].prevout;
@@ -186,18 +185,17 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
     }
 
-    if (nValueIn < tx.GetValueOut())
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
-                         strprintf("value in (%s) < value out (%s)", nValueIn, tx.GetValueOut()));
-
     // Tally transaction fees
-    CAmount nTxFee = nValueIn - tx.GetValueOut();
-    if (nTxFee < 0)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
-    nFees += nTxFee;
-    if (!MoneyRange(nFees))
+    CAmount nValueOut = tx.GetValueOut();
+    if (nValueIn < nValueOut)
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
+                         strprintf("value in (%s) < value out (%s)", nValueIn, nValueOut));
+
+    CAmount nTxFee = nValueIn - nValueOut;
+    if (!MoneyRange(nTxFee))
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
 
+    nFees += nTxFee;
     return true;
 }
 

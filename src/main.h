@@ -300,11 +300,11 @@ struct CDiskTxPos : public CDiskBlockPos
 
 
 /**
- * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
+ * Check whether all inputs of this transaction are valid (scripts & sigs)
  * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
  * instead of being performed inline.
  */
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
+bool CheckInputsScripts(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view,
                  unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
