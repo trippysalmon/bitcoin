@@ -251,15 +251,12 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeig
     return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, flags, prevHeights, block));
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, int nSpendHeight)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, int64_t nSpendHeight, CAmount& nFees)
 {
-    // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
-    // for an attacker to attempt to split the network.
     if (!inputs.HaveInputs(tx))
-        return state.Invalid(false, 0, "", "Inputs unavailable");
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent");
 
     CAmount nValueIn = 0;
-    CAmount nFees = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
 
         const COutPoint &prevout = tx.vin[i].prevout;
@@ -280,25 +277,30 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
     }
 
-    if (nValueIn < tx.GetValueOut())
+    CAmount nValueOut = tx.GetValueOut();
+    if (nValueIn < nValueOut)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
-                         strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(tx.GetValueOut())));
+                         strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(nValueOut)));
 
     // Tally transaction fees
-    CAmount nTxFee = nValueIn - tx.GetValueOut();
-    if (nTxFee < 0)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
+    CAmount nTxFee = nValueIn - nValueOut;
     nFees += nTxFee;
-    if (!MoneyRange(nFees))
+    if (!MoneyRange(nTxFee))
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
 
     return true;
 }
 
-bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, int64_t& nSigOps)
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, const CUtxoView& inputs, CAmount& nFees, int64_t& nSigOps)
 {
     const int64_t nLockTimeCutoff = (flags & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : nBlockTime;
     if (!CheckTxPreInputs(tx, state, nHeight, nLockTimeCutoff, nSigOps))
+        return false;
+
+    if (tx.IsCoinBase())
+        return true; // TODO Call to a function with all coinbase-specific validations
+
+    if (!Consensus::CheckTxInputs(tx, state, inputs, nHeight, nFees))
         return false;
 
     return true;
