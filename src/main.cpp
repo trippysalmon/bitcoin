@@ -809,8 +809,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
-
-        CAmount nValueIn = 0;
         {
         LOCK(pool.cs);
         CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
@@ -837,18 +835,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             }
         }
 
-        // are the actual inputs available?
-        if (!view.HaveInputs(tx))
-            return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
-
         // Bring the best block into scope
         view.GetBestBlock();
-
-        nValueIn = view.GetValueIn(tx);
 
         // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
         view.SetBackend(dummy);
         }
+
+        CAmount nFees = 0;
+        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees))
+            return error("%s: Consensus::CheckTxInputs on %s: %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // Check for non-standard pay-to-script-hash in inputs
         if (fRequireStandard && !AreInputsStandard(tx, view))
@@ -865,8 +861,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                 strprintf("%d > %d", nSigOps, MAX_STANDARD_TX_SIGOPS));
 
-        CAmount nValueOut = tx.GetValueOut();
-        CAmount nFees = nValueIn-nValueOut;
         CAmount inChainInputValue;
         double dPriority = view.GetPriority(tx, chainActive.Height(), inChainInputValue);
 
@@ -1093,8 +1087,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
-            return error("%s: CheckInputs: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+        if (!CheckInputsScripts(tx, state, view, STANDARD_SCRIPT_VERIFY_FLAGS, true))
+            return error("%s: CheckInputsScripts: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // Check again against just the consensus-critical mandatory script
         // verification flags, in case of bugs in the standard flags that cause
@@ -1105,11 +1099,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
-        {
-            return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
+        if (!CheckInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+            return error("%s: BUG! PLEASE REPORT THIS! CheckInputsScripts failed against MANDATORY but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
-        }
 
         // Remove conflicting transactions from the mempool
         BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
@@ -1484,13 +1476,10 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
     return pindexPrev->nHeight + 1;
 }
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputsScripts(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
 {
     if (!tx.IsCoinBase())
     {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
-            return false;
-
         if (pvChecks)
             pvChecks->reserve(tx.vin.size());
 
@@ -1501,7 +1490,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         // Skip ECDSA signature verification when connecting blocks
         // before the last block chain checkpoint. This is safe because block merkle hashes are
         // still computed and checked, and any change will be caught at the next checkpoint.
-        if (fScriptChecks) {
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
                 const CCoins* coins = inputs.AccessCoins(prevout.hash);
@@ -1535,7 +1523,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
-        }
     }
 
     return true;
@@ -1918,9 +1905,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
         if (!tx.IsCoinBase())
         {
-            if (!view.HaveInputs(tx))
+            if (!view.HaveInputs(tx)) // Redundant check with different DoS score
                 return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
                                  REJECT_INVALID, "bad-txns-inputs-missingorspent");
+
+            if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees))
+                return error("%s: Consensus::CheckTxInputs on %s: %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
 
             if (flags & SCRIPT_VERIFY_P2SH)
             {
@@ -1933,14 +1923,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                      REJECT_INVALID, "bad-blk-sigops");
             }
 
-            nFees += view.GetValueIn(tx)-tx.GetValueOut();
-
-            std::vector<CScriptCheck> vChecks;
-            bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
-                return error("ConnectBlock(): CheckInputs on %s failed with %s",
-                    tx.GetHash().ToString(), FormatStateMessage(state));
-            control.Add(vChecks);
+            if (fScriptChecks) {
+                std::vector<CScriptCheck> vChecks;
+                if (!CheckInputsScripts(tx, state, view, flags, false, nScriptCheckThreads ? &vChecks : NULL))
+                    return error("ConnectBlock(): CheckInputs on %s failed with %s",
+                                 tx.GetHash().ToString(), FormatStateMessage(state));
+                control.Add(vChecks);
+            }
         }
 
         CTxUndo undoDummy;
