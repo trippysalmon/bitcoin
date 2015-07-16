@@ -446,10 +446,9 @@ size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 5 * sizeof(void*)) + entry.DynamicMemoryUsage() + memusage::IncrementalDynamicUsage(mapNextTx) * entry.GetTx().vin.size();
 }
 
-bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved)
+bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesReserved, CAmount& nFeesRemoved)
 {
     nFeesRemoved = 0;
-    const CTransaction& tx = toadd.GetTx();
     std::set<uint256> protect;
     bool fDoubleSpend = false;
     // Check for conflicts with in-memory transactions
@@ -514,7 +513,7 @@ bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& s
             }
             const CTxMemPoolEntry* origTx = &*mapTx.find(hashnow);
             nowfee += origTx->GetFee();
-            if (nFeesRemoved + nowfee > toadd.GetFee()) {
+            if (nFeesReserved + nFeesRemoved + nowfee > toadd.GetFee()) {
                 // If this pushes up to the total fees deleted too high, we're done with 'hash'.
                 good = false;
                 break;

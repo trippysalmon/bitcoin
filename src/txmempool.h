@@ -190,7 +190,7 @@ public:
      *  - Removing said list will reduce the DynamicMemoryUsage after adding toadd, below sizelimit.
      * @returns false if a replacement necessary (full mempool or spending conflicts) but is rejected.
      */
-    bool StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved);
+    bool StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesReserved, CAmount& nFeeRemoved);
     void RemoveStaged(std::set<uint256>& stage);
 
     unsigned long size()
