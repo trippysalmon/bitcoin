@@ -465,8 +465,20 @@ bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& s
 
     size_t sizelimit = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     size_t nSizeRemoved = 0;
-    size_t expsize = DynamicMemoryUsage() + GuessDynamicMemoryUsage(toadd); // Track the expected resulting memory usage of the mempool.
+    size_t usageToAdd = GuessDynamicMemoryUsage(toadd);
+    size_t expsize = DynamicMemoryUsage() + usageToAdd; // Track the expected resulting memory usage of the mempool.
     indexed_transaction_set::nth_index<1>::type::reverse_iterator it = mapTx.get<1>().rbegin();
+
+    // If we're over the mempoolsize limit
+    if (expsize > sizelimit) {
+        CAmount nFeeToPayForEvicted = toadd.GetFee() - nFeesReserved;
+        double estimateTxSzToBeEvicted = (double)(expsize-sizelimit)/usageToAdd * toadd.GetTxSize();
+        // If the lowest feerate tx in the mempool is higher than the effective fee rate available to pay for minimum evicted size
+        // We won't find any tx set we can evict, so we don't need to try.
+        if ((double)it->GetFee() * estimateTxSzToBeEvicted > (double)nFeeToPayForEvicted * it->GetTxSize())
+            return false;
+    }
+
     int fails = 0; // Number of initial mempool transactions iterated over that were not included in the stage.
     int itertotal = 0; // Total number of transactions inspected so far
 
