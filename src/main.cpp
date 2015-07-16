@@ -718,26 +718,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-static bool AllowBelowMinRelayFee(CTxMemPool& pool, const uint256& hash, unsigned int nBytes)
-{
-    bool fAllowFree = true;
-    double dPriorityDelta = 0;
-    CAmount nFeeDelta = 0;
-    pool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-    if (dPriorityDelta > 0 || nFeeDelta > 0)
-        return true;
-
-    // There is a free transaction area in blocks created by most miners,
-    // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
-    //   to be considered to fall into this category. We don't want to encourage sending
-    //   multiple transactions instead of one big transaction to avoid fees.
-    if (fAllowFree && nBytes < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))
-        return true;
-
-    return false;
-}
-
-
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
@@ -806,26 +786,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees))
             return error("%s: Consensus::CheckTxInputs: %s", __func__, state.GetRejectReason());
 
-        // Check for non-standard pay-to-script-hash in inputs
-        if (fRequireStandard && !AreInputsStandard(tx, view))
-            return error("AcceptToMemoryPool: nonstandard transaction input");
-
-        // Check that the transaction doesn't have an excessive number of
-        // sigops, making it impossible to mine. Since the coinbase transaction
-        // itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
-        // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
-        // merely non-standard transaction.
-        unsigned int nSigOps = GetLegacySigOpCount(tx);
-        nSigOps += GetP2SHSigOpCount(tx, view);
-        if (nSigOps > MAX_STANDARD_TX_SIGOPS)
-            return state.DoS(0,
-                             error("AcceptToMemoryPool: too many sigops %s, %d > %d",
-                                   hash.ToString(), nSigOps, MAX_STANDARD_TX_SIGOPS),
-                             REJECT_NONSTANDARD, "bad-txns-too-many-sigops");
-
         double dPriority = view.GetPriority(tx, chainActive.Height());
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), mempool.HasNoInputsOf(tx));
-        unsigned int nSize = entry.GetTxSize();
 
         // Try to make space in mempool
         std::set<uint256> stagedelete;
@@ -833,44 +795,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         if (!mempool.StageReplace(entry, stagedelete, nFeesDeleted))
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "replacement-rejected");
 
-        if (fLimitFree && nFees - nFeesDeleted < ::minRelayTxFee.GetFee(nSize)) {
-
-            // Don't accept it if it can't get into a block
-            if (!AllowBelowMinRelayFee(pool, hash, nSize, true))
-                return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
-                                          hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize) + nFeesDeleted),
-                                 REJECT_INSUFFICIENTFEE, "insufficient fee");
-
-            // Require that free transactions have sufficient priority to be mined in the next block.
-            if (GetBoolArg("-relaypriority", true) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1)))
-                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
-
-            // Continuously rate-limit free (really, very-low-fee) transactions
-            // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-            // be annoying or make others' transactions take longer to confirm.
-            static CCriticalSection csFreeLimiter;
-            static double dFreeCount;
-            static int64_t nLastTime;
-            int64_t nNow = GetTime();
-
-            LOCK(csFreeLimiter);
-
-            // Use an exponentially decaying ~10-minute window:
-            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-            nLastTime = nNow;
-            // -limitfreerelay unit is thousand-bytes-per-minute
-            // At default rate it would take over a month to fill 1GB
-            if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
-                return state.DoS(0, error("AcceptToMemoryPool: free transaction rejected by rate limiter"),
-                                 REJECT_INSUFFICIENTFEE, "rate limited free transaction");
-            LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            dFreeCount += nSize;
-        }
-
-        if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
-            return error("AcceptToMemoryPool: absurdly high fees %s, %d > %d",
-                         hash.ToString(),
-                         nFees, ::minRelayTxFee.GetFee(nSize) * 10000);
+        // Check for non-standard pay-to-script-hash in inputs
+        if (!AreInputsStandard(tx, state, view, nFees, nFeesDeleted, entry.GetTxSize(), fLimitFree, fRejectAbsurdFee))
+            return error("AcceptToMemoryPool: nonstandard transaction input");
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.

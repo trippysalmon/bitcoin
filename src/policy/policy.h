@@ -53,6 +53,6 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason);
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+bool AreInputsStandard(const CTransaction& tx, CValidationState &state, const CCoinsViewCache& mapInputs, const CAmount& nFees, const CAmount& nFeesDeleted, size_t nSize, bool fLimitFree, bool fRejectAbsurdFee);
 
 #endif // BITCOIN_POLICY_H
