@@ -467,7 +467,8 @@ bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& s
     size_t nSizeRemoved = 0;
     size_t expsize = DynamicMemoryUsage() + GuessDynamicMemoryUsage(toadd); // Track the expected resulting memory usage of the mempool.
     indexed_transaction_set::nth_index<1>::type::reverse_iterator it = mapTx.get<1>().rbegin();
-    int fails = 0; // Number of mempool transactions iterated over that were not included in the stage.
+    int fails = 0; // Number of initial mempool transactions iterated over that were not included in the stage.
+    int itertotal = 0; // Total number of transactions inspected so far
 
     if (fDoubleSpend) {
         // Disable replacement feature for now
@@ -496,7 +497,6 @@ bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& s
         CAmount nowfee = 0; // Sum of the fees in 'now'.
         size_t nowsize = 0; // Sum of the tx sizes in 'now'.
         size_t nowusage = 0; // Sum of the memory usages of transactions in 'now'.
-        int iternow = 0; // Transactions we've inspected so far while determining whether 'hash' is acceptable.
         todo.push_back(it->GetTx().GetHash()); // Add 'hash' to the todo list, to initiate processing its children.
         bool good = true; // Whether including 'hash' (and all its descendants) is a good idea.
         // Iterate breadth-first over all descendants of transaction with hash 'hash'.
@@ -507,9 +507,11 @@ bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& s
                 good = false;
                 break;
             }
-            iternow++; // We only count transactions we actually had to go find in the mempool.
-            if (iternow + fails > 20) {
-                return false;
+            itertotal++; // We only count transactions we actually had to go find in the mempool.
+            //Don't want to iterate more than 50 transactions, saving at least 5 to try on each fail attempt
+            if (itertotal + 5*(4-fails) > 50) {
+                good = false;
+                break;
             }
             const CTxMemPoolEntry* origTx = &*mapTx.find(hashnow);
             nowfee += origTx->GetFee();
@@ -543,9 +545,9 @@ bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& s
             nSizeRemoved += nowsize;
             expsize -= nowusage;
         } else {
-            fails += iternow;
-            if (fails > 10) {
-                // Bail out after traversing 32 transactions that are not acceptable.
+            fails++;
+            if (fails >= 5) {
+                // Bail out after trying to add 5 different failing transaction chains.
                 return false;
             }
         }
