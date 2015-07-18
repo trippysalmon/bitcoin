@@ -14,6 +14,7 @@
 #include "sync.h"
 
 class CAutoFile;
+class CValidationState;
 
 inline double AllowFreeThreshold()
 {
@@ -145,7 +146,7 @@ public:
      *  - No dependencies of toadd are removed.
      * @returns false if a replacement necessary (full mempool or spending conflicts) but is rejected.
      */
-    bool StageReplace(const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved);
+    bool StageReplace(const CTxMemPoolEntry& toadd, CValidationState& state, std::set<uint256>& stage, bool fLimitFree, const CCoinsViewCache& view, CAmount& nFeesRemoved);
     void RemoveStaged(std::set<uint256>& stage);
 
     unsigned long size()
