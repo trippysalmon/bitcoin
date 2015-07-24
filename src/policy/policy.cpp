@@ -7,12 +7,37 @@
 
 #include "policy/policy.h"
 
+#include "chainparams.h"
 #include "main.h"
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
+
+/** CStandardPolicy initialization */
+
+std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHelp() const
+{
+    std::vector<std::pair<std::string, std::string> > optionsHelp;
+    optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), fIsBareMultisigStd)));
+    optionsHelp.push_back(std::make_pair("-acceptnonstdtxn", strprintf(_("Relay and mine \"non-standard\" transactions (testnet/regtest only; default: %u)"), Params(CBaseChainParams::MAIN).RequireStandard())));
+    return optionsHelp;
+}
+
+void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
+{
+    fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
+    fAcceptNonStdTxn = GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard(), mapArgs);
+    if (fAcceptNonStdTxn && Params().RequireStandard())
+        throw std::runtime_error(strprintf(_("%s: acceptnonstdtxn is not currently supported for %s chain."), __func__, Params().NetworkIDString()));
+}
+
+CStandardPolicy::CStandardPolicy(bool fIsBareMultisigStdIn, bool fAcceptNonStdTxnIn) :
+    fIsBareMultisigStd(fIsBareMultisigStdIn),
+    fAcceptNonStdTxn(fAcceptNonStdTxnIn)
+{
+}
 
 /** CStandardPolicy implementation */
 
@@ -44,7 +69,7 @@ bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey) const
 
 bool CStandardPolicy::ApproveTx(const CTransaction& tx, std::string& reason) const
 {
-    if (!fRequireStandard)
+    if (fAcceptNonStdTxn)
         return true;
 
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
@@ -111,7 +136,7 @@ bool CStandardPolicy::ApproveTx(const CTransaction& tx, std::string& reason) con
 
 bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
 {
-    if (!fRequireStandard)
+    if (fAcceptNonStdTxn)
         return true;
 
     if (tx.IsCoinBase())
@@ -169,4 +194,13 @@ bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCa
     }
 
     return true;
+}
+
+/** Policy Factory and related utility functions */
+
+void Policy::AppendHelpMessages(std::string& strUsage)
+{
+    const CStandardPolicy policy;
+    strUsage += HelpMessageGroup(strprintf(_("Policy options: (for policy: %s)"), Policy::STANDARD));
+    AppendMessagesOpt(strUsage, policy.GetOptionsHelp());
 }

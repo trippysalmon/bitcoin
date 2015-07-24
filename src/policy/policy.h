@@ -11,6 +11,7 @@
 #include "script/interpreter.h"
 #include "script/standard.h"
 
+#include <map>
 #include <string>
 
 class CCoinsViewCache;
@@ -50,8 +51,17 @@ static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_
 class CStandardPolicy : public CPolicy
 {
 protected:
+    bool fIsBareMultisigStd;
+    bool fAcceptNonStdTxn;
+
     bool ApproveScript(const CScript&, txnouttype&) const;
 public:
+    CStandardPolicy(
+                    bool fIsBareMultisigStdIn=true, 
+                    bool fAcceptNonStdTxnIn=false
+                    );
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
+    virtual void InitFromArgs(const std::map<std::string, std::string>&);
     virtual bool ApproveScript(const CScript& scriptPubKey) const;
     virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const;
     /**
@@ -75,5 +85,19 @@ public:
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
 };
+
+namespace Policy {
+
+/**
+ * Append a help string for the options of the selected policy.
+ * @param strUsage a formatted HelpMessage string with policy options
+ * is appended to this string
+ */
+void AppendHelpMessages(std::string& strUsage);
+
+/** Supported policies */
+static const std::string STANDARD = "standard";
+
+} // namespace Policy
 
 #endif // BITCOIN_POLICY_H
