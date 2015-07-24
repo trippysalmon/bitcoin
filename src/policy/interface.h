@@ -6,7 +6,9 @@
 #ifndef BITCOIN_POLICY_INTERFACE_H
 #define BITCOIN_POLICY_INTERFACE_H
 
+#include <map>
 #include <string>
+#include <vector>
 
 class CCoinsViewCache;
 class CScript;
@@ -21,6 +23,16 @@ class CPolicy
 {
 public:
     virtual ~CPolicy() {};
+    /**
+     * @param argMap a map with options to read from.
+     * @return a formatted HelpMessage string with the policy options
+     */
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const = 0;
+    /**
+     * @param argMap a map with options to read from.
+     * @return a formatted HelpMessage string with the policy options
+     */
+    virtual void InitFromArgs(const std::map<std::string, std::string>& argMap) = 0;
     virtual bool ApproveScript(const CScript& scriptPubKey) const = 0;
     /**
      * Check for standard transaction types
