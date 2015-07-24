@@ -3800,22 +3800,8 @@ void static ProcessGetData(CNode* pfrom)
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
+static inline bool ProcessMsgVersion(CNode* pfrom, CDataStream& vRecv)
 {
-    const CChainParams& chainparams = Params();
-    RandAddSeedPerfmon();
-    LogPrint("net", "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->id);
-    if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
-    {
-        LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
-        return true;
-    }
-
-
-
-
-    if (strCommand == "version")
-    {
         // Each connection can only send one version message
         if (pfrom->nVersion != 0)
         {
@@ -3933,19 +3919,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->nTimeOffset = nTimeOffset;
         AddTimeData(pfrom->addr, nTimeOffset);
         return true;
-    }
+}
 
-
-    else if (pfrom->nVersion == 0)
-    {
-        // Must have a version message before anything else
-        Misbehaving(pfrom->GetId(), 1);
-        return false;
-    }
-
-
-    else if (strCommand == "verack")
-    {
+static inline bool ProcessMsgVerack(CNode* pfrom)
+{
         pfrom->SetRecvVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
 
         // Mark this node as currently connected, so we update its timestamp later.
@@ -3954,11 +3931,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             State(pfrom->GetId())->fCurrentlyConnected = true;
         }
         return true;
-    }
+}
 
-
-    else if (strCommand == "addr")
-    {
+static inline bool ProcessMsgAddr(CNode* pfrom, CDataStream& vRecv)
+{
         vector<CAddress> vAddr;
         vRecv >> vAddr;
 
@@ -4022,11 +3998,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pfrom->fOneShot)
             pfrom->fDisconnect = true;
         return true;
-    }
+}
 
-
-    else if (strCommand == "inv")
-    {
+static inline bool ProcessMsgInv(CNode* pfrom, CDataStream& vRecv, const CChainParams& chainparams)
+{
         vector<CInv> vInv;
         vRecv >> vInv;
         if (vInv.size() > MAX_INV_SZ)
@@ -4088,9 +4063,33 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (!vToFetch.empty())
             pfrom->PushMessage("getdata", vToFetch);
         return true;
+}
+
+bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
+{
+    const CChainParams& chainparams = Params();
+    RandAddSeedPerfmon();
+    LogPrint("net", "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->id);
+    if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
+    {
+        LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
+        return true;
     }
 
-
+    if (strCommand == "version")
+        return ProcessMsgVersion(pfrom, vRecv);
+    else if (pfrom->nVersion == 0)
+    {
+        // Must have a version message before anything else
+        Misbehaving(pfrom->GetId(), 1);
+        return false;
+    }
+    else if (strCommand == "verack")
+        return ProcessMsgVerack(pfrom);
+    else if (strCommand == "addr")
+        return ProcessMsgAddr(pfrom, vRecv);
+    else if (strCommand == "inv")
+        return ProcessMsgInv(pfrom, vRecv, chainparams);
     else if (strCommand == "getdata")
     {
         vector<CInv> vInv;
