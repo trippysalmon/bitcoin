@@ -6,6 +6,7 @@
 #define BITCOIN_POLICYESTIMATOR_H
 
 #include "amount.h"
+#include "policy/interface.h"
 #include "uint256.h"
 
 #include <map>
@@ -159,13 +160,13 @@ public:
      * @param nBlockHeight the current block height
      */
     double EstimateMedianVal(int confTarget, double sufficientTxVal,
-                             double minSuccess, bool requireGreater, unsigned int nBlockHeight);
+                             double minSuccess, bool requireGreater, unsigned int nBlockHeight) const;
 
     /** Return the max number of confirms we're tracking */
-    unsigned int GetMaxConfirms() { return confAvg.size(); }
+    unsigned int GetMaxConfirms() const { return confAvg.size(); };
 
     /** Write state of estimation data to a file*/
-    void Write(CAutoFile& fileout);
+    void Write(CAutoFile& fileout) const;
 
     /**
      * Read saved state of estimation data from a file and replace all internal data structures and
@@ -214,44 +215,39 @@ static const double PRI_SPACING = 2;
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
  * stats on the transactions included in that block
  */
-class CBlockPolicyEstimator
+class CBlockPolicyEstimator : public CPolicy
 {
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator(const CFeeRate& minRelayFee);
+    CBlockPolicyEstimator(const CAmount& nMinRelayFeePerK);
 
-    /** Process all the transactions that have been included in a block */
     void processBlock(unsigned int nBlockHeight,
                       std::vector<CTxMemPoolEntry>& entries, bool fCurrentEstimate);
-
-    /** Process a transaction confirmed in a block*/
     void processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry);
-
-    /** Process a transaction accepted to the mempool*/
     void processTransaction(const CTxMemPoolEntry& entry, bool fCurrentEstimate);
+    void removeTx(const uint256& hash);
+    CFeeRate estimateFee(int confTarget) const;
+    double estimatePriority(int confTarget) const;
+    void Write(CAutoFile& fileout) const;
+    void Read(CAutoFile& filein);
 
-    /** Remove a transaction from the mempool tracking stats*/
-    void removeTx(uint256 hash);
-
+protected:
+    /**
+     * Fee-per-kilobyte amount considered the same as "free"
+     * If you are mining, be careful setting this:
+     * if you set it to zero then
+     * a transaction spammer can cheaply fill blocks using
+     * 1-satoshi-fee transactions. It should be set above the real
+     * cost to you of processing a transaction.
+     */
+    void InitMinRelayFee(const CAmount& nMinRelayFeePerK);
     /** Is this transaction likely included in a block because of its fee?*/
     bool isFeeDataPoint(const CFeeRate &fee, double pri);
 
     /** Is this transaction likely included in a block because of its priority?*/
     bool isPriDataPoint(const CFeeRate &fee, double pri);
 
-    /** Return a fee estimate */
-    CFeeRate estimateFee(int confTarget);
-
-    /** Return a priority estimate */
-    double estimatePriority(int confTarget);
-
-    /** Write estimation data to a file */
-    void Write(CAutoFile& fileout);
-
-    /** Read estimation data from a file */
-    void Read(CAutoFile& filein);
-
-private:
+    CFeeRate minRelayFee;
     CFeeRate minTrackedFee; //! Passed to constructor to avoid dependency on main
     double minTrackedPriority; //! Set to AllowFreeThreshold
     unsigned int nBestSeenHeight;

@@ -14,6 +14,7 @@
 #include "sync.h"
 
 class CAutoFile;
+class CPolicy;
 
 inline double AllowFreeThreshold()
 {
@@ -62,8 +63,6 @@ public:
     size_t DynamicMemoryUsage() const { return nUsageSize; }
 };
 
-class CBlockPolicyEstimator;
-
 /** An inpoint - a combination of a transaction and an index n into its vin */
 class CInPoint
 {
@@ -93,7 +92,7 @@ class CTxMemPool
 private:
     bool fSanityCheck; //! Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;
-    CBlockPolicyEstimator* minerPolicyEstimator;
+    CPolicy* minerPolicyEstimator;
 
     uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
     uint64_t cachedInnerUsage; //! sum of dynamic memory usage of all the map elements (NOT the maps themselves)
@@ -104,7 +103,7 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
-    CTxMemPool(const CFeeRate& _minRelayFee);
+    CTxMemPool(CPolicy& policy);
     ~CTxMemPool();
 
     /**

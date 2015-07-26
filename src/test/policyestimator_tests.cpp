@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "policy/fees.h"
+#include "policy/policy.h"
 #include "txmempool.h"
 #include "uint256.h"
 #include "util.h"
@@ -15,7 +15,8 @@ BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
-    CTxMemPool mpool(CFeeRate(1000));
+    CStandardPolicy testPolicy;
+    CTxMemPool mpool(testPolicy);
     CAmount basefee(2000);
     double basepri = 1e6;
     CAmount deltaFee(100);

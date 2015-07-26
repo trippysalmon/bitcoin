@@ -10,9 +10,14 @@
 #include <string>
 #include <vector>
 
+class CAutoFile;
 class CCoinsViewCache;
+class CFeeRate;
 class CScript;
 class CTransaction;
+class CTxMemPoolEntry;
+class CTxOut;
+class uint256;
 
 /**
  * \class CPolicy
@@ -45,6 +50,38 @@ public:
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
+    /**
+     *Process all the transactions that have been included in a block 
+     */
+    virtual void processBlock(unsigned int nBlockHeight, std::vector<CTxMemPoolEntry>& entries, bool fCurrentEstimate) = 0;
+    /**
+     * Process a transaction confirmed in a block
+     */
+    virtual void processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry) = 0;
+    /**
+     * Process a transaction accepted to the mempool
+     */
+    virtual void processTransaction(const CTxMemPoolEntry& entry, bool fCurrentEstimate) = 0;
+    /**
+     * Remove a transaction from the mempool tracking stats
+     */
+    virtual void removeTx(const uint256& hash) = 0;
+    /**
+     * Return a fee estimate 
+     */
+    virtual CFeeRate estimateFee(int confTarget) const = 0;
+    /**
+     * Return a priority estimate 
+     */
+    virtual double estimatePriority(int confTarget) const = 0;
+    /**
+     * Write estimation data to a file 
+     */
+    virtual void Write(CAutoFile& fileout) const = 0;
+    /**
+     * Read estimation data from a file 
+     */
+    virtual void Read(CAutoFile& filein) = 0;
 };
 
 namespace Policy {

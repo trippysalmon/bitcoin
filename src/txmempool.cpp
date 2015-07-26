@@ -48,7 +48,7 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
     return dResult;
 }
 
-CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
+CTxMemPool::CTxMemPool(CPolicy& policyIn) :
     nTransactionsUpdated(0)
 {
     // Sanity checks off by default for performance, because otherwise
@@ -56,12 +56,11 @@ CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
     // of transactions in the pool
     fSanityCheck = false;
 
-    minerPolicyEstimator = new CBlockPolicyEstimator(_minRelayFee);
+    minerPolicyEstimator = &policyIn;
 }
 
 CTxMemPool::~CTxMemPool()
 {
-    delete minerPolicyEstimator;
 }
 
 void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "policy/policy.h"
 #include "txmempool.h"
 #include "util.h"
 
@@ -50,8 +51,8 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
         txGrandChild[i].vout[0].nValue = 11000LL;
     }
 
-
-    CTxMemPool testPool(CFeeRate(0));
+    CStandardPolicy testPolicy(0);
+    CTxMemPool testPool(testPolicy);
     std::list<CTransaction> removed;
 
     // Nothing in pool, remove should do nothing:

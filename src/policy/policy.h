@@ -7,6 +7,7 @@
 #define BITCOIN_POLICY_H
 
 #include "consensus/consensus.h"
+#include "policy/fees.h"
 #include "policy/interface.h"
 #include "script/interpreter.h"
 #include "script/standard.h"
@@ -46,9 +47,9 @@ static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_
 
 /**
  * \class CStandardPolicy
- * Standard implementation of CPolicy.
+ * Standard implementation of CPolicy, extends CBlockPolicyEstimator.
  */
-class CStandardPolicy : public CPolicy
+class CStandardPolicy : public CBlockPolicyEstimator
 {
 protected:
     bool fIsBareMultisigStd;
@@ -57,6 +58,7 @@ protected:
     bool ApproveScript(const CScript&, txnouttype&) const;
 public:
     CStandardPolicy(
+                    const CAmount& nMinRelayFeePerK=1000,
                     bool fIsBareMultisigStdIn=true, 
                     bool fAcceptNonStdTxnIn=false
                     );

@@ -6,6 +6,7 @@
 #include "policy/fees.h"
 
 #include "amount.h"
+#include "main.h" // Temporary, for minRelayTxFee
 #include "primitives/transaction.h"
 #include "streams.h"
 #include "txmempool.h"
@@ -76,7 +77,7 @@ void TxConfirmStats::UpdateMovingAverages()
 // returns -1 on error conditions
 double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
                                          double successBreakPoint, bool requireGreater,
-                                         unsigned int nBlockHeight)
+                                         unsigned int nBlockHeight) const
 {
     // Counters for a bucket (or range of buckets)
     double nConf = 0; // Number of tx's confirmed within the confTarget
@@ -172,7 +173,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     return median;
 }
 
-void TxConfirmStats::Write(CAutoFile& fileout)
+void TxConfirmStats::Write(CAutoFile& fileout) const
 {
     fileout << decay;
     fileout << buckets;
@@ -281,7 +282,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
     }
 }
 
-void CBlockPolicyEstimator::removeTx(uint256 hash)
+void CBlockPolicyEstimator::removeTx(const uint256& hash)
 {
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos == mapMemPoolTxs.end()) {
@@ -298,10 +299,10 @@ void CBlockPolicyEstimator::removeTx(uint256 hash)
     mapMemPoolTxs.erase(hash);
 }
 
-CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
+CBlockPolicyEstimator::CBlockPolicyEstimator(const CAmount& nMinRelayFeePerK)
     : nBestSeenHeight(0)
 {
-    minTrackedFee = _minRelayFee < CFeeRate(MIN_FEERATE) ? CFeeRate(MIN_FEERATE) : _minRelayFee;
+    InitMinRelayFee(nMinRelayFeePerK);
     std::vector<double> vfeelist;
     for (double bucketBoundary = minTrackedFee.GetFeePerK(); bucketBoundary <= MAX_FEERATE; bucketBoundary *= FEE_SPACING) {
         vfeelist.push_back(bucketBoundary);
@@ -321,6 +322,13 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
     feeLikely = CFeeRate(INF_FEERATE);
     priUnlikely = 0;
     priLikely = INF_PRIORITY;
+}
+
+void CBlockPolicyEstimator::InitMinRelayFee(const CAmount& nMinRelayFeePerK)
+{
+    minRelayFee = CFeeRate(nMinRelayFeePerK);
+    minTrackedFee = nMinRelayFeePerK < MIN_FEERATE ? CFeeRate(MIN_FEERATE) : minRelayFee;
+    minRelayTxFee = minRelayFee; // FIX Copy to global
 }
 
 bool CBlockPolicyEstimator::isFeeDataPoint(const CFeeRate &fee, double pri)
@@ -490,7 +498,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
              entries.size(), mapMemPoolTxs.size());
 }
 
-CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
+CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
 {
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
@@ -504,7 +512,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
     return CFeeRate(median);
 }
 
-double CBlockPolicyEstimator::estimatePriority(int confTarget)
+double CBlockPolicyEstimator::estimatePriority(int confTarget) const
 {
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > priStats.GetMaxConfirms())
@@ -513,7 +521,7 @@ double CBlockPolicyEstimator::estimatePriority(int confTarget)
     return priStats.EstimateMedianVal(confTarget, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
 }
 
-void CBlockPolicyEstimator::Write(CAutoFile& fileout)
+void CBlockPolicyEstimator::Write(CAutoFile& fileout) const
 {
     fileout << nBestSeenHeight;
     feeStats.Write(fileout);

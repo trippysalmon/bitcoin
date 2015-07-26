@@ -11,6 +11,7 @@
 #include "main.h"
 #include "tinyformat.h"
 #include "util.h"
+#include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
@@ -22,6 +23,7 @@ std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHel
     std::vector<std::pair<std::string, std::string> > optionsHelp;
     optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), fIsBareMultisigStd)));
     optionsHelp.push_back(std::make_pair("-acceptnonstdtxn", strprintf(_("Relay and mine \"non-standard\" transactions (default: %u)"), Params(CBaseChainParams::MAIN).RequireStandard())));
+    optionsHelp.push_back(std::make_pair("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/Kb) smaller than this are considered zero fee for relaying (default: %s)"), CURRENCY_UNIT, FormatMoney(minRelayFee.GetFeePerK()))));
     return optionsHelp;
 }
 
@@ -29,9 +31,11 @@ void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& map
 {
     fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
     fAcceptNonStdTxn = GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard(), mapArgs);
+    InitMinRelayFee(ParseAmountFromArgs("-minrelaytxfee", minRelayFee.GetFee(1000), mapArgs));
 }
 
-CStandardPolicy::CStandardPolicy(bool fIsBareMultisigStdIn, bool fAcceptNonStdTxnIn) :
+CStandardPolicy::CStandardPolicy(const CAmount& nMinRelayFeePerK, bool fIsBareMultisigStdIn, bool fAcceptNonStdTxnIn) :
+    CBlockPolicyEstimator(nMinRelayFeePerK),
     fIsBareMultisigStd(fIsBareMultisigStdIn),
     fAcceptNonStdTxn(fAcceptNonStdTxnIn)
 {
