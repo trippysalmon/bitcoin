@@ -17,6 +17,9 @@ class CAutoFile;
 class CFeeRate;
 class CTxMemPoolEntry;
 
+/** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
+static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 50000;
+
 /** \class CBlockPolicyEstimator
  * The BlockPolicyEstimator is used for estimating the fee or priority needed
  * for a transaction to be included in a block within a certain number of
@@ -243,6 +246,7 @@ public:
     virtual CAmount GetDustThreshold(const CTxOut& txout) const;
     virtual bool ApproveAbsurdFee(const CAmount& nFees, CValidationState& state, size_t nSize) const;
     virtual bool ApproveFeeRate(const CFeeRate& nDeltaFeeRate) const;
+    virtual bool ApproveFreeTx(size_t nSize, CValidationState& state, const double& dNextBlockPriority, bool fIsPrioritized) const;
 
 protected:
     /**

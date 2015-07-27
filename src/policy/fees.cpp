@@ -560,3 +560,37 @@ bool CBlockPolicyEstimator::ApproveFeeRate(const CFeeRate& nDeltaFeeRate) const
 {
     return nDeltaFeeRate < dynamicMinRelayFee;
 }
+
+bool CBlockPolicyEstimator::ApproveFreeTx(size_t nSize, CValidationState& state, const double& dNextBlockPriority, bool fIsPrioritized) const
+{
+    // Require that free transactions have sufficient priority
+    if (!fIsPrioritized && nSize >= (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))
+        return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee");
+
+    // Require that free transactions have sufficient utxo priority to be mined in the next block.
+    if (GetBoolArg("-relaypriority", true) && !AllowFree(dNextBlockPriority))
+        return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
+
+    // Continuously rate-limit free (really, very-low-fee) transactions
+    // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+    // be annoying or make others' transactions take longer to confirm.
+    {
+        static CCriticalSection csFreeLimiter;
+        static double dFreeCount;
+        static int64_t nLastTime;
+        int64_t nNow = GetTime();
+
+        LOCK(csFreeLimiter);
+
+        // Use an exponentially decaying ~10-minute window:
+        dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+        nLastTime = nNow;
+        // -limitfreerelay unit is thousand-bytes-per-minute
+        // At default rate it would take over a month to fill 1GB
+        if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
+            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "rate limited free transaction");
+        LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+        dFreeCount += nSize;
+    }
+    return true;
+}

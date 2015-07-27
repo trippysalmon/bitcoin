@@ -135,6 +135,7 @@ public:
     /** Affect CreateNewBlock prioritisation of transactions */
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
+    bool IsPrioritized(const uint256 hash);
     void ClearPrioritisation(const uint256 hash);
 
     unsigned long size()

@@ -394,6 +394,14 @@ void CTxMemPool::ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount
     nFeeDelta += deltas.second;
 }
 
+bool CTxMemPool::IsPrioritized(const uint256 hash)
+{
+    double dPriorityDelta = 0;
+    CAmount nFeeDelta = 0;
+    ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
+    return dPriorityDelta > 0 || nFeeDelta > 0;
+}
+
 void CTxMemPool::ClearPrioritisation(const uint256 hash)
 {
     LOCK(cs);
