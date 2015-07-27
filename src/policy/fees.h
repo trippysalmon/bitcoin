@@ -231,17 +231,18 @@ public:
     void Write(CAutoFile& fileout) const;
     void Read(CAutoFile& filein);
     /**
-     * "Dust" is defined in terms of global minRelayTxFee,
+     * "Dust" is defined in terms of global CBlockPolicyEstimator::minRelayFee,
      * which has units satoshis-per-kilobyte.
      * If you'd pay more than 1/3 in fees
      * to spend something, then we consider it dust.
      * A typical spendable txout is 34 bytes big, and will
      * need a CTxIn of at least 148 bytes to spend:
      * so dust is a spendable txout less than 546 satoshis
-     * with default minRelayTxFee.
+     * with default CBlockPolicyEstimator::minRelayFee.
      */
     virtual CAmount GetDustThreshold(const CTxOut& txout) const;
     virtual bool ApproveAbsurdFee(const CAmount& nFees, CValidationState& state, size_t nSize) const;
+    virtual bool ApproveFeeRate(const CFeeRate& nDeltaFeeRate) const;
 
 protected:
     /**
@@ -260,6 +261,7 @@ protected:
     bool isPriDataPoint(const CFeeRate &fee, double pri);
 
     CFeeRate minRelayFee;
+    CFeeRate dynamicMinRelayFee;
     CFeeRate minTrackedFee; //! Passed to constructor to avoid dependency on main
     double minTrackedPriority; //! Set to AllowFreeThreshold
     unsigned int nBestSeenHeight;

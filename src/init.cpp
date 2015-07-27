@@ -851,6 +851,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     } catch(const std::exception& e) {
         return InitError(strprintf(_("Error while initializing policy: %s"), e.what()));
     }
+    const CPolicy& policy = globalPolicy;
 
 #ifdef ENABLE_WALLET
     if (mapArgs.count("-mintxfee"))
@@ -869,7 +870,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (nFeePerK > nHighTransactionFeeWarning)
             InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
         payTxFee = CFeeRate(nFeePerK, 1000);
-        if (payTxFee < ::minRelayTxFee)
+        if (!policy.ApproveFeeRate(payTxFee))
         {
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
                                        mapArgs["-paytxfee"], ::minRelayTxFee.ToString()));
@@ -883,7 +884,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (nMaxFee > nHighTransactionMaxFeeWarning)
             InitWarning(_("Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         maxTxFee = nMaxFee;
-        if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
+        if (!policy.ApproveFeeRate(CFeeRate(maxTxFee, 1000)))
         {
             return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
                                        mapArgs["-maxtxfee"], ::minRelayTxFee.ToString()));

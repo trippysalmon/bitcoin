@@ -328,6 +328,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const CAmount& nMinRelayFeePerK)
 void CBlockPolicyEstimator::InitMinRelayFee(const CAmount& nMinRelayFeePerK)
 {
     minRelayFee = CFeeRate(nMinRelayFeePerK);
+    dynamicMinRelayFee = minRelayFee; // Copy to dynamic min relay fee
     minTrackedFee = nMinRelayFeePerK < MIN_FEERATE ? CFeeRate(MIN_FEERATE) : minRelayFee;
     minRelayTxFee = minRelayFee; // FIX Copy to global
 }
@@ -553,4 +554,9 @@ bool CBlockPolicyEstimator::ApproveAbsurdFee(const CAmount& nFees, CValidationSt
         return state.Invalid(false, REJECT_HIGHFEE, "absurdly-high-fee",
                              strprintf("%d > %d", nFees, minRelayFee.GetFee(nSize) * 10000));
     return true;
+}
+
+bool CBlockPolicyEstimator::ApproveFeeRate(const CFeeRate& nDeltaFeeRate) const
+{
+    return nDeltaFeeRate < dynamicMinRelayFee;
 }
