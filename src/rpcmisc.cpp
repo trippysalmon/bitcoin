@@ -9,6 +9,8 @@
 #include "main.h"
 #include "net.h"
 #include "netbase.h"
+#include "policy/interface.h"
+#include "policy/policy.h" // For CStandardPolicy complete type (globalPolicy)
 #include "rpcserver.h"
 #include "timedata.h"
 #include "util.h"
@@ -102,7 +104,7 @@ UniValue getinfo(const UniValue& params, bool fHelp)
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
 #endif
-    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(globalPolicy.GetMinRelayFee().GetFeePerK())));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }

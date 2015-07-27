@@ -247,6 +247,7 @@ public:
     virtual bool ApproveAbsurdFee(const CAmount& nFees, CValidationState& state, size_t nSize) const;
     virtual bool ApproveFeeRate(const CFeeRate& nDeltaFeeRate) const;
     virtual bool ApproveFreeTx(size_t nSize, CValidationState& state, const double& dNextBlockPriority, bool fIsPrioritized) const;
+    virtual CFeeRate GetMinRelayFee() const;
 
 protected:
     /**

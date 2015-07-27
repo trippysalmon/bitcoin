@@ -873,7 +873,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (!policy.ApproveFeeRate(payTxFee))
         {
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-                                       mapArgs["-paytxfee"], ::minRelayTxFee.ToString()));
+                                       mapArgs["-paytxfee"], policy.GetMinRelayFee().ToString()));
         }
     }
     if (mapArgs.count("-maxtxfee"))
@@ -887,7 +887,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (!policy.ApproveFeeRate(CFeeRate(maxTxFee, 1000)))
         {
             return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-                                       mapArgs["-maxtxfee"], ::minRelayTxFee.ToString()));
+                                       mapArgs["-maxtxfee"], policy.GetMinRelayFee().ToString()));
         }
     }
     nTxConfirmTarget = GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);

@@ -7,7 +7,6 @@
 
 #include "amount.h"
 #include "consensus/validation.h"
-#include "main.h" // Temporary, for minRelayTxFee
 #include "primitives/transaction.h"
 #include "streams.h"
 #include "txmempool.h"
@@ -330,7 +329,11 @@ void CBlockPolicyEstimator::InitMinRelayFee(const CAmount& nMinRelayFeePerK)
     minRelayFee = CFeeRate(nMinRelayFeePerK);
     dynamicMinRelayFee = minRelayFee; // Copy to dynamic min relay fee
     minTrackedFee = nMinRelayFeePerK < MIN_FEERATE ? CFeeRate(MIN_FEERATE) : minRelayFee;
-    minRelayTxFee = minRelayFee; // FIX Copy to global
+}
+
+CFeeRate CBlockPolicyEstimator::GetMinRelayFee() const
+{
+    return dynamicMinRelayFee;
 }
 
 bool CBlockPolicyEstimator::isFeeDataPoint(const CFeeRate &fee, double pri)

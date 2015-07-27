@@ -50,6 +50,10 @@ public:
     virtual bool ApproveFeeRate(const CFeeRate& nDeltaFeeRate) const = 0;
     virtual bool ApproveFreeTx(size_t nSize, CValidationState& state, const double& dNextBlockPriority, bool fIsPrioritized) const = 0;
     /**
+     * Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining)
+     */
+    virtual CFeeRate GetMinRelayFee() const = 0 ;
+    /**
      * @param txout the CTxOut being considered
      * @return True if the CTxOut has an acceptable nValue.
      */

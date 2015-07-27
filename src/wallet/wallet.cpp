@@ -2143,7 +2143,7 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
         nFeeNeeded = minTxFee.GetFee(nTxBytes);
     // prevent user from paying a non-sense fee (like 1 satoshi): 0 < fee < minRelayFee
     if (!policy.ApproveFeeRate(CFeeRate(nFeeNeeded, nTxBytes)))
-        nFeeNeeded = ::minRelayTxFee.GetFee(nTxBytes);
+        nFeeNeeded = policy.GetMinRelayFee().GetFee(nTxBytes);
     // But always obey the maximum
     if (nFeeNeeded > maxTxFee)
         nFeeNeeded = maxTxFee;
