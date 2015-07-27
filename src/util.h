@@ -14,6 +14,7 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include "amount.h"
 #include "compat.h"
 #include "tinyformat.h"
 #include "utiltime.h"
@@ -167,6 +168,8 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault, const std::map<std::
  */
 bool GetBoolArg(const std::string& strArg, bool fDefault);
 bool GetBoolArg(const std::string& strArg, bool fDefault, const std::map<std::string, std::string>& mapArgs);
+
+CAmount ParseAmountFromArgs(const std::string& strArg, CAmount nDefault, const std::map<std::string, std::string>& mapArgs);
 
 /**
  * Set an argument if it doesn't already have a value

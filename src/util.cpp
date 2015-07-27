@@ -13,6 +13,7 @@
 #include "random.h"
 #include "serialize.h"
 #include "sync.h"
+#include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
 
@@ -390,6 +391,16 @@ bool GetBoolArg(const std::string& strArg, bool fDefault, const std::map<std::st
     if (it != mapArgs.end())
         return InterpretBool(it->second);
     return fDefault;
+}
+
+CAmount ParseAmountFromArgs(const std::string& strArg, CAmount nDefault, const std::map<std::string, std::string>& mapArgs)
+{
+    CAmount n = 0;
+    std::string strAmount = GetArg(strArg, "", mapArgs);
+    if ("" != strAmount)
+        if (!ParseMoney(strAmount, n) || !MoneyRange(n))
+            throw std::runtime_error(strprintf(_("Invalid amount for %s=<amount>: '%s'"), strArg, strAmount));
+    return n;
 }
 
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
