@@ -19,6 +19,7 @@ class CScript;
 class CTransaction;
 class CTxMemPoolEntry;
 class CTxOut;
+class CValidationState;
 class uint256;
 
 /**
@@ -45,6 +46,7 @@ public:
      * @return the minimum acceptable nValue for this CTxOut.
      */
     virtual CAmount GetDustThreshold(const CTxOut& txout) const = 0;
+    virtual bool ApproveAbsurdFee(const CAmount& nFees, CValidationState& state, size_t nSize) const = 0;
     /**
      * @param txout the CTxOut being considered
      * @return True if the CTxOut has an acceptable nValue.

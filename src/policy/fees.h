@@ -241,6 +241,7 @@ public:
      * with default minRelayTxFee.
      */
     virtual CAmount GetDustThreshold(const CTxOut& txout) const;
+    virtual bool ApproveAbsurdFee(const CAmount& nFees, CValidationState& state, size_t nSize) const;
 
 protected:
     /**

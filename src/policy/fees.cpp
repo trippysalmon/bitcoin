@@ -6,6 +6,7 @@
 #include "policy/fees.h"
 
 #include "amount.h"
+#include "consensus/validation.h"
 #include "main.h" // Temporary, for minRelayTxFee
 #include "primitives/transaction.h"
 #include "streams.h"
@@ -544,4 +545,12 @@ CAmount CBlockPolicyEstimator::GetDustThreshold(const CTxOut& txout) const
 
     size_t nSize = txout.GetSerializeSize(SER_DISK,0) + 148u;
     return 3 * minRelayFee.GetFee(nSize);
+}
+
+bool CBlockPolicyEstimator::ApproveAbsurdFee(const CAmount& nFees, CValidationState& state, size_t nSize) const
+{
+    if (nFees > minRelayFee.GetFee(nSize) * 10000)
+        return state.Invalid(false, REJECT_HIGHFEE, "absurdly-high-fee",
+                             strprintf("%d > %d", nFees, minRelayFee.GetFee(nSize) * 10000));
+    return true;
 }
