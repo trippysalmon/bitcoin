@@ -178,6 +178,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
+  policy/factory.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \

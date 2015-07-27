@@ -47,4 +47,18 @@ public:
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const = 0;
 };
 
+namespace Policy {
+
+/**
+ * Append a help string for the options of the selected policy.
+ * @param strUsage a formatted HelpMessage string with policy options
+ * is appended to this string
+ */
+void AppendHelpMessages(std::string& strUsage);
+
+/** Supported policies */
+static const std::string STANDARD = "standard";
+
+} // namespace Policy
+
 #endif // BITCOIN_POLICY_INTERFACE_H

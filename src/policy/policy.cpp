@@ -193,12 +193,3 @@ bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCa
 
     return true;
 }
-
-/** Policy Factory and related utility functions */
-
-void Policy::AppendHelpMessages(std::string& strUsage)
-{
-    const CStandardPolicy policy;
-    strUsage += HelpMessageGroup(strprintf(_("Policy options: (for policy: %s)"), Policy::STANDARD));
-    AppendMessagesOpt(strUsage, policy.GetOptionsHelp());
-}
