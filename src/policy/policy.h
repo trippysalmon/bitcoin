@@ -44,6 +44,8 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
+static const unsigned int MAX_OP_RETURN_RELAY = 83; //! bytes (+1 for OP_RETURN, +2 for the pushdata opcodes)
+
 /**
  * \class CStandardPolicy
  * Standard implementation of CPolicy.
@@ -53,12 +55,14 @@ class CStandardPolicy : public CPolicy
 protected:
     bool fIsBareMultisigStd;
     bool fAcceptNonStdTxn;
+    unsigned nMaxDatacarrierBytes;
 
     bool ApproveScript(const CScript&, txnouttype&) const;
 public:
     CStandardPolicy(
                     bool fIsBareMultisigStdIn=true, 
-                    bool fAcceptNonStdTxnIn=false
+                    bool fAcceptNonStdTxnIn=false,
+                    unsigned nMaxDatacarrierBytes=MAX_OP_RETURN_RELAY
                     );
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
