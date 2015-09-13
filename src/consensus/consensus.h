@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#include "amount.h"
 #include "consensus/params.h"
 
 #include <stdint.h>
@@ -61,11 +62,38 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Pa
 
 } // namespace Consensus
 
+/** Transaction validation utility functions */
+
+/**
+ * Check if transaction is final and can be included in a block with the
+ * specified height and time. Consensus critical.
+ */
+bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
+/**
+ * Count ECDSA signature operations the old-fashioned (pre-0.6) way
+ * @return number of sigops this transaction's outputs will produce when spent
+ * @see CTransaction::FetchInputs
+ */
+unsigned int GetLegacySigOpCount(const CTransaction& tx);
+/**
+ * Count ECDSA signature operations in pay-to-script-hash inputs.
+ * 
+ * @param[in] mapInputs Map of previous transactions that have outputs we're spending
+ * @return maximum number of sigops required to validate this transaction's inputs
+ * @see CTransaction::FetchInputs
+ */
+unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+
 /** Block header validation utility functions */
 
 int64_t GetMedianTimePast(const CBlockIndex* pindex, const Consensus::Params& consensusParams);
+/**
+ * Returns true if there are nRequired or more blocks of minVersion or above
+ * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
+ */
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
 
-/** Block validation utilities */
+/** Block validation utility functions */
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 inline uint64_t MaxBlockSize(const Consensus::Params& consensusParams)
@@ -77,5 +105,6 @@ inline uint64_t MaxBlockSigops(const Consensus::Params& consensusParams)
 {
     return consensusParams.nMaxBlockSigops;
 }
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
