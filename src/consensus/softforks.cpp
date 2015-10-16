@@ -6,6 +6,7 @@
 #include "consensus/softforks.h"
 
 #include "chain.h"
+#include "consensus/blockruleindex.h"
 #include "consensus/params.h"
 
 using namespace Consensus::SoftForks;
