@@ -11,6 +11,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "consensus/blockruleindex.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "hash.h"
@@ -73,6 +74,7 @@ bool fCheckpointsEnabled = true;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
+Consensus::VersionBits::BlockRuleIndex g_blockRuleIndex;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
