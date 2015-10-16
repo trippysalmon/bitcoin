@@ -82,6 +82,7 @@ BITCOIN_CORE_H = \
   amount.h \
   arith_uint256.h \
   base58.h \
+  blockruleindex.h \
   bloom.h \
   chain.h \
   chainparams.h \
@@ -101,6 +102,7 @@ BITCOIN_CORE_H = \
   consensus/params.h \
   consensus/softforks.h \
   consensus/validation.h \
+  consensus/versionbits.h \
   core_io.h \
   core_memusage.h \
   eccryptoverify.h \
@@ -183,6 +185,7 @@ libbitcoin_server_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT
 libbitcoin_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
+  blockruleindex.cpp \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
@@ -262,6 +265,7 @@ libbitcoin_common_a_SOURCES = \
   base58.cpp \
   chainparams.cpp \
   coins.cpp \
+  consensus/versionbits.cpp \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
