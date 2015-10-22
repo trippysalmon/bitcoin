@@ -21,8 +21,6 @@ enum Rule
     BIP16,
     BIP30,
     BIP34,
-    BIP42,
-    BIP62,
     BIP65,
     BIP66,
     BIP9999,
