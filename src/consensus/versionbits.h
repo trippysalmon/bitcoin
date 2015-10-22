@@ -32,23 +32,20 @@ bool UsesVersionBits(int nVersion);
 class SoftFork
 {
 public:
-    SoftFork(int bit, int rule, int threshold, uint32_t deployTime, uint32_t expireTime) :
+    SoftFork(int bit, int rule, uint32_t deployTime, uint32_t expireTime) :
         m_bit(bit),
         m_rule(rule),
-        m_threshold(threshold),
         m_deployTime(deployTime),
         m_expireTime(expireTime) { }
 
     int         GetBit() const { return m_bit; }
     int         GetRule() const { return m_rule; }
-    int         GetThreshold() const { return m_threshold; }
     uint32_t    GetDeployTime() const { return m_deployTime; }
     uint32_t    GetExpireTime() const { return m_expireTime; }
 
 private:
     int m_bit;
     int m_rule;
-    int m_threshold;
     uint32_t m_deployTime;
     uint32_t m_expireTime;
 };
@@ -62,7 +59,7 @@ public:
     ~SoftForkDeployments();
 
     // Creates and adds a new soft fork deployment
-    void AddSoftFork(int bit, int rule, int threshold, uint32_t deployTime, uint32_t expireTime);
+    void AddSoftFork(int bit, int rule, uint32_t deployTime, uint32_t expireTime);
 
     // Returns true if the specified bit has not been assigned yet for the given time interval
     bool IsBitAvailable(int bit, uint32_t deployTime, uint32_t expireTime) const;

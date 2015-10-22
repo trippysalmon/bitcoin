@@ -277,7 +277,7 @@ bool BlockRuleIndex::InsertBlockIndex(const CBlockIndex* pblockIndex, const Cons
         int count = it->second;
         const SoftFork* softFork = m_deployments->GetSoftFork(rule);
 
-        if (softFork && (count >= softFork->GetThreshold()))
+        if (softFork && (count >= consensusParams.nRuleChangeActivationThreshold))
             newRuleStates[rule] = LOCKED_IN;
         else
             if (!m_deployments->IsRuleAssigned(rule, currentMedianTime))

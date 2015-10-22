@@ -21,6 +21,7 @@ struct Params {
     int nMajorityRejectBlockOutdated;
     int nMajorityWindow;
     /** Used for soft fork deployments using versionbits */
+    int64_t nRuleChangeActivationThreshold;
     VersionBits::SoftForkDeployments softForkDeployments;
     /** Proof of work parameters */
     uint256 powLimit;

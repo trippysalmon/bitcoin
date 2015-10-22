@@ -129,7 +129,7 @@ std::string RuleStateToString(RuleState state)
         return "N/A";
     }
 }
-void StateChanged(const CBlockIndex* pblockIndex, const SoftFork* psoftFork, RuleState prevState, RuleState newState, int bitCount)
+void StateChanged(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams, const SoftFork* psoftFork, RuleState prevState, RuleState newState, int bitCount)
 {
     int bit = psoftFork->GetBit();
     bool isBitSet = (pblockIndex->pprev->nVersion >> bit) & 0x1;
@@ -138,7 +138,7 @@ void StateChanged(const CBlockIndex* pblockIndex, const SoftFork* psoftFork, Rul
     BOOST_TEST_MESSAGE("STATE CHANGED - height: " << pblockIndex->nHeight << " median time: " << pblockIndex->GetMedianTimePast()
          << " bit: " << psoftFork->GetBit() << " (" << (isBitSet ? "true" : "false") << ") rule: " << psoftFork->GetRule());
     BOOST_TEST_MESSAGE("  " << RuleStateToString(prevState) << " -> " << RuleStateToString(newState));
-    BOOST_TEST_MESSAGE("    " << bitCount << "/" << psoftFork->GetThreshold());
+    BOOST_TEST_MESSAGE("    " << bitCount << "/" << consensusParams.nRuleChangeActivationThreshold);
 
     if ((prevState == DEFINED) && (newState != LOCKED_IN) && (newState != FAILED))
         throw runtime_error("Invalid state transition.");
@@ -155,11 +155,11 @@ void StateChanged(const CBlockIndex* pblockIndex, const SoftFork* psoftFork, Rul
     if ((newState == ACTIVE) && (prevState != LOCKED_IN))
         throw runtime_error("Invalid state transition.");
 
-    if ((newState == LOCKED_IN) && (bitCount < psoftFork->GetThreshold()))
+    if ((newState == LOCKED_IN) && (bitCount < consensusParams.nRuleChangeActivationThreshold))
         throw runtime_error("Insufficient bit count for lock-in.");
 }
 
-void CompareRuleStates(const CBlockIndex* pblockIndex, const RuleStates& prevStates, const RuleStates& newStates, const BitCounter& bitCounter)
+void CompareRuleStates(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams, const RuleStates& prevStates, const RuleStates& newStates, const BitCounter& bitCounter)
 {
     for (RuleStates::const_iterator newIt = newStates.begin(); newIt != newStates.end(); ++newIt)
     {
@@ -172,15 +172,15 @@ void CompareRuleStates(const CBlockIndex* pblockIndex, const RuleStates& prevSta
         RuleStates::const_iterator prevIt = prevStates.find(newIt->first);
         if (prevIt == prevStates.end())
         {
-            StateChanged(pblockIndex, psoftFork, UNDEFINED, newIt->second, bitCount);
+            StateChanged(pblockIndex, consensusParams, psoftFork, UNDEFINED, newIt->second, bitCount);
         }
         else if (newIt->second != prevIt->second)
         {
-            StateChanged(pblockIndex, psoftFork, prevIt->second, newIt->second, bitCount);
+            StateChanged(pblockIndex, consensusParams, psoftFork, prevIt->second, newIt->second, bitCount);
         }
-        else if ((pblockIndex->nHeight % ACTIVATION_INTERVAL == 0) && (newIt->second == DEFINED) && (bitCount >= psoftFork->GetThreshold()))
+        else if ((pblockIndex->nHeight % ACTIVATION_INTERVAL == 0) && (newIt->second == DEFINED) && (bitCount >= consensusParams.nRuleChangeActivationThreshold))
         {
-            BOOST_TEST_MESSAGE("bit count: " << bitCount << "/" << psoftFork->GetThreshold());
+            BOOST_TEST_MESSAGE("bit count: " << bitCount << "/" << consensusParams.nRuleChangeActivationThreshold);
             throw runtime_error("Threshold exceeded but lock-in did not occur.");
         }
     }
@@ -196,7 +196,7 @@ void CompareRuleStates(const CBlockIndex* pblockIndex, const RuleStates& prevSta
 
             int bitCount = bitCounter.GetCountForBit(psoftFork->GetBit());
 
-            StateChanged(pblockIndex, psoftFork, prevIt->second, UNDEFINED, bitCount);
+            StateChanged(pblockIndex, consensusParams, psoftFork, prevIt->second, UNDEFINED, bitCount);
         }
     }
 }
@@ -247,7 +247,7 @@ CBlockIndex* NewBlock(int nVersion, unsigned int nTime, const Consensus::Params&
         {
             RuleStates prevRuleStates   = blockRuleIndex.GetRuleStates(pparent, consensusParams);
             RuleStates newRuleStates    = blockRuleIndex.GetRuleStates(pblockIndex, consensusParams);
-            CompareRuleStates(pblockIndex, prevRuleStates, newRuleStates, *pbitCounter);
+            CompareRuleStates(pblockIndex, consensusParams, prevRuleStates, newRuleStates, *pbitCounter);
         }
         pbitCounter->CountBits(nVersion, pblockIndex->GetMedianTimePast());
     }
@@ -290,15 +290,20 @@ inline void CleanUp()
 
 BOOST_AUTO_TEST_CASE( deployments )
 {
+    Consensus::Params consensusParams;
+    consensusParams.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+    consensusParams.nPowTargetSpacing = 10 * 60;
+    assert(consensusParams.DifficultyAdjustmentInterval() == ACTIVATION_INTERVAL);
+    consensusParams.nRuleChangeActivationThreshold = 1916;
     try
     {
         g_deployments.Clear();
-        g_deployments.AddSoftFork(0, 1, 500, 10000, 100000);
-
+        g_deployments.AddSoftFork(0, 1, 10000, 100000);
         try
         {
             // Test conflicting bit, overlapping deployment window
-            g_deployments.AddSoftFork(0, 2, 950, 30, 20000);
+            // consensusParams.nRuleChangeActivationThreshold = 950;
+            g_deployments.AddSoftFork(0, 2, 30, 20000);
             BOOST_FAIL("Bit conflict not detected for overlapping deployment.");
         }
         catch(exception& e) { }
@@ -306,7 +311,7 @@ BOOST_AUTO_TEST_CASE( deployments )
         try
         {
             // Test conflicting bit, overlapping expiration window
-            g_deployments.AddSoftFork(0, 3, 500, 70000, 130000);
+            g_deployments.AddSoftFork(0, 3, 70000, 130000);
             BOOST_FAIL("Bit conflict not detected for overlapping expiration.");
         }
         catch(exception& e) { }
@@ -314,7 +319,7 @@ BOOST_AUTO_TEST_CASE( deployments )
         try
         {
             // Test conflicting bit, inner time window containment
-            g_deployments.AddSoftFork(0, 4, 500, 60000, 80000);
+            g_deployments.AddSoftFork(0, 4, 60000, 80000);
             BOOST_FAIL("Bit conflict not detected for inner time window containment.");
         }
         catch(exception& e) { }
@@ -322,7 +327,7 @@ BOOST_AUTO_TEST_CASE( deployments )
         try
         {
             // Test conflicting bit, outer time window containment
-            g_deployments.AddSoftFork(0, 5, 500, 6000, 800000);
+            g_deployments.AddSoftFork(0, 5, 6000, 800000);
             BOOST_FAIL("Bit conflict not detected for outer time window containment.");
         }
         catch(exception& e) { }
@@ -339,6 +344,7 @@ BOOST_AUTO_TEST_CASE( transitions )
     consensusParams.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
     consensusParams.nPowTargetSpacing = 10 * 60;
     assert(consensusParams.DifficultyAdjustmentInterval() == ACTIVATION_INTERVAL);
+    consensusParams.nRuleChangeActivationThreshold = 1916;
     BlockRuleIndex blockRuleIndex;
     srand(time(NULL));
 
@@ -357,10 +363,10 @@ BOOST_AUTO_TEST_CASE( transitions )
         vgen.SetBitProbability(0, 100);
 
         vgen.SetBitProbability(5, 900);
-        g_deployments.AddSoftFork(5, 1, 900, 0, 0xffffffff);
+        g_deployments.AddSoftFork(5, 1, 0, 0xffffffff);
 
         vgen.SetBitProbability(6, 1034);
-        g_deployments.AddSoftFork(6, 2, 1034, 0, 0xffffffff);
+        g_deployments.AddSoftFork(6, 2, 0, 0xffffffff);
 
         blockRuleIndex.SetSoftForkDeployments(&g_deployments);
 
@@ -430,7 +436,7 @@ BOOST_AUTO_TEST_CASE( transitions )
 
         g_deployments.Clear();
         vgen.SetBitProbability(10, 800);
-        g_deployments.AddSoftFork(10, 3, 400, 0, pstart->nTime + (100 * ACTIVATION_INTERVAL)/2);
+        g_deployments.AddSoftFork(10, 3, 0, pstart->nTime + (100 * ACTIVATION_INTERVAL)/2);
 
         blockRuleIndex.SetSoftForkDeployments(&g_deployments);
 

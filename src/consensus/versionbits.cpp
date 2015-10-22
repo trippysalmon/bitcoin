@@ -44,13 +44,10 @@ SoftForkDeployments::~SoftForkDeployments()
     Clear();
 }
 
-void SoftForkDeployments::AddSoftFork(int bit, int rule, int threshold, uint32_t deployTime, uint32_t expireTime)
+void SoftForkDeployments::AddSoftFork(int bit, int rule, uint32_t deployTime, uint32_t expireTime)
 {
     if (bit < MIN_BIT || bit > MAX_BIT)
         throw std::runtime_error("VersionBits::SoftForkDeployments::AddSoftFork() - invalid bit.");
-
-    if (threshold < 0)
-        throw std::runtime_error("VersionBits::SoftForkDeployments::AddSoftFork() - invalid threshold.");
 
     if (deployTime >= expireTime)
         throw std::runtime_error("VersionBits::SoftForkDeployments::AddSoftFork() - invalid time range.");
@@ -61,7 +58,7 @@ void SoftForkDeployments::AddSoftFork(int bit, int rule, int threshold, uint32_t
     if (!IsBitAvailable(bit, deployTime, expireTime))
         throw std::runtime_error("VersionBits::SoftForkDeployments::AddSoftFork() - bit conflicts with existing softFork.");
 
-    SoftFork* softFork = new SoftFork(bit, rule, threshold, deployTime, expireTime);
+    SoftFork* softFork = new SoftFork(bit, rule, deployTime, expireTime);
     m_softForks.insert(std::pair<int, SoftFork*>(rule, softFork));
     m_rules.insert(std::pair<int, int>(bit, rule));
 }
