@@ -90,12 +90,6 @@ bool Consensus::SoftForks::UseRule(int rule, const CBlockIndex& blockIndex, cons
         // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
         return blockIndex.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams);
         
-    case BIP42:
-        return false;
-
-    case BIP62:
-        return false;
-    
     case BIP65:
         // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for blockIndex.nVersion=4, when 75% of the network has upgraded:
         // DEPLOY BIP65 - Remove the following line to deploy
@@ -125,12 +119,6 @@ const char* Consensus::SoftForks::GetRuleName(int rule)
 
     case BIP34:
         return "BIP34";
-
-    case BIP42:
-        return "BIP42";
-
-    case BIP62:
-        return "BIP62";
 
     case BIP65:
         return "BIP65";
