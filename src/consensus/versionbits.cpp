@@ -4,6 +4,10 @@
 
 #include "versionbits.h"
 
+#include "consensus/params.h"
+#include "tinyformat.h"
+
+using namespace Consensus;
 using namespace Consensus::VersionBits;
 
 typedef std::multimap<int /*bit*/, int /*rule*/> RuleMap;
@@ -44,122 +48,110 @@ SoftForkDeployments::~SoftForkDeployments()
     Clear();
 }
 
-void SoftForkDeployments::AddSoftFork(int bit, int rule, uint32_t deployTime, uint32_t expireTime)
+void SoftForkDeployments::AddSoftFork(int rule, const Consensus::Params& consensusParams)
 {
-    if (bit < MIN_BIT || bit > MAX_BIT)
-        throw std::runtime_error("VersionBits::SoftForkDeployments::AddSoftFork() - invalid bit.");
+    const SoftFork& softfork = GetSoftFork(rule, consensusParams);
+    if (softfork.nBit < MIN_BIT || softfork.nBit > MAX_BIT)
+        throw std::runtime_error(strprintf("%s: invalid bit %d in rule %d", __func__, softfork.nBit, rule));
 
-    if (deployTime >= expireTime)
-        throw std::runtime_error("VersionBits::SoftForkDeployments::AddSoftFork() - invalid time range.");
+    if (softfork.nDeployTime >= softfork.nExpireTime)
+        throw std::runtime_error(strprintf("%s: invalid time range in rule %d", __func__, rule));
 
-    if (m_softForks.count(rule))
-        throw std::runtime_error("VersionBits::SoftForkDeployments::AddSoftFork() - rule already assigned.");
+    if (!IsBitAvailable(softfork.nBit, consensusParams, softfork.nDeployTime, softfork.nExpireTime))
+        throw std::runtime_error(strprintf("%s: bit conflicts with existing softFork in rule %d", __func__, rule));
 
-    if (!IsBitAvailable(bit, deployTime, expireTime))
-        throw std::runtime_error("VersionBits::SoftForkDeployments::AddSoftFork() - bit conflicts with existing softFork.");
-
-    SoftFork* softFork = new SoftFork(bit, rule, deployTime, expireTime);
-    m_softForks.insert(std::pair<int, SoftFork*>(rule, softFork));
-    m_rules.insert(std::pair<int, int>(bit, rule));
+    m_rules.insert(std::pair<int, int>(softfork.nBit, rule));
 }
 
-bool SoftForkDeployments::IsBitAvailable(int bit, uint32_t deployTime, uint32_t expireTime) const
+bool SoftForkDeployments::IsBitAvailable(int bit, const Consensus::Params& consensusParams, uint32_t deployTime, uint32_t expireTime) const
 {
     std::pair<RuleMap::const_iterator, RuleMap::const_iterator> range;
     range = m_rules.equal_range(bit);
     for (RuleMap::const_iterator rit = range.first; rit != range.second; ++rit)
     {
-        SoftForkMap::const_iterator it = m_softForks.find(rit->second);
-        if (it == m_softForks.end())
-            throw std::runtime_error("VersionBits::SoftForkDeployments::IsBitAvailable() - inconsistent internal state.");
-
         // Do softFork times overlap?
-        const SoftFork* softFork = it->second;
-        if (((deployTime >= softFork->GetDeployTime()) && (deployTime <  softFork->GetExpireTime())) ||
-            ((expireTime >  softFork->GetDeployTime()) && (expireTime <= softFork->GetExpireTime())) ||
-            ((deployTime <= softFork->GetDeployTime()) && (expireTime >= softFork->GetExpireTime())))
+        const SoftFork& softFork = GetSoftFork(rit->second, consensusParams);
+        if (((deployTime >= softFork.nDeployTime) && (deployTime <  softFork.nExpireTime)) ||
+            ((expireTime >  softFork.nDeployTime) && (expireTime <= softFork.nExpireTime)) ||
+            ((deployTime <= softFork.nDeployTime) && (expireTime >= softFork.nExpireTime)))
                 return false;
     }
 
     return true;
 }
 
-bool SoftForkDeployments::IsRuleAssigned(int rule, uint32_t time) const
+bool SoftForkDeployments::IsRuleAssigned(int rule, const Consensus::Params& consensusParams, uint32_t time) const
 {
-    SoftForkMap::const_iterator it = m_softForks.find(rule);
-    if (it == m_softForks.end())
-        return false;
-
-    const SoftFork* softFork = it->second;
-
-    return ((time >= softFork->GetDeployTime()) && (time < softFork->GetExpireTime()));
+    const SoftFork& softFork = GetSoftFork(rule, consensusParams);
+    return ((time >= softFork.nDeployTime) && (time < softFork.nExpireTime));
 }
 
-const SoftFork* SoftForkDeployments::GetSoftFork(int rule) const
+const SoftFork& SoftForkDeployments::GetSoftFork(int rule, const Consensus::Params& consensusParams) const
 {
-    SoftForkMap::const_iterator it = m_softForks.find(rule);
-
-    return (it != m_softForks.end()) ? it->second : NULL;
+    if (rule >= MAX_VERSION_BITS_DEPLOYMENTS)
+        throw std::runtime_error(strprintf("%s: rule %d not recognized.", __func__, rule));
+    return consensusParams.vDeployments[rule];
 }
 
-const SoftFork* SoftForkDeployments::GetAssignedSoftFork(int bit, uint32_t time) const
+const SoftFork& SoftForkDeployments::GetAssignedSoftFork(int bit, const Consensus::Params& consensusParams, uint32_t time) const
 {
     std::pair<RuleMap::const_iterator, RuleMap::const_iterator> range;
     range = m_rules.equal_range(bit);
     for (RuleMap::const_iterator rit = range.first; rit != range.second; ++rit)
     {
-        SoftForkMap::const_iterator it = m_softForks.find(rit->second);
-        if (it == m_softForks.end())
-            throw std::runtime_error("VersionBits::SoftForkDeployments::GetAssignedSoftFork() - inconsistent internal state.");
-        const SoftFork* softFork = it->second;
-        if ((time >= softFork->GetDeployTime()) && (time < softFork->GetExpireTime()))
+        const SoftFork& softFork = GetSoftFork(rit->second, consensusParams);
+        if ((time >= softFork.nDeployTime) && (time < softFork.nExpireTime))
             return softFork;
     }
-
-    return NULL;
+    throw std::runtime_error(strprintf("%s: rule not assigned.", __func__));
 }
 
-int SoftForkDeployments::GetAssignedRule(int bit, uint32_t time) const
+int SoftForkDeployments::GetAssignedRule(int bit, const Consensus::Params& consensusParams, uint32_t time) const
 {
-    const SoftFork* softFork = GetAssignedSoftFork(bit, time);
+    std::pair<RuleMap::const_iterator, RuleMap::const_iterator> range;
+    range = m_rules.equal_range(bit);
+    for (RuleMap::const_iterator rit = range.first; rit != range.second; ++rit) {
+        int rule = rit->second;
+        const SoftFork& softFork = GetSoftFork(rule, consensusParams);
 
-    return softFork ? softFork->GetRule() : NO_RULE;
+        if ((time >= softFork.nDeployTime) && (time < softFork.nExpireTime))
+            return rule;
+    }
+
+    return NO_RULE;
 }
 
-std::set<const SoftFork*> SoftForkDeployments::GetAssignedSoftForks(uint32_t time) const
+std::set<const SoftFork*> SoftForkDeployments::GetAssignedSoftForks(const Consensus::Params& consensusParams, uint32_t time) const
 {
     std::set<const SoftFork*> softForks;
-    for (SoftForkMap::const_iterator it = m_softForks.begin(); it != m_softForks.end(); ++it)
-    {
-        const SoftFork* softFork = it->second;
-        if ((time >= softFork->GetDeployTime()) && (time < softFork->GetExpireTime()))
-            softForks.insert(softFork);
+    for (RuleMap::const_iterator rit = m_rules.begin(); rit != m_rules.end(); ++rit) {
+        const SoftFork& softFork = GetSoftFork(rit->second, consensusParams);
+            softForks.insert(&softFork);
     }
 
     return softForks;
 }
 
-std::set<int> SoftForkDeployments::GetAssignedBits(uint32_t time) const
+std::set<int> SoftForkDeployments::GetAssignedBits(const Consensus::Params& consensusParams, uint32_t time) const
 {
     std::set<int> bits;
-    for (SoftForkMap::const_iterator it = m_softForks.begin(); it != m_softForks.end(); ++it)
-    {
-        const SoftFork* softFork = it->second;
-        if ((time >= softFork->GetDeployTime()) && (time < softFork->GetExpireTime()))
-            bits.insert(softFork->GetBit());
+    for (RuleMap::const_iterator rit = m_rules.begin(); rit != m_rules.end(); ++rit) {
+        const SoftFork& softFork = GetSoftFork(rit->second, consensusParams);
+        if ((time >= softFork.nDeployTime) && (time < softFork.nExpireTime))
+            bits.insert(softFork.nBit);
     }
 
     return bits;
 }
 
-std::set<int> SoftForkDeployments::GetAssignedRules(uint32_t time) const
+std::set<int> SoftForkDeployments::GetAssignedRules(const Consensus::Params& consensusParams, uint32_t time) const
 {
     std::set<int> rules;
-    for (SoftForkMap::const_iterator it = m_softForks.begin(); it != m_softForks.end(); ++it)
-    {
-        const SoftFork* softFork = it->second;
-        if ((time >= softFork->GetDeployTime()) && (time < softFork->GetExpireTime()))
-            rules.insert(softFork->GetRule());
+    for (RuleMap::const_iterator rit = m_rules.begin(); rit != m_rules.end(); ++rit) {
+        int rule = rit->second;
+        const SoftFork& softFork = GetSoftFork(rule, consensusParams);
+        if ((time >= softFork.nDeployTime) && (time < softFork.nExpireTime))
+            rules.insert(rule);
     }
 
     return rules;
@@ -167,10 +159,5 @@ std::set<int> SoftForkDeployments::GetAssignedRules(uint32_t time) const
 
 void SoftForkDeployments::Clear()
 {
-    SoftForkMap::iterator it = m_softForks.begin();
-    for (; it != m_softForks.end(); ++it)
-        if (it->second) delete it->second;
-
-    m_softForks.clear();
     m_rules.clear();
 }

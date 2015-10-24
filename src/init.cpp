@@ -725,6 +725,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 2: parameter interactions
     const CChainParams& chainparams = Params();
+    Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex;
+
+    // Initialize block rule index for versionbits support
+    blockRuleIndex.SetSoftForkDeployments(chainparams.GetConsensus());
 
     // Set this early so that parameter interactions go to console
     fPrintToConsole = GetBoolArg("-printtoconsole", false);

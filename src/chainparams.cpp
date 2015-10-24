@@ -224,7 +224,9 @@ public:
         consensus.fPowNoRetargeting = true;
 
         // Example versionbits soft fork deployment on bit 0
-        consensus.softForkDeployments.AddSoftFork(0, Consensus::SoftForks::BIP9999, 0x00000000, 0xffffffff);
+        consensus.vDeployments[Consensus::TEST1].nBit = 0;
+        consensus.vDeployments[Consensus::TEST1].nDeployTime = 0x00000000;
+        consensus.vDeployments[Consensus::TEST1].nExpireTime = 0xffffffff;
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;

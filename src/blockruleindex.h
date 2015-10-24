@@ -27,14 +27,14 @@ typedef std::map<const CBlockIndex*, RuleStates> RuleStateMap;
 class BlockRuleIndex
 {
 public:
-    BlockRuleIndex(const SoftForkDeployments* deployments = NULL) : m_deployments(deployments) { }
+    BlockRuleIndex() { }
 
     bool IsIntervalStart(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const;
 
     const CBlockIndex* GetIntervalStart(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const;
 
     // Clears the index, so should only be called upon initialization
-    void SetSoftForkDeployments(const SoftForkDeployments* deployments);
+    void SetSoftForkDeployments(const Consensus::Params& consensusParams);
 
     // Constructs a new nVersion field with bits set for all deployments that have not yet activated or failed
     // The disabledRules parameter allows us to request that the bit for a rule be unset if it has not yet locked in
@@ -61,9 +61,9 @@ public:
     }
 #endif
 
+    SoftForkDeployments m_deployments;
 private:
     RuleStateMap m_ruleStateMap;
-    const SoftForkDeployments* m_deployments;
 };
 
 }

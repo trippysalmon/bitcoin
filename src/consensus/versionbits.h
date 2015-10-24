@@ -5,6 +5,8 @@
 #ifndef BITCOIN_VERSIONBITS_H
 #define BITCOIN_VERSIONBITS_H
 
+#include "consensus/params.h"
+
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -37,38 +39,37 @@ public:
     ~SoftForkDeployments();
 
     // Creates and adds a new soft fork deployment
-    void AddSoftFork(int bit, int rule, uint32_t deployTime, uint32_t expireTime);
+    void AddSoftFork(int rule, const Consensus::Params& consensusParams);
 
     // Returns true if the specified bit has not been assigned yet for the given time interval
-    bool IsBitAvailable(int bit, uint32_t deployTime, uint32_t expireTime) const;
+    bool IsBitAvailable(int bit, const Consensus::Params& consensusParams, uint32_t deployTime, uint32_t expireTime) const;
 
     // Returns true if the specified rule is assigned at a given time
-    bool IsRuleAssigned(int rule, uint32_t time) const;
+    bool IsRuleAssigned(int rule, const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Returns the soft fork object for a given rule
-    const SoftFork* GetSoftFork(int rule) const;
+    const SoftFork& GetSoftFork(int rule, const Consensus::Params& consensusParams) const;
 
     // Returns the soft fork object to which the bit is assigned at a given time
-    const SoftFork* GetAssignedSoftFork(int bit, uint32_t time) const;
+    const SoftFork& GetAssignedSoftFork(int bit, const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Returns the rule for the soft fork to which the bit is assigned at a given time
-    int GetAssignedRule(int bit, uint32_t time) const;
+    int GetAssignedRule(int bit, const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Returns the soft fork objects to which bits assigned at a given time
-    std::set<const SoftFork*> GetAssignedSoftForks(uint32_t time) const;
+    std::set<const SoftFork*> GetAssignedSoftForks(const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Returns all the bits assigned at a given time
-    std::set<int> GetAssignedBits(uint32_t time) const;
+    std::set<int> GetAssignedBits(const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Returns all the soft fork rules to which bits are assigned at a given time
-    std::set<int> GetAssignedRules(uint32_t time) const;
+    std::set<int> GetAssignedRules(const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Clears all internal structures
     void Clear();
 
 private:
     RuleMap m_rules;
-    SoftForkMap m_softForks;
 };
 
 }

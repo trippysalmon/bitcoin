@@ -5,10 +5,8 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
-#include "consensus/blockruleindex.h"
 #include "rpcserver.h"
 #include "init.h"
-#include "main.h" // for g_blockRuleIndex
 #include "noui.h"
 #include "scheduler.h"
 #include "util.h"
@@ -115,11 +113,6 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: %s\n", e.what());
             return false;
         }
-
-        // Initialize block rule index for versionbits support
-        const Consensus::Params& consensusParams = Params().GetConsensus();
-        Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex; // from main.cpp
-        blockRuleIndex.SetSoftForkDeployments(&consensusParams.softForkDeployments);
 
         // Command-line RPC
         bool fCommandLine = false;
