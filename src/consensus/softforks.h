@@ -16,16 +16,6 @@ namespace VersionBits { class BlockRuleIndex; }
 
 namespace SoftForks {
 
-enum Rule
-{
-    BIP16,
-    BIP30,
-    BIP34,
-    BIP65,
-    BIP66,
-    BIP9999,
-};
-
 enum VersionStatus { VALID, UNRECOGNIZED, INVALID };
 
 VersionStatus CheckVersion(const CBlockIndex& blockIndex, const Consensus::VersionBits::BlockRuleIndex& blockRuleIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev = NULL);
