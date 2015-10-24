@@ -29,29 +29,7 @@ const char* GetRuleStateText(int ruleState, bool bUseCaps = false);
 
 bool UsesVersionBits(int nVersion);
 
-class SoftFork
-{
-public:
-    SoftFork(int bit, int rule, uint32_t deployTime, uint32_t expireTime) :
-        m_bit(bit),
-        m_rule(rule),
-        m_deployTime(deployTime),
-        m_expireTime(expireTime) { }
-
-    int         GetBit() const { return m_bit; }
-    int         GetRule() const { return m_rule; }
-    uint32_t    GetDeployTime() const { return m_deployTime; }
-    uint32_t    GetExpireTime() const { return m_expireTime; }
-
-private:
-    int m_bit;
-    int m_rule;
-    uint32_t m_deployTime;
-    uint32_t m_expireTime;
-};
-
 typedef std::multimap<int /*bit*/, int /*rule*/> RuleMap;
-typedef std::map<int /*rule*/, SoftFork*> SoftForkMap;
 
 class SoftForkDeployments
 {
