@@ -23,18 +23,18 @@ const CBlockIndex* BlockRuleIndex::GetIntervalStart(const CBlockIndex* pblockInd
     return pblockIndex->GetAncestor(nHeight);
 }
 
-void BlockRuleIndex::SetSoftForkDeployments(const SoftForkDeployments* deployments)
+void BlockRuleIndex::SetSoftForkDeployments(const Consensus::Params& consensusParams)
 {
-    m_deployments = deployments;
+    for (unsigned i = 0; i < MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
+        // const SoftFork& softFork = consensusParams.vDeployments[i];
+        m_deployments.AddSoftFork(i, consensusParams);
+    }
     m_ruleStateMap.clear();
 }
 
 int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const Consensus::Params& consensusParams, const std::set<int>& disabledRules) const
 {
     int nVersion = VERSION_HIGH_BITS;
-
-    if (!m_deployments)
-        return nVersion;
 
     std::set<int> setRules;
     std::set<int> finalizedRules;
@@ -55,7 +55,7 @@ int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const
             case DEFINED:
                 // Set assigned bits we're not disabling
                 if (!disabledRules.count(it->first) &&
-                    m_deployments->IsRuleAssigned(it->first, medianTime))
+                    m_deployments.IsRuleAssigned(it->first, consensusParams, medianTime))
                         setRules.insert(it->first);
                 break;
 
@@ -78,7 +78,7 @@ int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const
 
     {
         // Also set bits for any new deployments that have not been requested disabled
-        std::set<int> assignedRules = m_deployments->GetAssignedRules(nTime);
+        std::set<int> assignedRules = m_deployments.GetAssignedRules(consensusParams, nTime);
         std::set<int>::const_iterator it = assignedRules.begin();
         for (; it != assignedRules.end(); ++it)
         {
@@ -91,9 +91,8 @@ int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const
         std::set<int>::const_iterator it = setRules.begin();
         for (; it != setRules.end(); ++it)
         {
-            const SoftFork* psoftFork = m_deployments->GetSoftFork(*it);
-            if (psoftFork)
-                nVersion |= (0x1 << psoftFork->GetBit());
+            const SoftFork& softFork = m_deployments.GetSoftFork(*it, consensusParams);
+            nVersion |= (0x1 << softFork.nBit);
         }
     }
 
@@ -102,7 +101,7 @@ int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const
 
 RuleState BlockRuleIndex::GetRuleState(int rule, const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const
 {
-    if (!consensusParams.DifficultyAdjustmentInterval() || !m_deployments)
+    if (!consensusParams.DifficultyAdjustmentInterval())
         return UNDEFINED;
 
     pblockIndex = GetIntervalStart(pblockIndex, consensusParams);
@@ -124,7 +123,7 @@ RuleState BlockRuleIndex::GetRuleState(int rule, const CBlockIndex* pblockIndex,
 RuleStates BlockRuleIndex::GetRuleStates(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const
 {
     RuleStates ruleStates;
-    if (!consensusParams.DifficultyAdjustmentInterval() || !m_deployments)
+    if (!consensusParams.DifficultyAdjustmentInterval())
         return ruleStates;
 
     pblockIndex = GetIntervalStart(pblockIndex, consensusParams);
@@ -158,7 +157,7 @@ bool BlockRuleIndex::AreVersionBitsRecognized(const CBlockIndex* pblockIndex, co
     {
         if ((pblockIndex->nVersion >> b) & 0x1)
         {
-            int rule = m_deployments->GetAssignedRule(b, currentMedianTime);
+            int rule = m_deployments.GetAssignedRule(b, consensusParams, currentMedianTime);
 
             // Bit should not be set if it is not assigned
             if (rule == NO_RULE)
@@ -187,11 +186,6 @@ bool BlockRuleIndex::InsertBlockIndex(const CBlockIndex* pblockIndex, const Cons
         return true;
 
     RuleStates newRuleStates;
-    if (!m_deployments)
-    {
-        m_ruleStateMap[pblockIndex] = newRuleStates;
-        return true;
-    }
 
     if (!pprev)
         pprev = pblockIndex->pprev;
@@ -207,7 +201,7 @@ bool BlockRuleIndex::InsertBlockIndex(const CBlockIndex* pblockIndex, const Cons
 
     // Assign the rule states for the new block
     //   1) Set all assigned rules for new block to DEFINED (we'll check whether they are active next)
-    std::set<int> assignedRules = m_deployments->GetAssignedRules(currentMedianTime);
+    std::set<int> assignedRules = m_deployments.GetAssignedRules(consensusParams, currentMedianTime);
     for (std::set<int>::iterator it = assignedRules.begin(); it != assignedRules.end(); ++it)
     {
         newRuleStates[*it] = DEFINED;
@@ -249,7 +243,7 @@ bool BlockRuleIndex::InsertBlockIndex(const CBlockIndex* pblockIndex, const Cons
             {
                 if ((pprev->nVersion >> b) & 0x1)
                 {
-                    int rule = m_deployments->GetAssignedRule(b, pprev->GetMedianTimePast());
+                    int rule = m_deployments.GetAssignedRule(b, consensusParams, pprev->GetMedianTimePast());
 
                     // Only count bits for soft forks that are assigned and are not failed and not already active
                     if ((rule == NO_RULE) || failedRules.count(rule) || activeRules.count(rule))
@@ -275,12 +269,11 @@ bool BlockRuleIndex::InsertBlockIndex(const CBlockIndex* pblockIndex, const Cons
     {
         int rule = it->first;
         int count = it->second;
-        const SoftFork* softFork = m_deployments->GetSoftFork(rule);
 
-        if (softFork && (count >= consensusParams.nRuleChangeActivationThreshold))
+        if (rule < MAX_VERSION_BITS_DEPLOYMENTS && count >= consensusParams.nRuleChangeActivationThreshold)
             newRuleStates[rule] = LOCKED_IN;
         else
-            if (!m_deployments->IsRuleAssigned(rule, currentMedianTime))
+            if (!m_deployments.IsRuleAssigned(rule, consensusParams, currentMedianTime))
                 newRuleStates[rule] = FAILED;
     }
 

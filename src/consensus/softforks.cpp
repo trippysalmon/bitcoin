@@ -47,9 +47,8 @@ VersionStatus Consensus::SoftForks::CheckVersion(const CBlockIndex& blockIndex, 
         return INVALID;
 
     // Reject blockIndex.nVersion=3 blocks when 95% (75% on testnet) of the network has upgraded:
-    // DEPLOY BIP65 - Uncomment the following line to deploy
-    //if (blockIndex.nVersion < 4 && IsSuperMajority(4, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-    //    return false;
+    if (blockIndex.nVersion < 4 && IsSuperMajority(4, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+       return INVALID;
 
     if (blockIndex.nVersion > 3)
         return UNRECOGNIZED;
@@ -126,8 +125,8 @@ const char* Consensus::SoftForks::GetRuleName(int rule)
     case BIP66:
         return "BIP66";
 
-    case BIP9999:
-        return "BIP9999";
+    case TEST1:
+        return "TEST1";
 
     default:
         return "N/A";
