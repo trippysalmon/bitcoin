@@ -119,8 +119,7 @@ bool AppInit(int argc, char* argv[])
         // Initialize block rule index for versionbits support
         const Consensus::Params& consensusParams = Params().GetConsensus();
         Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex; // from main.cpp
-        blockRuleIndex.SetSoftForkDeployments(consensusParams.DifficultyAdjustmentInterval(),
-                                              &consensusParams.softForkDeployments);
+        blockRuleIndex.SetSoftForkDeployments(&consensusParams.softForkDeployments);
 
         // Command-line RPC
         bool fCommandLine = false;

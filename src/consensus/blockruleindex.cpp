@@ -8,29 +8,28 @@
 using namespace Consensus::VersionBits;
 
 
-bool BlockRuleIndex::IsIntervalStart(const CBlockIndex* pblockIndex) const
+bool BlockRuleIndex::IsIntervalStart(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const
 {
-    return m_activationInterval && pblockIndex && (pblockIndex->nHeight % m_activationInterval == 0);
+    return consensusParams.DifficultyAdjustmentInterval() && pblockIndex && (pblockIndex->nHeight % consensusParams.DifficultyAdjustmentInterval() == 0);
 }
 
-const CBlockIndex* BlockRuleIndex::GetIntervalStart(const CBlockIndex* pblockIndex) const
+const CBlockIndex* BlockRuleIndex::GetIntervalStart(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const
 {
-    if (!m_activationInterval || !pblockIndex)
+    if (!consensusParams.DifficultyAdjustmentInterval() || !pblockIndex)
         return NULL;
 
-    int nHeight = pblockIndex->nHeight - (pblockIndex->nHeight % m_activationInterval);
+    int nHeight = pblockIndex->nHeight - (pblockIndex->nHeight % consensusParams.DifficultyAdjustmentInterval());
 
     return pblockIndex->GetAncestor(nHeight);
 }
 
-void BlockRuleIndex::SetSoftForkDeployments(int activationInterval, const SoftForkDeployments* deployments)
+void BlockRuleIndex::SetSoftForkDeployments(const SoftForkDeployments* deployments)
 {
-    m_activationInterval = activationInterval;
     m_deployments = deployments;
     m_ruleStateMap.clear();
 }
 
-int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const std::set<int>& disabledRules) const
+int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const Consensus::Params& consensusParams, const std::set<int>& disabledRules) const
 {
     int nVersion = VERSION_HIGH_BITS;
 
@@ -47,7 +46,7 @@ int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const
 
     {
         // Set bits for all defined soft forks that haven't activated, failed, or have been requested disabled
-        RuleStates ruleStates = GetRuleStates(pprev);
+        RuleStates ruleStates = GetRuleStates(pprev, consensusParams);
         RuleStates::const_iterator it = ruleStates.begin();
         for (; it != ruleStates.end(); ++it)
         {
@@ -101,12 +100,12 @@ int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const
     return nVersion;
 }
 
-RuleState BlockRuleIndex::GetRuleState(int rule, const CBlockIndex* pblockIndex) const
+RuleState BlockRuleIndex::GetRuleState(int rule, const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const
 {
-    if (!m_activationInterval || !m_deployments)
+    if (!consensusParams.DifficultyAdjustmentInterval() || !m_deployments)
         return UNDEFINED;
 
-    pblockIndex = GetIntervalStart(pblockIndex);
+    pblockIndex = GetIntervalStart(pblockIndex, consensusParams);
     if (!pblockIndex)
         return UNDEFINED;
 
@@ -122,13 +121,13 @@ RuleState BlockRuleIndex::GetRuleState(int rule, const CBlockIndex* pblockIndex)
     return it->second;
 }
 
-RuleStates BlockRuleIndex::GetRuleStates(const CBlockIndex* pblockIndex) const
+RuleStates BlockRuleIndex::GetRuleStates(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const
 {
     RuleStates ruleStates;
-    if (!m_activationInterval || !m_deployments)
+    if (!consensusParams.DifficultyAdjustmentInterval() || !m_deployments)
         return ruleStates;
 
-    pblockIndex = GetIntervalStart(pblockIndex);
+    pblockIndex = GetIntervalStart(pblockIndex, consensusParams);
     if (!pblockIndex)
         return ruleStates;
 
@@ -139,21 +138,21 @@ RuleStates BlockRuleIndex::GetRuleStates(const CBlockIndex* pblockIndex) const
     return rit->second;
 }
 
-bool BlockRuleIndex::AreVersionBitsRecognized(const CBlockIndex* pblockIndex, const CBlockIndex* pprev) const
+bool BlockRuleIndex::AreVersionBitsRecognized(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams, const CBlockIndex* pprev) const
 {
-    if (!m_activationInterval || !pblockIndex || !UsesVersionBits(pblockIndex->nVersion))
+    if (!consensusParams.DifficultyAdjustmentInterval() || !pblockIndex || !UsesVersionBits(pblockIndex->nVersion))
         return false;
 
     if (!pprev)
         pprev = pblockIndex->pprev;
 
     // Get the start of the interval
-    const CBlockIndex* pstart = GetIntervalStart(pprev);
+    const CBlockIndex* pstart = GetIntervalStart(pprev, consensusParams);
     if (!pstart)
         return false;
 
     uint32_t currentMedianTime = pblockIndex->GetMedianTimePast();
-    RuleStates startStates = GetRuleStates(pstart);
+    RuleStates startStates = GetRuleStates(pstart, consensusParams);
 
     for (int b = MIN_BIT; b <= MAX_BIT; b++)
     {
@@ -179,9 +178,9 @@ bool BlockRuleIndex::AreVersionBitsRecognized(const CBlockIndex* pblockIndex, co
     return true;
 }
 
-bool BlockRuleIndex::InsertBlockIndex(const CBlockIndex* pblockIndex, const CBlockIndex* pprev)
+bool BlockRuleIndex::InsertBlockIndex(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams, const CBlockIndex* pprev)
 {
-    if (!m_activationInterval || !IsIntervalStart(pblockIndex))
+    if (!consensusParams.DifficultyAdjustmentInterval() || !IsIntervalStart(pblockIndex, consensusParams))
         return false;
 
     if (m_ruleStateMap.count(pblockIndex))
@@ -200,7 +199,7 @@ bool BlockRuleIndex::InsertBlockIndex(const CBlockIndex* pblockIndex, const CBlo
     uint32_t currentMedianTime = pblockIndex->GetMedianTimePast();
 
     // Get the start of the interval just completed.
-    const CBlockIndex* pstart = (pblockIndex->nHeight > 0) ? pblockIndex->GetAncestor(pblockIndex->nHeight - m_activationInterval) : NULL;
+    const CBlockIndex* pstart = (pblockIndex->nHeight > 0) ? pblockIndex->GetAncestor(pblockIndex->nHeight - consensusParams.DifficultyAdjustmentInterval()) : NULL;
 
     RuleStates prevRuleStates;
     if (pstart && m_ruleStateMap.count(pstart))

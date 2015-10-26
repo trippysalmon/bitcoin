@@ -36,7 +36,7 @@ VersionStatus Consensus::SoftForks::CheckVersion(const CBlockIndex& blockIndex, 
 
     // Handle versionbits cases first
     if (UsesVersionBits(blockIndex.nVersion))
-        return blockRuleIndex.AreVersionBitsRecognized(&blockIndex, pindexPrev) ? VALID : UNRECOGNIZED;
+        return blockRuleIndex.AreVersionBitsRecognized(&blockIndex, consensusParams, pindexPrev) ? VALID : UNRECOGNIZED;
 
     // Reject blockIndex.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
     if (blockIndex.nVersion < 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
@@ -102,7 +102,7 @@ bool Consensus::SoftForks::UseRule(int rule, const CBlockIndex& blockIndex, cons
 
     default:
         // Handle versionbits cases
-        return (blockRuleIndex.GetRuleState(rule, &blockIndex) == Consensus::VersionBits::ACTIVE);
+        return blockRuleIndex.GetRuleState(rule, &blockIndex, consensusParams) == Consensus::VersionBits::ACTIVE;
     }
 
 }
