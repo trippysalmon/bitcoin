@@ -15,8 +15,6 @@
 namespace Consensus
 {
 
-const int           NO_RULE      = -1;
-
 namespace VersionBits
 {
 
