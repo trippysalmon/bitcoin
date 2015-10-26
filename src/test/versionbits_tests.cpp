@@ -208,7 +208,7 @@ BlockMap g_blockIndexMap;
 BOOST_FIXTURE_TEST_SUITE(versionbits_tests, BasicTestingSetup)
 
 
-std::string ToString(const CBlockIndex* pblockIndex, const BlockRuleIndex& blockRuleIndex)
+std::string ToString(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams, const BlockRuleIndex& blockRuleIndex)
 {
     using namespace Consensus::VersionBits;
 
@@ -217,7 +217,7 @@ std::string ToString(const CBlockIndex* pblockIndex, const BlockRuleIndex& block
     ss << " Hash: " << pblockIndex->phashBlock->ToString();
     ss << " Version: 0x" << hex << pblockIndex->nVersion;
     ss << " Time: " << dec << pblockIndex->nTime;
-    const RuleStates& ruleStates = blockRuleIndex.GetRuleStates(pblockIndex);
+    const RuleStates& ruleStates = blockRuleIndex.GetRuleStates(pblockIndex, consensusParams);
     for (RuleStates::const_iterator it = ruleStates.begin(); it != ruleStates.end(); ++it)
     {
         ss << endl << setw(4) << right << it->first << ": " << RuleStateToString(it->second);
@@ -227,7 +227,7 @@ std::string ToString(const CBlockIndex* pblockIndex, const BlockRuleIndex& block
     return ss.str();
 }
 
-CBlockIndex* NewBlock(int nVersion, unsigned int nTime, BlockRuleIndex& blockRuleIndex, CBlockIndex* pparent = NULL, BitCounter* pbitCounter = NULL)
+CBlockIndex* NewBlock(int nVersion, unsigned int nTime, const Consensus::Params& consensusParams, BlockRuleIndex& blockRuleIndex, CBlockIndex* pparent = NULL, BitCounter* pbitCounter = NULL)
 {
     CBlockHeader blockHeader;
     blockHeader.nVersion = nVersion;
@@ -239,14 +239,14 @@ CBlockIndex* NewBlock(int nVersion, unsigned int nTime, BlockRuleIndex& blockRul
     pblockIndex->phashBlock = new uint256(blockHeader.GetHash());
     pblockIndex->nHeight = pparent ? pparent->nHeight + 1 : 0;
     g_blockIndexMap[pblockIndex->GetBlockHash()] = pblockIndex;
-    blockRuleIndex.InsertBlockIndex(pblockIndex);
+    blockRuleIndex.InsertBlockIndex(pblockIndex, consensusParams);
 
     if (pbitCounter)
     {
         if (pparent)
         {
-            RuleStates prevRuleStates   = blockRuleIndex.GetRuleStates(pparent);
-            RuleStates newRuleStates    = blockRuleIndex.GetRuleStates(pblockIndex);
+            RuleStates prevRuleStates   = blockRuleIndex.GetRuleStates(pparent, consensusParams);
+            RuleStates newRuleStates    = blockRuleIndex.GetRuleStates(pblockIndex, consensusParams);
             CompareRuleStates(pblockIndex, prevRuleStates, newRuleStates, *pbitCounter);
         }
         pbitCounter->CountBits(nVersion, pblockIndex->GetMedianTimePast());
@@ -255,16 +255,16 @@ CBlockIndex* NewBlock(int nVersion, unsigned int nTime, BlockRuleIndex& blockRul
     return pblockIndex;
 }
 
-CBlockIndex* Generate(CBlockIndex* ptip, int nBlocks, int nTimeIncrement, BlockRuleIndex& blockRuleIndex, const VersionGenerator& vgen, BitCounter* pbitCounter = NULL, bool showOutput = false)
+CBlockIndex* Generate(CBlockIndex* ptip, int nBlocks, int nTimeIncrement, const Consensus::Params& consensusParams, BlockRuleIndex& blockRuleIndex, const VersionGenerator& vgen, BitCounter* pbitCounter = NULL, bool showOutput = false)
 {
     for (int i = 0; i < nBlocks; i++)
     {
-        ptip = NewBlock(vgen.Generate(), ptip->nTime + nTimeIncrement, blockRuleIndex, ptip, pbitCounter);
+        ptip = NewBlock(vgen.Generate(), ptip->nTime + nTimeIncrement, consensusParams, blockRuleIndex, ptip, pbitCounter);
 
         if (showOutput)
         {
             stringstream ss;
-            ss << ToString(ptip, blockRuleIndex);
+            ss << ToString(ptip, consensusParams, blockRuleIndex);
 
             if (pbitCounter)
                 ss << endl << pbitCounter->ToString();
@@ -335,6 +335,10 @@ BOOST_AUTO_TEST_CASE( deployments )
 
 BOOST_AUTO_TEST_CASE( transitions )
 {
+    Consensus::Params consensusParams;
+    consensusParams.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+    consensusParams.nPowTargetSpacing = 10 * 60;
+    assert(consensusParams.DifficultyAdjustmentInterval() == ACTIVATION_INTERVAL);
     BlockRuleIndex blockRuleIndex;
     srand(time(NULL));
 
@@ -347,7 +351,7 @@ BOOST_AUTO_TEST_CASE( transitions )
         VersionGenerator vgen;
 
         // Create genesis block and generate a full retarget interval
-        CBlockIndex* pstart = NewBlock(0, time(NULL), blockRuleIndex);
+        CBlockIndex* pstart = NewBlock(0, time(NULL), consensusParams, blockRuleIndex);
 
         // Set version distribution and add g_deployments
         vgen.SetBitProbability(0, 100);
@@ -358,9 +362,9 @@ BOOST_AUTO_TEST_CASE( transitions )
         vgen.SetBitProbability(6, 1034);
         g_deployments.AddSoftFork(6, 2, 1034, 0, 0xffffffff);
 
-        blockRuleIndex.SetSoftForkDeployments(ACTIVATION_INTERVAL, &g_deployments);
+        blockRuleIndex.SetSoftForkDeployments(&g_deployments);
 
-        pstart = Generate(pstart, 2016, 100, blockRuleIndex, vgen);
+        pstart = Generate(pstart, 2016, 100, consensusParams, blockRuleIndex, vgen);
 
         ////////////////////////////////////
         // TEST 1: DEFINED -> LOCKED_IN
@@ -378,7 +382,7 @@ BOOST_AUTO_TEST_CASE( transitions )
             blockRuleIndex.InsertBlockIndexWithRuleStates(pstart, ruleStates);
 
             // Generate another 2020 blocks
-            Generate(pstart, 2020, 100, blockRuleIndex, vgen, &bitCounter);//, true);
+            Generate(pstart, 2020, 100, consensusParams, blockRuleIndex, vgen, &bitCounter);//, true);
         }
 
         ////////////////////////////////////
@@ -397,7 +401,7 @@ BOOST_AUTO_TEST_CASE( transitions )
             blockRuleIndex.InsertBlockIndexWithRuleStates(pstart, ruleStates);
 
             // Generate another 2020 blocks
-            Generate(pstart, 2020, 100, blockRuleIndex, vgen, &bitCounter);//, true);
+            Generate(pstart, 2020, 100, consensusParams, blockRuleIndex, vgen, &bitCounter);//, true);
         }
 
         ////////////////////////////////////////////////
@@ -416,7 +420,7 @@ BOOST_AUTO_TEST_CASE( transitions )
             blockRuleIndex.InsertBlockIndexWithRuleStates(pstart, ruleStates);
 
             // Generate another 2020 blocks
-            Generate(pstart, 2020, 100, blockRuleIndex, vgen, &bitCounter);//, true);
+            Generate(pstart, 2020, 100, consensusParams, blockRuleIndex, vgen, &bitCounter);//, true);
         }
 
         ////////////////////////////////////////////////////
@@ -428,7 +432,7 @@ BOOST_AUTO_TEST_CASE( transitions )
         vgen.SetBitProbability(10, 800);
         g_deployments.AddSoftFork(10, 3, 400, 0, pstart->nTime + (100 * ACTIVATION_INTERVAL)/2);
 
-        blockRuleIndex.SetSoftForkDeployments(ACTIVATION_INTERVAL, &g_deployments);
+        blockRuleIndex.SetSoftForkDeployments(&g_deployments);
 
         for (int i = 0; i < 20; i++)
         {
@@ -440,7 +444,7 @@ BOOST_AUTO_TEST_CASE( transitions )
             blockRuleIndex.InsertBlockIndexWithRuleStates(pstart, ruleStates);
 
             // Generate another 2020 blocks
-            Generate(pstart, 2020, 100, blockRuleIndex, vgen, &bitCounter);//, true);
+            Generate(pstart, 2020, 100, consensusParams, blockRuleIndex, vgen, &bitCounter);//, true);
         }
 
     }

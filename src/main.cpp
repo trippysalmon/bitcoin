@@ -2461,6 +2461,7 @@ bool ReconsiderBlock(CValidationState& state, CBlockIndex *pindex) {
 
 CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex;
 
     // Check for duplicate
@@ -2493,7 +2494,7 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     setDirtyBlockIndex.insert(pindexNew);
 
     // Insert into versionbits block rule index and compute soft fork deployment states
-    blockRuleIndex.InsertBlockIndex(pindexNew);
+    blockRuleIndex.InsertBlockIndex(pindexNew, consensusParams);
 
     return pindexNew;
 }
@@ -3186,7 +3187,7 @@ bool static LoadBlockIndexDB()
             pindexBestHeader = pindex;
 
         // Insert into versionbits block rule index and recompute soft fork deployment states for chain
-        blockRuleIndex.InsertBlockIndex(pindex);
+        blockRuleIndex.InsertBlockIndex(pindex, chainparams.GetConsensus());
     }
 
     // Load block file info
