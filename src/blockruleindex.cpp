@@ -3,10 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "blockruleindex.h"
+
 #include "chain.h"
+#include "consensus/softforks.h"
 
+using namespace Consensus;
 using namespace Consensus::VersionBits;
-
 
 bool BlockRuleIndex::IsIntervalStart(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const
 {
@@ -285,4 +287,24 @@ bool BlockRuleIndex::InsertBlockIndex(const CBlockIndex* pblockIndex, const Cons
 void BlockRuleIndex::Clear()
 {
     m_ruleStateMap.clear();
+}
+
+void BlockRuleIndex::UpdateVersionBitsState(const CBlockIndex& blockIndex, const Consensus::Params& consensusParams)
+{
+    assert(false); // TODO implement function
+}
+
+const Consensus::VersionBits::State& BlockRuleIndex::GetVersionBitsState(const CBlockIndex& blockIndex, const Consensus::Params& consensusParams)
+{
+    return m_versionBitsState;
+}
+
+bool BlockRuleIndex::UseRule(int rule, const CBlockIndex& blockIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev)
+{
+    if (!pindexPrev)
+        pindexPrev = blockIndex.pprev;
+
+    UpdateVersionBitsState(blockIndex, consensusParams);
+    const Consensus::VersionBits::State& versionBitsState = GetVersionBitsState(blockIndex, consensusParams);
+    return Consensus::SoftForks::UseRule(rule, blockIndex, versionBitsState, consensusParams);
 }

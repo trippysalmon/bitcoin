@@ -51,16 +51,16 @@ public:
     bool IsRuleAssigned(int rule, const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Returns the soft fork object for a given rule
-    const SoftFork& GetSoftFork(int rule, const Consensus::Params& consensusParams) const;
+    const Consensus::SoftFork& GetSoftFork(int rule, const Consensus::Params& consensusParams) const;
 
     // Returns the soft fork object to which the bit is assigned at a given time
-    const SoftFork& GetAssignedSoftFork(int bit, const Consensus::Params& consensusParams, uint32_t time) const;
+    const Consensus::SoftFork& GetAssignedSoftFork(int bit, const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Returns the rule for the soft fork to which the bit is assigned at a given time
     int GetAssignedRule(int bit, const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Returns the soft fork objects to which bits assigned at a given time
-    std::set<const SoftFork*> GetAssignedSoftForks(const Consensus::Params& consensusParams, uint32_t time) const;
+    std::set<const Consensus::SoftFork*> GetAssignedSoftForks(const Consensus::Params& consensusParams, uint32_t time) const;
 
     // Returns all the bits assigned at a given time
     std::set<int> GetAssignedBits(const Consensus::Params& consensusParams, uint32_t time) const;

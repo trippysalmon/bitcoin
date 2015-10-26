@@ -40,7 +40,7 @@ public:
     // The disabledRules parameter allows us to request that the bit for a rule be unset if it has not yet locked in
     int CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const Consensus::Params& consensusParams, const std::set<int>& disabledRules = std::set<int>()) const;
 
-    RuleState GetRuleState(int rule, const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const;
+    Consensus::VersionBits::RuleState GetRuleState(int rule, const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const;
 
     RuleStates GetRuleStates(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams) const;
 
@@ -50,6 +50,10 @@ public:
     bool InsertBlockIndex(const CBlockIndex* pblockIndex, const Consensus::Params& consensusParams, const CBlockIndex* pprev = NULL);
 
     void Clear();
+
+    void UpdateVersionBitsState(const CBlockIndex& blockIndex, const Consensus::Params& consensusParams);
+    const Consensus::VersionBits::State& GetVersionBitsState(const CBlockIndex& blockIndex, const Consensus::Params& consensusParams);
+    bool UseRule(int rule, const CBlockIndex& blockIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev = NULL);
 
 #ifdef VERSIONBITS_UNIT_TEST
     // For testing only
