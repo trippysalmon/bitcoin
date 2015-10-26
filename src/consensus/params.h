@@ -52,7 +52,8 @@ enum Rule
     BIP30,
     BIP34,
     BIP65,
-    BIP66
+    BIP66,
+    NO_RULE
 };
 
 struct SoftFork
