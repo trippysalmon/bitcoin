@@ -64,6 +64,7 @@ public:
     SoftForkDeployments m_deployments;
 private:
     RuleStateMap m_ruleStateMap;
+    Consensus::VersionBits::State m_versionBitsState;
 };
 
 }
