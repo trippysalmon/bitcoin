@@ -5,8 +5,8 @@
 
 #include "consensus/softforks.h"
 
+#include "blockruleindex.h" // TODO this circular dependeny may summon @sipa
 #include "chain.h"
-#include "consensus/blockruleindex.h"
 #include "consensus/params.h"
 
 using namespace Consensus::SoftForks;
@@ -56,11 +56,9 @@ VersionStatus Consensus::SoftForks::CheckVersion(const CBlockIndex& blockIndex, 
     return VALID;
 }
 
-bool Consensus::SoftForks::UseRule(int rule, const CBlockIndex& blockIndex, const Consensus::VersionBits::BlockRuleIndex& blockRuleIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev)
+bool Consensus::SoftForks::UseRule(int rule, const CBlockIndex& blockIndex, const Consensus::VersionBits::State& versionBitsState, const Consensus::Params& consensusParams)
 {
-    if (!pindexPrev)
-        pindexPrev = blockIndex.pprev;
-
+    const CBlockIndex* pindexPrev = blockIndex.pprev;
     switch (rule)
     {
     case BIP16:
@@ -92,7 +90,6 @@ bool Consensus::SoftForks::UseRule(int rule, const CBlockIndex& blockIndex, cons
     case BIP65:
         // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for blockIndex.nVersion=4, when 75% of the network has upgraded:
         // DEPLOY BIP65 - Remove the following line to deploy
-        return false;
         return blockIndex.nVersion >= 4 && IsSuperMajority(4, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams);
 
     case BIP66:
@@ -101,7 +98,9 @@ bool Consensus::SoftForks::UseRule(int rule, const CBlockIndex& blockIndex, cons
 
     default:
         // Handle versionbits cases
-        return blockRuleIndex.GetRuleState(rule, &blockIndex, consensusParams) == Consensus::VersionBits::ACTIVE;
+        if (rule >= MAX_VERSION_BITS_DEPLOYMENTS)
+            return false;
+        return versionBitsState.vRuleStates[rule] == Consensus::VersionBits::ACTIVE;
     }
 
 }

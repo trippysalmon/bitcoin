@@ -19,10 +19,10 @@ namespace SoftForks {
 enum VersionStatus { VALID, UNRECOGNIZED, INVALID };
 
 VersionStatus CheckVersion(const CBlockIndex& blockIndex, const Consensus::VersionBits::BlockRuleIndex& blockRuleIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev = NULL);
-bool UseRule(int rule, const CBlockIndex& blockIndex, const Consensus::VersionBits::BlockRuleIndex& blockRuleIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev = NULL);
+bool UseRule(int rule, const CBlockIndex& blockIndex, const Consensus::VersionBits::State& versionBitsState, const Consensus::Params& consensusParams);
 const char* GetRuleName(int rule);
 
-}
-}
+} // namespace SoftForks
+} // namespace Consensus
 
 #endif // BITCOIN_SOFTFORKS_H
