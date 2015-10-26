@@ -4,6 +4,8 @@
 
 #include "versionbits.h"
 
+// #include "blockruleindex.h" // TODO this circular dependeny may summon @sipa
+// #include "chain.h" // TODO remove from libconsenus
 #include "consensus/params.h"
 #include "tinyformat.h"
 

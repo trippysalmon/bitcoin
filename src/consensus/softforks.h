@@ -6,6 +6,9 @@
 #ifndef BITCOIN_SOFTFORKS_H
 #define BITCOIN_SOFTFORKS_H
 
+#include "consensus/params.h"
+#include "consensus/versionbits.h"
+
 #include <cstddef>
 
 class CBlockIndex;
