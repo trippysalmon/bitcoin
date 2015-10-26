@@ -27,6 +27,11 @@ const char          MAX_BIT             = 28;
 
 enum RuleState { UNDEFINED, DEFINED, LOCKED_IN, ACTIVE, FAILED };
 
+struct State
+{
+    RuleState vRuleStates[MAX_VERSION_BITS_DEPLOYMENTS];
+};
+
 const char* GetRuleStateText(int ruleState, bool bUseCaps = false);
 
 bool UsesVersionBits(int nVersion);
