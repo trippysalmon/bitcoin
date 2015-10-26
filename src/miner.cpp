@@ -146,7 +146,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
         const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
-        pblock->nVersion = blockRuleIndex.CreateBlockVersion(pblock->nTime, chainActive.Tip()->pprev);
+        pblock->nVersion = blockRuleIndex.CreateBlockVersion(pblock->nTime, chainActive.Tip()->pprev, chainparams.GetConsensus());
 
         // -regtest only: allow overriding block.nVersion with
         // -blockversion=N to test forking scenarios

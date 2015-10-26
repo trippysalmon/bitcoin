@@ -602,7 +602,7 @@ static UniValue VersionBitsDesc(const Consensus::VersionBits::BlockRuleIndex& bl
 {
     UniValue rv(UniValue::VARR);
 
-    Consensus::VersionBits::RuleStates ruleStates = blockRuleIndex.GetRuleStates(pindex);
+    Consensus::VersionBits::RuleStates ruleStates = blockRuleIndex.GetRuleStates(pindex, Params().GetConsensus());
     Consensus::VersionBits::RuleStates::const_iterator it = ruleStates.begin();
     for (; it != ruleStates.end(); ++it)
     {
