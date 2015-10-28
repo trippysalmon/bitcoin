@@ -727,9 +727,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     const CChainParams& chainparams = Params();
     Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex;
 
-    // Initialize block rule index for versionbits support
-    blockRuleIndex.SetSoftForkDeployments(chainparams.GetConsensus());
-
     // Set this early so that parameter interactions go to console
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
@@ -1232,10 +1229,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("* Using %.1fMiB for in-memory UTXO set\n", nCoinCacheUsage * (1.0 / 1024 / 1024));
 
     // Initialize block rule index for versionbits support
-    const Consensus::Params& consensusParams = Params().GetConsensus();
-    Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex; // from main.cpp
-    blockRuleIndex.SetSoftForkDeployments(consensusParams.DifficultyAdjustmentInterval(),
-                                          &consensusParams.softForkDeployments);
+    blockRuleIndex.SetSoftForkDeployments(chainparams.GetConsensus());
 
     bool fLoaded = false;
     while (!fLoaded) {
