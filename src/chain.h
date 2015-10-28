@@ -403,4 +403,15 @@ public:
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
 };
 
+class VersionBitsIndex
+{
+    std::map<const CBlockIndex*, Consensus::VersionBits::State> ruleStateMap;
+public:
+    VersionBitsIndex() {};
+    void InitIndex(const Consensus::Params& consensusParams);
+    const Consensus::VersionBits::State& GetVersionBitsState(const CBlockIndex& blockIndex);
+    const Consensus::VersionBits::State& GetPreviousState(const CBlockIndex& blockIndex);
+    void CalculateStateAndInsertToIndex(const CBlockIndex& blockIndex, const Consensus::Params& consensusParams);
+};
+
 #endif // BITCOIN_CHAIN_H

@@ -29,6 +29,8 @@ struct State
 {
     RuleState vRuleStates[MAX_VERSION_BITS_DEPLOYMENTS];
 };
+
+bool CalculateState(State& newState, CValidationState& state, const Consensus::Params& consensusParams, const State& prevState, const CBlockIndex& blockIndex);
 } // namespace VersionBits
 
 bool CheckVersion(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex& blockIndex, const VersionBits::State& versionBitsState);

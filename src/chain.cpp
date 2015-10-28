@@ -107,3 +107,31 @@ void CBlockIndex::BuildSkip()
     if (pprev)
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
+
+void VersionBitsIndex::InitIndex(const Consensus::Params& consensusParams)
+{
+    for (unsigned i = 0; i < MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
+        // const SoftFork& softFork = consensusParams.vDeployments[i];
+        // TODO
+    }
+}
+const Consensus::VersionBits::State& GetPreviousState(const CBlockIndex& blockIndex)
+{
+    Consensus::VersionBits::State newState;
+    return newState;
+}
+
+const Consensus::VersionBits::State& VersionBitsIndex::GetVersionBitsState(const CBlockIndex& blockIndex)
+{
+    Consensus::VersionBits::State newState;
+    return newState;
+}
+
+void VersionBitsIndex::CalculateStateAndInsertToIndex(const CBlockIndex& blockIndex, const Consensus::Params& consensusParams)
+{
+    // if (ruleStateMap.count(&blockIndex) == 0) {
+    //     const Consensus::VersionBits::State& prevState = GetPreviousState(blockIndex);
+    //     Consensus::VersionBits::State newState;
+    //     Consensus::VersionBits::CalculateState(newState, state, consensusParams, prevState, blockIndex);
+    // }
+}
