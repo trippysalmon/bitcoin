@@ -8,30 +8,32 @@
 
 #include <cstddef>
 
+#include "consensus/params.h"
+
+class CBlockHeader;
 class CBlockIndex;
+class CValidationState;
+
 namespace Consensus {
 
-struct Params;
-namespace VersionBits { class BlockRuleIndex; }
-
-namespace SoftForks {
-
-enum Rule
+namespace VersionBits
 {
-    BIP16,
-    BIP30,
-    BIP34,
-    BIP65,
-    BIP66,
+const int           VERSION_HIGH_BITS   = 0x20000000;
+const int           VERSION_BITS_MASK   = 0x1fffffff;
+const char          MIN_BIT             = 0;
+const char          MAX_BIT             = 28;
+
+enum RuleState { UNDEFINED, DEFINED, LOCKED_IN, ACTIVE, FAILED };
+
+struct State
+{
+    RuleState vRuleStates[MAX_VERSION_BITS_DEPLOYMENTS];
 };
+} // namespace VersionBits
 
-enum VersionStatus { VALID, UNRECOGNIZED, INVALID };
+bool CheckVersion(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex& blockIndex, const VersionBits::State& versionBitsState);
+bool UseRule(int rule, const CBlockIndex& blockIndex, const Consensus::Params& consensusParams, const VersionBits::State& versionBitsState);
 
-VersionStatus CheckVersion(const CBlockIndex& blockIndex, const Consensus::VersionBits::BlockRuleIndex& blockRuleIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev = NULL);
-bool UseRule(int rule, const CBlockIndex& blockIndex, const Consensus::VersionBits::BlockRuleIndex& blockRuleIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev = NULL);
-const char* GetRuleName(int rule);
-
-}
-}
+} // namespace Consensus
 
 #endif // BITCOIN_SOFTFORKS_H
