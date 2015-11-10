@@ -145,9 +145,13 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     {
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
-        const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
-        const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
+
+        CBlockIndex index;
+        index.nHeight = pindexPrev->nHeight + 1;
+        index.nTime = pblock->nTime;
+        index.pprev = pindexPrev;
+
         CCoinsViewCache view(pcoinsTip);
 
         // Priority order to process transactions
@@ -163,11 +167,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         {
             const CTransaction& tx = mi->GetTx();
 
-            int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
-                                    ? nMedianTimePast
-                                    : pblock->GetBlockTime();
-
-            if (tx.IsCoinBase() || LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &view, nHeight, nLockTimeCutoff))
+            if (tx.IsCoinBase() || LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &view, index))
                 continue;
 
             COrphan* porphan = NULL;
@@ -210,7 +210,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 CAmount nValueIn = coins->vout[txin.prevout.n].nValue;
                 nTotalIn += nValueIn;
 
-                int nConf = nHeight - coins->nHeight;
+                int nConf = index.nHeight - coins->nHeight;
 
                 dPriority += (double)nValueIn * nConf;
             }
@@ -297,7 +297,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
                 continue;
 
-            UpdateCoins(tx, state, view, nHeight);
+            UpdateCoins(tx, state, view, index.nHeight);
 
             // Added
             pblock->vtx.push_back(tx);
@@ -337,8 +337,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Compute final coinbase transaction.
-        txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-        txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
+        txNew.vout[0].nValue = nFees + GetBlockSubsidy(index.nHeight, chainparams.GetConsensus());
+        txNew.vin[0].scriptSig = CScript() << index.nHeight << OP_0;
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
 
