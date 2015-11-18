@@ -939,7 +939,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee", false,
                 strprintf("%d < %d", nFees, txMinFee));
 
-        CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
+        CAmount mempoolRejectFee = pool.GetMinFee(nGlobalMempoolSizeLimit).GetFee(nSize);
         if (mempoolRejectFee > 0 && nFees < mempoolRejectFee) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
         } else if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
@@ -1180,7 +1180,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             if (expired != 0)
                 LogPrint("mempool", "Expired %i transactions from the memory pool\n", expired);
 
-            pool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+            pool.TrimToSize(nGlobalMempoolSizeLimit);
             if (!pool.exists(tx.GetHash()))
                 return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
         }
@@ -2541,7 +2541,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
     }
 
     if (fBlocksDisconnected)
-        mempool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+        mempool.TrimToSize(nGlobalMempoolSizeLimit);
 
     // Callbacks/notifications for a new best chain.
     if (fInvalidFound)
@@ -2630,7 +2630,7 @@ bool InvalidateBlock(CValidationState& state, const Consensus::Params& consensus
         }
     }
 
-    mempool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+    mempool.TrimToSize(nGlobalMempoolSizeLimit);
 
     // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
     // add it again.
