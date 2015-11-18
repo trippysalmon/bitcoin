@@ -701,20 +701,20 @@ CFeeRate CTxMemPool::estimateFee(int nBlocks) const
     LOCK(cs);
     return minerPolicyEstimator->estimateFee(nBlocks);
 }
-CFeeRate CTxMemPool::estimateSmartFee(int nBlocks, int *answerFoundAtBlocks) const
+CFeeRate CTxMemPool::estimateSmartFee(int nBlocks, const size_t nSizeLimit, int *answerFoundAtBlocks) const
 {
     LOCK(cs);
-    return minerPolicyEstimator->estimateSmartFee(nBlocks, answerFoundAtBlocks, *this);
+    return minerPolicyEstimator->estimateSmartFee(nBlocks, answerFoundAtBlocks, GetMinFee(nSizeLimit).GetFeePerK());
 }
 double CTxMemPool::estimatePriority(int nBlocks) const
 {
     LOCK(cs);
     return minerPolicyEstimator->estimatePriority(nBlocks);
 }
-double CTxMemPool::estimateSmartPriority(int nBlocks, int *answerFoundAtBlocks) const
+double CTxMemPool::estimateSmartPriority(int nBlocks, const size_t nSizeLimit, int *answerFoundAtBlocks) const
 {
     LOCK(cs);
-    return minerPolicyEstimator->estimateSmartPriority(nBlocks, answerFoundAtBlocks, *this);
+    return minerPolicyEstimator->estimateSmartPriority(nBlocks, answerFoundAtBlocks, GetMinFee(nSizeLimit).GetFeePerK());
 }
 
 bool

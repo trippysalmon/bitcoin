@@ -757,7 +757,7 @@ UniValue estimatesmartfee(const UniValue& params, bool fHelp)
 
     UniValue result(UniValue::VOBJ);
     int answerFound;
-    CFeeRate feeRate = mempool.estimateSmartFee(nBlocks, &answerFound);
+    CFeeRate feeRate = mempool.estimateSmartFee(nBlocks, nGlobalMempoolSizeLimit, &answerFound);
     result.push_back(Pair("feerate", feeRate == CFeeRate(0) ? -1.0 : ValueFromAmount(feeRate.GetFeePerK())));
     result.push_back(Pair("blocks", answerFound));
     return result;
@@ -793,7 +793,7 @@ UniValue estimatesmartpriority(const UniValue& params, bool fHelp)
 
     UniValue result(UniValue::VOBJ);
     int answerFound;
-    double priority = mempool.estimateSmartPriority(nBlocks, &answerFound);
+    double priority = mempool.estimateSmartPriority(nBlocks, nGlobalMempoolSizeLimit, &answerFound);
     result.push_back(Pair("priority", priority));
     result.push_back(Pair("blocks", answerFound));
     return result;

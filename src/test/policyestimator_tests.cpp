@@ -15,6 +15,7 @@ BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
+    size_t nMempoolSizeLimit = 300000000;
     CTxMemPool mpool(CFeeRate(1000));
     TestMemPoolEntryHelper entry;
     CAmount basefee(2000);
@@ -92,10 +93,10 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             BOOST_CHECK(mpool.estimateFee(4).GetFeePerK() < 8*baseRate.GetFeePerK() + deltaFee);
             BOOST_CHECK(mpool.estimateFee(4).GetFeePerK() > 8*baseRate.GetFeePerK() - deltaFee);
             int answerFound;
-            BOOST_CHECK(mpool.estimateSmartFee(1, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
-            BOOST_CHECK(mpool.estimateSmartFee(3, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
-            BOOST_CHECK(mpool.estimateSmartFee(4, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
-            BOOST_CHECK(mpool.estimateSmartFee(8, &answerFound) == mpool.estimateFee(8) && answerFound == 8);
+            BOOST_CHECK(mpool.estimateSmartFee(1, nMempoolSizeLimit, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
+            BOOST_CHECK(mpool.estimateSmartFee(3, nMempoolSizeLimit, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
+            BOOST_CHECK(mpool.estimateSmartFee(4, nMempoolSizeLimit, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
+            BOOST_CHECK(mpool.estimateSmartFee(8, nMempoolSizeLimit, &answerFound) == mpool.estimateFee(8) && answerFound == 8);
         }
     }
 
@@ -151,9 +152,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     int answerFound;
     for (int i = 1; i < 10;i++) {
         BOOST_CHECK(mpool.estimateFee(i) == CFeeRate(0) || mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
-        BOOST_CHECK(mpool.estimateSmartFee(i, &answerFound).GetFeePerK() > origFeeEst[answerFound-1] - deltaFee);
+        BOOST_CHECK(mpool.estimateSmartFee(i, nMempoolSizeLimit, &answerFound).GetFeePerK() > origFeeEst[answerFound-1] - deltaFee);
         BOOST_CHECK(mpool.estimatePriority(i) == -1 || mpool.estimatePriority(i) > origPriEst[i-1] - deltaPri);
-        BOOST_CHECK(mpool.estimateSmartPriority(i, &answerFound) > origPriEst[answerFound-1] - deltaPri);
+        BOOST_CHECK(mpool.estimateSmartPriority(i, nMempoolSizeLimit, &answerFound) > origPriEst[answerFound-1] - deltaPri);
     }
 
     // Mine all those transactions
@@ -201,9 +202,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     mpool.TrimToSize(1);
     BOOST_CHECK(mpool.GetMinFee(1).GetFeePerK() > feeV[0][5]);
     for (int i = 1; i < 10; i++) {
-        BOOST_CHECK(mpool.estimateSmartFee(i).GetFeePerK() >= mpool.estimateFee(i).GetFeePerK());
-        BOOST_CHECK(mpool.estimateSmartFee(i).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
-        BOOST_CHECK(mpool.estimateSmartPriority(i) == INF_PRIORITY);
+        BOOST_CHECK(mpool.estimateSmartFee(i, nMempoolSizeLimit).GetFeePerK() >= mpool.estimateFee(i).GetFeePerK());
+        BOOST_CHECK(mpool.estimateSmartFee(i, nMempoolSizeLimit).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
+        BOOST_CHECK(mpool.estimateSmartPriority(i, nMempoolSizeLimit) == INF_PRIORITY);
     }
 }
 
