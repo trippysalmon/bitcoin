@@ -151,6 +151,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         index.nHeight = pindexPrev->nHeight + 1;
         index.nTime = pblock->nTime;
         index.pprev = pindexPrev;
+        std::vector<int> prevheights;
 
         CCoinsViewCache view(pcoinsTip);
 
@@ -167,13 +168,14 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         {
             const CTransaction& tx = mi->GetTx();
 
-            if (tx.IsCoinBase() || LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &view, index))
+            if (tx.IsCoinBase())
                 continue;
 
             COrphan* porphan = NULL;
             double dPriority = 0;
             CAmount nTotalIn = 0;
             bool fMissingInputs = false;
+            prevheights.resize(0);
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
             {
                 // Read prev transaction
@@ -202,6 +204,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                     mapDependers[txin.prevout.hash].push_back(porphan);
                     porphan->setDependsOn.insert(txin.prevout.hash);
                     nTotalIn += mempool.mapTx.find(txin.prevout.hash)->GetTx().vout[txin.prevout.n].nValue;
+                    prevheights.push_back(index.nHeight);
                     continue;
                 }
                 const CCoins* coins = view.AccessCoins(txin.prevout.hash);
@@ -213,8 +216,12 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 int nConf = index.nHeight - coins->nHeight;
 
                 dPriority += (double)nValueIn * nConf;
+                prevheights.push_back(coins->nHeight);
             }
             if (fMissingInputs) continue;
+
+            if (LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &prevheights, index))
+                continue;
 
             // Priority is sum(valuein * age) / modified_txsize
             unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
