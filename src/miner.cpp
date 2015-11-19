@@ -220,7 +220,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             }
             if (fMissingInputs) continue;
 
-            if (LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &prevheights, index))
+            if (LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, prevheights, index))
                 continue;
 
             // Priority is sum(valuein * age) / modified_txsize

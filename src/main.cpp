@@ -638,9 +638,9 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRE
     return nEvicted;
 }
 
-int64_t LockTime(const CTransaction &tx, int flags, const std::vector<int>* prevHeights, const CBlockIndex& block)
+int64_t LockTime(const CTransaction &tx, int flags, const std::vector<int>& prevHeights, const CBlockIndex& block)
 {
-    assert(prevHeights == NULL || prevHeights->size() == tx.vin.size());
+    assert(prevHeights.size() == 0 || prevHeights.size() == tx.vin.size());
     int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST)
                                     ? block.GetAncestor(std::max(block.nHeight-1, 0))->GetMedianTimePast()
                                     : block.GetBlockTime();
@@ -676,10 +676,10 @@ int64_t LockTime(const CTransaction &tx, int flags, const std::vector<int>* prev
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLED_FLAG)
             continue;
 
-        if (prevHeights == NULL)
+        if (prevHeights.size() == 0)
             continue;
 
-        int nCoinHeight = (*prevHeights)[txinIndex];
+        int nCoinHeight = prevHeights[txinIndex];
 
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_SECONDS_FLAG) {
 
@@ -768,7 +768,7 @@ int64_t CheckLockTime(const CTransaction &tx, int flags)
         }
     }
 
-    return LockTime(tx, flags, &prevheights, index);
+    return LockTime(tx, flags, prevheights, index);
 }
 
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
@@ -1934,7 +1934,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             for (size_t j = 0; j < tx.vin.size(); j++) {
                 prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
             }
-            if (LockTime(tx, nLockTimeFlags, &prevheights, *pindex))
+            if (LockTime(tx, nLockTimeFlags, prevheights, *pindex))
                 return state.DoS(100, error("ConnectBlock(): contains a non-final transaction", __func__),
                                  REJECT_INVALID, "bad-txns-nonfinal");
 
@@ -2883,10 +2883,11 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     blockIndex.nTime = block.nTime;
     blockIndex.nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
     blockIndex.pprev = pindexPrev;
+    std::vector<int> prevheights;
 
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, block.vtx) {
-        if (LockTime(tx, nLockTimeFlags, NULL, blockIndex))
+        if (LockTime(tx, nLockTimeFlags, prevheights, blockIndex))
             return state.DoS(10, error("%s: contains a non-final transaction", __func__), REJECT_INVALID, "bad-txns-nonfinal");
     }
 
