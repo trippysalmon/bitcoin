@@ -343,11 +343,11 @@ bitcoind_SOURCES += bitcoind-res.rc
 endif
 
 bitcoind_LDADD = \
+  $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
