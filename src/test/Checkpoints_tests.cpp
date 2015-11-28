@@ -20,7 +20,8 @@ BOOST_FIXTURE_TEST_SUITE(Checkpoints_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(sanity)
 {
-    const CCheckpointData& checkpoints = Params(CBaseChainParams::MAIN).Checkpoints();
+    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const CCheckpointData& checkpoints = chainParams->Checkpoints();
     BOOST_CHECK(Checkpoints::GetTotalBlocksEstimate(checkpoints) >= 134444);
 }
 
