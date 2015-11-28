@@ -307,7 +307,6 @@ public:
 };
 
 static std::unique_ptr<CChainParams> globalChainParams;
-static std::unique_ptr<CChainParams> globalSwitchingChainParams;
 
 const CChainParams &Params() {
     assert(globalChainParams.get());
@@ -324,12 +323,6 @@ CChainParams* CChainParams::Factory(const std::string& chain)
         return new CRegTestParams();
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
-}
-
-const CChainParams& Params(const std::string& chain)
-{
-    globalSwitchingChainParams.reset(CChainParams::Factory(chain));
-    return *globalSwitchingChainParams;
 }
 
 void SelectParams(const std::string& network)
