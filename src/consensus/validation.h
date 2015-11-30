@@ -6,6 +6,8 @@
 #ifndef BITCOIN_CONSENSUS_VALIDATION_H
 #define BITCOIN_CONSENSUS_VALIDATION_H
 
+#include "tinyformat.h"
+
 #include <string>
 
 /** "reject" message codes */
@@ -81,5 +83,14 @@ public:
     std::string GetRejectReason() const { return strRejectReason; }
     std::string GetDebugMessage() const { return strDebugMessage; }
 };
+
+/** Convert CValidationState to a human-readable message for logging */
+inline std::string FormatStateMessage(const CValidationState &state)
+{
+    return strprintf("%s%s (code %i)",
+        state.GetRejectReason(),
+        state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage(),
+        state.GetRejectCode());
+}
 
 #endif // BITCOIN_CONSENSUS_VALIDATION_H

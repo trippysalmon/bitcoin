@@ -6,10 +6,14 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#include "amount.h"
 #include "consensus/params.h"
 
 #include <stdint.h>
 
+class CBlock;
+class CBlockHeader;
+class CBlockIndex;
 class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
@@ -36,6 +40,36 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const Params
 
 } // namespace Consensus
 
+/** Block Header validation functions */
+
+/**
+ * Context-independent CBlockHeader validity checks
+ */
+bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
+/**
+ * Context-dependent CBlock validity checks
+ */
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex* pindexPrev);
+
+/** Block validation functions */
+
+/**
+ * Context-independent CBlock validity checks
+ */
+bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+/**
+ * Context-dependent CBlock validity checks
+ */
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindexPrev);
+
+/** Transaction validation utility functions */
+
+/**
+ * Check if transaction is final and can be included in a block with the
+ * specified height and time. Consensus critical.
+ */
+bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
+
 /** Block validation utility functions */
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
@@ -48,6 +82,9 @@ inline uint64_t MaxBlockSigops(const Consensus::Params& consensusParams)
 {
     return consensusParams.nMaxBlockSigops;
 }
+// TODO make static again
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 /** Flags for LockTime() */
 enum {
