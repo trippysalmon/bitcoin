@@ -8,12 +8,12 @@
 
 #include "amount.h"
 #include "consensus/params.h"
+#include "consensus/structs.h"
 
 #include <stdint.h>
 
 class CBlock;
 class CBlockHeader;
-class CBlockIndex;
 class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
@@ -47,7 +47,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
 /**
  * Context-dependent CBlock validity checks
  */
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBaseBlockIndex* pindexPrev, PrevIndexGetter);
 
 /** Block validation functions */
 
@@ -58,7 +58,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Params& cons
 /**
  * Context-dependent CBlock validity checks
  */
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, const int& nHeight, const CBaseBlockIndex* pindexPrev, PrevIndexGetter);
 
 } // namespace Consensus
 
@@ -83,7 +83,7 @@ inline uint64_t MaxBlockSigops(const Consensus::Params& consensusParams)
     return consensusParams.nMaxBlockSigops;
 }
 // TODO make static again
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
+bool IsSuperMajority(int minVersion, const CBaseBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams, PrevIndexGetter);
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 /** Flags for LockTime() */

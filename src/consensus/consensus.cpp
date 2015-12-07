@@ -12,9 +12,6 @@
 #include "validation.h"
 #include "version.h"
 
-// TODO remove these dependencies (chain.o is "fine" but never include coins.o from here [and of course not main])
-#include "chain.h"
-
 #include <boost/foreach.hpp>
 
 using namespace std;
@@ -97,14 +94,14 @@ bool Consensus::CheckTx(const CTransaction& tx, CValidationState &state, const C
  * Returns true if there are nRequired or more blocks of minVersion or above
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
+bool IsSuperMajority(int minVersion, const CBaseBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams, PrevIndexGetter indexGetter)
 {
     unsigned int nFound = 0;
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
     {
         if (pstart->nVersion >= minVersion)
             ++nFound;
-        pstart = pstart->pprev;
+        pstart = indexGetter(pstart);
     }
     return (nFound >= nRequired);
 }
@@ -122,19 +119,19 @@ bool Consensus::CheckBlockHeader(const CBlockHeader& block, CValidationState& st
     return true;
 }
 
-bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev)
+bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBaseBlockIndex* pindexPrev, PrevIndexGetter indexGetter)
 {
     // Check proof of work
-    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, indexGetter))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits");
 
     // Check timestamp against prev
-    if (block.GetBlockTime() <= GetMedianTimePast(pindexPrev, consensusParams))
+    if (block.GetBlockTime() <= GetMedianTimePast(pindexPrev, consensusParams, indexGetter))
         return state.Invalid(false, REJECT_INVALID, "time-too-old");
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     for (int32_t version = 2; version < 5; ++version) // check for version 2, 3 and 4 upgrades
-        if (block.nVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+        if (block.nVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams, indexGetter))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(v%d)", version - 1));
 
     return true;
@@ -215,15 +212,13 @@ bool Consensus::CheckBlock(const CBlock& block, CValidationState& state, const C
     return true;
 }
 
-bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const int& nHeight, const CBaseBlockIndex* pindexPrev, PrevIndexGetter indexGetter)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
-
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, block.vtx) {
         int nLockTimeFlags = 0;
         int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
-                                ? GetMedianTimePast(pindexPrev, consensusParams)
+                                ? GetMedianTimePast(pindexPrev, consensusParams, indexGetter)
                                 : block.GetBlockTime();
         if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal");
@@ -232,7 +227,7 @@ bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& stat
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams, indexGetter))
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
