@@ -6,20 +6,19 @@
 #include "pow.h"
 
 #include "arith_uint256.h"
-#include "chain.h"
 #include "primitives/block.h"
 #include "uint256.h"
 
 #include <algorithm>
 
-int64_t GetMedianTimePast(const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+int64_t GetMedianTimePast(const CBaseBlockIndex* pindex, const Consensus::Params& consensusParams, PrevIndexGetter indexGetter)
 {
     int64_t pmedian[consensusParams.nPowMedianTimeSpan];
     int64_t* pbegin = &pmedian[consensusParams.nPowMedianTimeSpan];
     int64_t* pend = &pmedian[consensusParams.nPowMedianTimeSpan];
 
-    for (unsigned int i = 0; i < consensusParams.nPowMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
-        *(--pbegin) = (int64_t)pindex->GetBlockTime();
+    for (unsigned int i = 0; i < consensusParams.nPowMedianTimeSpan && pindex; i++, pindex = indexGetter(pindex))
+        *(--pbegin) = (int64_t)pindex->nTime;
 
     std::sort(pbegin, pend);
     return pbegin[(pend - pbegin)/2];
@@ -57,7 +56,7 @@ CBlockIndex* GetAncestor(const CBlockIndex* pindex, int height)
     return pindexWalk;
 }
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+unsigned int GetNextWorkRequired(const CBaseBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, PrevIndexGetter indexGetter)
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
@@ -73,14 +72,14 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
+            if (pblock->GetBlockTime() > pindexLast->nTime + params.nPowTargetSpacing*2)
                 return nProofOfWorkLimit;
             else
             {
                 // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
+                const CBaseBlockIndex* pindex = pindexLast;
+                while (indexGetter(pindex) && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                    pindex = indexGetter(pindex);
                 return pindex->nBits;
             }
         }
@@ -96,7 +95,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
 }
 
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
+unsigned int CalculateNextWorkRequired(const CBaseBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;

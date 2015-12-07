@@ -683,7 +683,7 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
     // chain tip, so we use that to calculate the median time passed to
     // IsFinalTx() if LOCKTIME_MEDIAN_TIME_PAST is set.
     const int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST)
-                             ? GetMedianTimePast(chainActive.Tip(), consensusParams)
+                             ? GetMedianTimePast(chainActive.Tip(), consensusParams, GetPrevIndex)
                              : GetAdjustedTime();
 
     return IsFinalTx(tx, nBlockHeight, nBlockTime);

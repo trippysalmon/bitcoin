@@ -7,15 +7,15 @@
 #define BITCOIN_POW_H
 
 #include "consensus/params.h"
+#include "consensus/structs.h"
 
 #include <stdint.h>
 
 class CBlockHeader;
-class CBlockIndex;
 class uint256;
 class arith_uint256;
 
-int64_t GetMedianTimePast(const CBlockIndex* pindex, const Consensus::Params& consensusParams);
+int64_t GetMedianTimePast(const CBaseBlockIndex* pindex, const Consensus::Params& consensusParams, PrevIndexGetter);
 
 /** Turn the lowest '1' bit in the binary representation of a number into a '0'. */
 static inline int InvertLowestOne(int n) { return n & (n - 1); }
@@ -36,8 +36,8 @@ inline int GetSkipHeight(int height) {
  */
 CBlockIndex* GetAncestor(const CBlockIndex* pindex, int height);
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
+unsigned int GetNextWorkRequired(const CBaseBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&, PrevIndexGetter);
+unsigned int CalculateNextWorkRequired(const CBaseBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
