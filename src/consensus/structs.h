@@ -20,4 +20,10 @@ struct CBaseBlockIndex
     int nHeight;
 };
 
+/**
+ * Function pointer definition for libconsensus to interface with
+ * chain index storage (and avoid CBlockIndex).
+ */
+typedef const CBaseBlockIndex* (*PrevIndexGetter)(const CBaseBlockIndex*);
+
 #endif // BITCOIN_CONSENSUS_STRUCTS_H
