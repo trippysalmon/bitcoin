@@ -251,10 +251,6 @@ public:
 
     //! Build the skiplist pointer for this entry.
     void BuildSkip();
-
-    //! Efficiently find an ancestor of this block.
-    CBlockIndex* GetAncestor(int height);
-    const CBlockIndex* GetAncestor(int height) const;
 };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);
