@@ -7,6 +7,7 @@
 #define BITCOIN_CHAIN_H
 
 #include "arith_uint256.h"
+#include "consensus/structs.h"
 #include "primitives/block.h"
 #include "pow.h"
 #include "tinyformat.h"
@@ -99,7 +100,7 @@ enum BlockStatus {
  * candidates to be the next block. A blockindex may have multiple pprev pointing
  * to it, but at most one of them can be part of the currently active branch.
  */
-class CBlockIndex
+class CBlockIndex : public CBaseBlockIndex
 {
 public:
     //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
@@ -110,9 +111,6 @@ public:
 
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
-
-    //! height of the entry in the chain. The genesis block has height 0
-    int nHeight;
 
     //! Which # file this block is stored in (blk?????.dat)
     int nFile;
@@ -137,13 +135,6 @@ public:
 
     //! Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
-
-    //! block header
-    int nVersion;
-    uint256 hashMerkleRoot;
-    unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
