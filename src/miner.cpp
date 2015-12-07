@@ -136,7 +136,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
-        const int64_t nMedianTimePast = GetMedianTimePast(pindexPrev, chainparams.GetConsensus());
+        const int64_t nMedianTimePast = GetMedianTimePast(pindexPrev, chainparams.GetConsensus(), GetPrevIndex);
 
         int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
                                 ? nMedianTimePast
@@ -285,7 +285,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
+        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus(), GetPrevIndex);
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 

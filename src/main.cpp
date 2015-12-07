@@ -419,9 +419,9 @@ bool PeerHasHeader(CNodeState *state, CBlockIndex *pindex)
  *  Both pa and pb must be non-NULL. */
 CBlockIndex* LastCommonAncestor(CBlockIndex* pa, CBlockIndex* pb) {
     if (pa->nHeight > pb->nHeight) {
-        pa = GetAncestor(pa, pb->nHeight);
+        pa = (CBlockIndex*)GetAncestor(pa, pb->nHeight);
     } else if (pb->nHeight > pa->nHeight) {
-        pb = GetAncestor(pb, pa->nHeight);
+        pb = (CBlockIndex*)GetAncestor(pb, pa->nHeight);
     }
 
     while (pa != pb && pa && pb) {
