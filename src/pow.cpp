@@ -24,9 +24,9 @@ int64_t GetMedianTimePast(const CBaseBlockIndex* pindex, const Consensus::Params
     return pbegin[(pend - pbegin)/2];
 }
 
-static CBlockIndex* GetAncestorStep(const CBlockIndex* pindex, const int height, int& heightWalk)
+static CBaseBlockIndex* GetAncestorStep(const CBaseBlockIndex* pindex, const int height, int& heightWalk)
 {
-    CBlockIndex* pindexWalk;
+    CBaseBlockIndex* pindexWalk;
     int heightSkip = GetSkipHeight(heightWalk);
     int heightSkipPrev = GetSkipHeight(heightWalk - 1);
     if (pindex->pskip != NULL &&
@@ -43,13 +43,13 @@ static CBlockIndex* GetAncestorStep(const CBlockIndex* pindex, const int height,
     return pindexWalk;
 }
 
-CBlockIndex* GetAncestor(const CBlockIndex* pindex, int height)
+CBaseBlockIndex* GetAncestor(const CBaseBlockIndex* pindex, int height)
 {
     if (height > pindex->nHeight || height < 0)
         return NULL;
 
     int heightWalk = pindex->nHeight;
-    CBlockIndex* pindexWalk = GetAncestorStep(pindex, height, heightWalk);    
+    CBaseBlockIndex* pindexWalk = GetAncestorStep(pindex, height, heightWalk);    
     while (heightWalk > height)
         pindexWalk = GetAncestorStep(pindexWalk, height, heightWalk);
 
@@ -89,7 +89,7 @@ unsigned int GetNextWorkRequired(const CBaseBlockIndex* pindexLast, const CBlock
     // Go back by what we want to be 14 days worth of blocks
     int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
     assert(nHeightFirst >= 0);
-    const CBlockIndex* pindexFirst = GetAncestor(pindexLast, nHeightFirst);
+    const CBaseBlockIndex* pindexFirst = GetAncestor(pindexLast, nHeightFirst);
     assert(pindexFirst);
 
     return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
