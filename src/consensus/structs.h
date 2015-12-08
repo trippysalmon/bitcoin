@@ -25,5 +25,6 @@ struct CBaseBlockIndex
  * chain index storage (and avoid CBlockIndex).
  */
 typedef const CBaseBlockIndex* (*PrevIndexGetter)(const CBaseBlockIndex*);
+typedef const CBaseBlockIndex* (*SkipIndexGetter)(const CBaseBlockIndex*);
 
 #endif // BITCOIN_CONSENSUS_STRUCTS_H

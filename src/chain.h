@@ -258,12 +258,16 @@ arith_uint256 GetBlockProof(const CBlockIndex& block);
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
 
 /**
- * This getter is used by in bitcoin core when a PrevIndexGetter
- * function pointer is needed in consensus checks. 
+ * This getters are used by in bitcoin core when a PrevIndexGetter
+ * and/or SkipIndexGetter function pointer is needed in consensus checks. 
  */
 inline const CBaseBlockIndex* GetPrevIndex(const CBaseBlockIndex* pindex)
 {
     return ((CBlockIndex*)pindex)->pprev;
+}
+inline const CBaseBlockIndex* GetSkipIndex(const CBaseBlockIndex* pindex)
+{
+    return ((CBlockIndex*)pindex)->pskip;
 }
 
 /** Used to marshal pointers into hashes for db storage. */
