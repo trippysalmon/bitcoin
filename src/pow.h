@@ -34,7 +34,7 @@ inline int GetSkipHeight(int height) {
 /**
  * Efficiently find an ancestor of this block.
  */
-CBaseBlockIndex* GetAncestor(const CBaseBlockIndex* pindex, int height);
+CBaseBlockIndex* GetAncestor(const CBaseBlockIndex* pindex, int height, PrevIndexGetter, SkipIndexGetter);
 
 unsigned int GetNextWorkRequired(const CBaseBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&, PrevIndexGetter);
 unsigned int CalculateNextWorkRequired(const CBaseBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);

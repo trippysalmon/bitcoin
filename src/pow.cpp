@@ -24,17 +24,18 @@ int64_t GetMedianTimePast(const CBaseBlockIndex* pindex, const Consensus::Params
     return pbegin[(pend - pbegin)/2];
 }
 
-static CBaseBlockIndex* GetAncestorStep(const CBaseBlockIndex* pindex, const int height, int& heightWalk)
+static CBaseBlockIndex* GetAncestorStep(const CBaseBlockIndex* pindex, const int height, int& heightWalk, PrevIndexGetter indexGetter, SkipIndexGetter skipGetter)
 {
     CBaseBlockIndex* pindexWalk;
     int heightSkip = GetSkipHeight(heightWalk);
     int heightSkipPrev = GetSkipHeight(heightWalk - 1);
-    if (pindex->pskip != NULL &&
+    CBaseBlockIndex* pskip = skipGetter(pindex);
+    if (pskip != NULL &&
         (heightSkip == height ||
          (heightSkip > height && !(heightSkipPrev < heightSkip - 2 &&
                                    heightSkipPrev >= height)))) {
         // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
-        pindexWalk = pindex->pskip;
+        pindexWalk = pskip;
         heightWalk = heightSkip;
     } else {
         pindexWalk = pindex->pprev;
@@ -43,15 +44,15 @@ static CBaseBlockIndex* GetAncestorStep(const CBaseBlockIndex* pindex, const int
     return pindexWalk;
 }
 
-CBaseBlockIndex* GetAncestor(const CBaseBlockIndex* pindex, int height)
+CBaseBlockIndex* GetAncestor(const CBaseBlockIndex* pindex, int height, PrevIndexGetter indexGetter, SkipIndexGetter skipGetter)
 {
     if (height > pindex->nHeight || height < 0)
         return NULL;
 
     int heightWalk = pindex->nHeight;
-    CBaseBlockIndex* pindexWalk = GetAncestorStep(pindex, height, heightWalk);    
+    CBaseBlockIndex* pindexWalk = GetAncestorStep(pindex, height, heightWalk, indexGetter, skipGetter);
     while (heightWalk > height)
-        pindexWalk = GetAncestorStep(pindexWalk, height, heightWalk);
+        pindexWalk = GetAncestorStep(pindexWalk, height, heightWalk, indexGetter, skipGetter);
 
     return pindexWalk;
 }
