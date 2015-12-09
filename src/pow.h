@@ -36,7 +36,7 @@ inline int GetSkipHeight(int height) {
  */
 CBaseBlockIndex* GetAncestor(const CBaseBlockIndex* pindex, int height, PrevIndexGetter, SkipIndexGetter);
 
-unsigned int GetNextWorkRequired(const CBaseBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&, PrevIndexGetter);
+unsigned int GetNextWorkRequired(const CBaseBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&, PrevIndexGetter, SkipIndexGetter);
 unsigned int CalculateNextWorkRequired(const CBaseBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */

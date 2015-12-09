@@ -38,7 +38,7 @@ static CBaseBlockIndex* GetAncestorStep(const CBaseBlockIndex* pindex, const int
         pindexWalk = pskip;
         heightWalk = heightSkip;
     } else {
-        pindexWalk = pindex->pprev;
+        pindexWalk = indexGetter(pindex);
         heightWalk--;
     }
     return pindexWalk;
@@ -57,7 +57,7 @@ CBaseBlockIndex* GetAncestor(const CBaseBlockIndex* pindex, int height, PrevInde
     return pindexWalk;
 }
 
-unsigned int GetNextWorkRequired(const CBaseBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, PrevIndexGetter indexGetter)
+unsigned int GetNextWorkRequired(const CBaseBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, PrevIndexGetter indexGetter, SkipIndexGetter skipGetter)
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
@@ -90,10 +90,10 @@ unsigned int GetNextWorkRequired(const CBaseBlockIndex* pindexLast, const CBlock
     // Go back by what we want to be 14 days worth of blocks
     int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
     assert(nHeightFirst >= 0);
-    const CBaseBlockIndex* pindexFirst = GetAncestor(pindexLast, nHeightFirst);
+    const CBaseBlockIndex* pindexFirst = GetAncestor(pindexLast, nHeightFirst, indexGetter, skipGetter);
     assert(pindexFirst);
 
-    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+    return CalculateNextWorkRequired(pindexLast, pindexFirst->nTime, params);
 }
 
 unsigned int CalculateNextWorkRequired(const CBaseBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
@@ -102,7 +102,7 @@ unsigned int CalculateNextWorkRequired(const CBaseBlockIndex* pindexLast, int64_
         return pindexLast->nBits;
 
     // Limit adjustment step
-    int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
+    int64_t nActualTimespan = pindexLast->nTime - nFirstBlockTime;
     if (nActualTimespan < params.nPowTargetTimespan/4)
         nActualTimespan = params.nPowTargetTimespan/4;
     if (nActualTimespan > params.nPowTargetTimespan*4)

@@ -38,9 +38,9 @@ BOOST_AUTO_TEST_CASE(skiplist_test)
         int from = insecure_rand() % (SKIPLIST_LENGTH - 1);
         int to = insecure_rand() % (from + 1);
 
-        BOOST_CHECK(GetAncestor(&vIndex[SKIPLIST_LENGTH - 1], from) == &vIndex[from]);
-        BOOST_CHECK(GetAncestor(&vIndex[from], to) == &vIndex[to]);
-        BOOST_CHECK(GetAncestor(&vIndex[from], 0) == &vIndex[0]);
+        BOOST_CHECK(GetAncestor(&vIndex[SKIPLIST_LENGTH - 1], from, GetPrevIndex, GetSkipIndex) == &vIndex[from]);
+        BOOST_CHECK(GetAncestor(&vIndex[from], to, GetPrevIndex, GetSkipIndex) == &vIndex[to]);
+        BOOST_CHECK(GetAncestor(&vIndex[from], 0, GetPrevIndex, GetSkipIndex) == &vIndex[0]);
     }
 }
 

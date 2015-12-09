@@ -119,10 +119,10 @@ bool Consensus::CheckBlockHeader(const CBlockHeader& block, CValidationState& st
     return true;
 }
 
-bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBaseBlockIndex* pindexPrev, PrevIndexGetter indexGetter)
+bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBaseBlockIndex* pindexPrev, PrevIndexGetter indexGetter, SkipIndexGetter skipGetter)
 {
     // Check proof of work
-    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, indexGetter))
+    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, indexGetter, skipGetter))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits");
 
     // Check timestamp against prev

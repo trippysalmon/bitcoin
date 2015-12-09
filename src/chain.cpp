@@ -41,7 +41,7 @@ CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
             pindex = (*this)[nHeight];
         } else {
             // Otherwise, use O(log n) skiplist.
-            pindex = (CBlockIndex*)GetAncestor(pindex, nHeight);
+            pindex = (CBlockIndex*)GetAncestor(pindex, nHeight, GetPrevIndex, GetSkipIndex);
         }
         if (vHave.size() > 10)
             nStep *= 2;
@@ -55,7 +55,7 @@ const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
         return NULL;
     }
     if (pindex->nHeight > Height())
-        pindex = (CBlockIndex*)GetAncestor(pindex, Height());
+        pindex = (CBlockIndex*)GetAncestor(pindex, Height(), GetPrevIndex, GetSkipIndex);
     while (pindex && !Contains(pindex))
         pindex = pindex->pprev;
     return pindex;
@@ -64,7 +64,7 @@ const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
 void CBlockIndex::BuildSkip()
 {
     if (pprev)
-        pskip = (CBlockIndex*)GetAncestor(pprev, GetSkipHeight(nHeight));
+        pskip = (CBlockIndex*)GetAncestor(pprev, GetSkipHeight(nHeight), GetPrevIndex, GetSkipIndex);
 }
 
 arith_uint256 GetBlockProof(const CBlockIndex& block)

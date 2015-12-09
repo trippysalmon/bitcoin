@@ -24,7 +24,7 @@ struct CBaseBlockIndex
  * Function pointer definition for libconsensus to interface with
  * chain index storage (and avoid CBlockIndex).
  */
-typedef const CBaseBlockIndex* (*PrevIndexGetter)(const CBaseBlockIndex*);
-typedef const CBaseBlockIndex* (*SkipIndexGetter)(const CBaseBlockIndex*);
+typedef CBaseBlockIndex* (*PrevIndexGetter)(const CBaseBlockIndex*);
+typedef CBaseBlockIndex* (*SkipIndexGetter)(const CBaseBlockIndex*);
 
 #endif // BITCOIN_CONSENSUS_STRUCTS_H
