@@ -123,8 +123,10 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CUtxoView& mapInput
 
 /** Block validation utility functions */
 
-// TODO make static again
-bool IsSuperMajority(int minVersion, const CBlockIndexView* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
+/**
+ * Get the consensus flags to be enforced according to the block.nVersion history. 
+ */
+unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Params& consensusParams, const CBlockIndexView* pindex);
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
