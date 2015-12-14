@@ -6,7 +6,11 @@
 #ifndef BITCOIN_CONSENSUS_INTERFACES_H
 #define BITCOIN_CONSENSUS_INTERFACES_H
 
+#include "amount.h"
+
 #include <stdint.h>
+
+class uint256; // TODO don't expose C++ uint256
 
 namespace Consensus {
 
@@ -64,6 +68,38 @@ struct BlockIndexInterface
     MedianTimeGetter MedianTime;
     //! TODO This is mostly here for discussion, but not used yet.
     IndexDeallocator deleteIndex;
+};
+
+/**
+ * Convenience struct for objects in memory like scripts.
+ */
+struct ObjectInterface
+{
+    const void* ptr;
+    unsigned length;
+};
+
+typedef void* (*CoinsIndex)(const uint256& txid);
+typedef int (*IsCoinBaseGetter)(const void* coinsObject);
+typedef int (*IsPrunedGetter)(const void* coinsObject);
+typedef int (*IsAvailableGetter)(const void* coinsObject, unsigned int nPos);
+typedef const CAmount& (*AmountGetter)(const void* coinsObject, unsigned int nPos);
+typedef const ObjectInterface& (*ScriptGetter)(const void* coinsObject, unsigned int nPos);
+typedef void (*CoinsDeallocator)(void* coinsObject);
+
+/**
+ * Collection of function pointers to interface with txo/utxo storage.
+ */
+struct CoinsIndexInterface
+{
+    CoinsIndex Access;
+    HeightGetter Height;
+    IsCoinBaseGetter IsCoinBase;
+    IsPrunedGetter IsPruned;
+    IsAvailableGetter IsAvailable;
+    AmountGetter Amount;
+    ScriptGetter Script;
+    CoinsDeallocator deleteCoins;
 };
 
 } // namespace Consensus
