@@ -22,7 +22,7 @@
  * Returns true if there are nRequired or more blocks of minVersion or above
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
-bool IsSuperMajority(int minVersion, const CBlockIndexView* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
+static bool IsSuperMajority(int minVersion, const CBlockIndexView* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
 {
     unsigned int nFound = 0;
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
@@ -32,6 +32,25 @@ bool IsSuperMajority(int minVersion, const CBlockIndexView* pstart, unsigned nRe
         pstart = pstart->GetPrev();
     }
     return (nFound >= nRequired);
+}
+
+unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Params& consensusParams, const CBlockIndexView* pindex)
+{
+    // BIP16 didn't become active until Apr 1 2012
+    bool fStrictPayToScriptHash = pindex->GetTime() >= 1333238400;
+    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+
+    // Old softforks with IsSuperMajority: start enforcing in new version blocks when 75% of the network has upgraded:
+
+    // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
+    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->GetPrev(), consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+        flags |= SCRIPT_VERIFY_DERSIG;
+
+    // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for block.nVersion=4
+    if (block.nVersion >= 4 && IsSuperMajority(4, pindex->GetPrev(), consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+
+    return flags;
 }
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
