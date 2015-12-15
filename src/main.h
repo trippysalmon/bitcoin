@@ -297,8 +297,9 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
  * Check whether all inputs of this transaction are valid (scripts & sigs)
  * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
  * instead of being performed inline.
+ * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckInputsScripts(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view,
+bool CheckTxInputsScriptsThreads(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view,
                  unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */

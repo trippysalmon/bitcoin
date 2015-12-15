@@ -299,7 +299,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     return true;
 }
 
-bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, const CBlockIndexView* pindexPrev, const CUtxoView& inputs, CAmount& nFees, int64_t& nSigOps)
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, bool fScriptChecks, bool cacheStore, const CBlockIndexView* pindexPrev, const CUtxoView& inputs, CAmount& nFees, int64_t& nSigOps)
 {
     const int64_t nLockTimeCutoff = (flags & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : nBlockTime;
     if (!CheckTxPreInputs(tx, state, nHeight, nLockTimeCutoff, nSigOps))
@@ -319,6 +319,9 @@ bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const 
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-bip68-nonfinal");
 
     if (!Consensus::CheckTxInputs(tx, state, flags, inputs, nHeight, nFees, nSigOps))
+        return false;
+
+    if (fScriptChecks && !CheckTxInputsScripts(tx, state, inputs, flags, cacheStore))
         return false;
 
     return true;
