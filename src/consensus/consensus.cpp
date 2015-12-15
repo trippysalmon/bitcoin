@@ -200,7 +200,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     return true;
 }
 
-bool Consensus::CheckNonCoinbaseTxStorage(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, CAmount& nFees, int64_t& nSigOps)
+bool Consensus::CheckNonCoinbaseTxStorage(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps)
 {
     if (!Consensus::CheckTxInputs(tx, state, inputs, nSpendHeight, nFees))
         return false;
@@ -214,6 +214,9 @@ bool Consensus::CheckNonCoinbaseTxStorage(const CTransaction& tx, CValidationSta
     if (nSigOps > MAX_BLOCK_SIGOPS)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops");
 
+    if (fScriptChecks && !CheckTxInputsScripts(tx, state, inputs, flags, cacheStore))
+        return false;
+
     return true;
 }
 
@@ -226,11 +229,11 @@ bool Consensus::VerifyCoinbaseTx(const CTransaction& tx, CValidationState& state
     return true;
 }
 
-bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, CAmount& nFees, int64_t& nSigOps)
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps)
 {
     if (tx.IsCoinBase())
         return VerifyCoinbaseTx(tx, state, nSigOps);
-    return CheckNonCoinbaseTxStorage(tx, state, inputs, nSpendHeight, flags, nFees, nSigOps);
+    return CheckNonCoinbaseTxStorage(tx, state, inputs, nSpendHeight, flags, fScriptChecks, cacheStore, nFees, nSigOps);
 }
 
 bool Consensus::CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, bool fCheckPOW)
