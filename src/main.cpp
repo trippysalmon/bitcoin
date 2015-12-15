@@ -1060,8 +1060,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!CheckInputsScripts(tx, state, view, STANDARD_SCRIPT_VERIFY_FLAGS, true))
-            return error("%s: CheckInputsScripts: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+        if (!Consensus::CheckTxInputsScripts(tx, state, view, STANDARD_SCRIPT_VERIFY_FLAGS, true))
+            return error("%s: Consensus::CheckTxInputsScripts on %s: %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // Check again against just the consensus-critical mandatory script
         // verification flags, in case of bugs in the standard flags that cause
@@ -1072,8 +1072,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
-            return error("%s: BUG! PLEASE REPORT THIS! CheckInputsScripts failed against MANDATORY but not STANDARD flags %s, %s",
+        if (!Consensus::CheckTxInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+            return error("%s: BUG! PLEASE REPORT THIS! Consensus::CheckTxInputsScripts failed against MANDATORY but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
 
         // Remove conflicting transactions from the mempool
@@ -1449,13 +1449,9 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
     return pindexPrev->nHeight + 1;
 }
 
-bool CheckInputsScripts(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckTxInputsScriptsThreads(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheStore, std::vector<CScriptCheck>& pvChecks)
 {
-    if (!tx.IsCoinBase())
-    {
-        if (pvChecks)
-            pvChecks->reserve(tx.vin.size());
-
+    pvChecks.reserve(tx.vin.size());
         // The first loop above does all the inexpensive checks.
         // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
         // Helps prevent CPU exhaustion attacks.
@@ -1470,10 +1466,26 @@ bool CheckInputsScripts(const CTransaction& tx, CValidationState &state, const C
 
                 // Verify signature
                 CScriptCheck check(*coins, tx, i, flags, cacheStore);
-                if (pvChecks) {
-                    pvChecks->push_back(CScriptCheck());
-                    check.swap(pvChecks->back());
-                } else if (!check()) {
+                pvChecks.push_back(CScriptCheck());
+                check.swap(pvChecks.back());
+            }
+
+    return true;
+}
+
+bool Consensus::CheckTxInputsScripts(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheStore)
+{
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const COutPoint& prevout = tx.vin[i].prevout;
+        const CCoins* coins = inputs.AccessCoins(prevout.hash);
+        assert(coins);
+
+        const CScript& scriptSig = tx.vin[i].scriptSig;
+        const CScript& scriptPubKey = coins->vout[prevout.n].scriptPubKey;
+        CachingTransactionSignatureChecker checker(&tx, i, cacheStore);
+        ScriptError error;
+        
+        if (!VerifyScript(scriptSig, scriptPubKey, flags, checker, &error)) {
                     if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                         // Check whether the failure was caused by a
                         // non-mandatory script verification check, such as
@@ -1481,10 +1493,8 @@ bool CheckInputsScripts(const CTransaction& tx, CValidationState &state, const C
                         // arguments; if so, don't trigger DoS protection to
                         // avoid splitting the network between upgraded and
                         // non-upgraded nodes.
-                        CScriptCheck check2(*coins, tx, i,
-                                flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheStore);
-                        if (check2())
-                            return state.Invalid(false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
+                        if (VerifyScript(scriptSig, scriptPubKey, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, checker, &error))
+                            return state.Invalid(false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(error)));
                     }
                     // Failures of other flags indicate a transaction that is
                     // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
@@ -1493,9 +1503,8 @@ bool CheckInputsScripts(const CTransaction& tx, CValidationState &state, const C
                     // as to the correct behavior - we may want to continue
                     // peering with non-upgraded nodes even after a soft-fork
                     // super-majority vote has passed.
-                    return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
-                }
-            }
+                    return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(error)));
+        }
     }
 
     return true;
@@ -1811,6 +1820,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             fScriptChecks = false;
         }
     }
+    bool fScriptCheckThreads = fScriptChecks && nScriptCheckThreads;
 
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint("bench", "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
@@ -1857,7 +1867,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CBlockUndo blockundo;
 
-    CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
+    CCheckQueueControl<CScriptCheck> control(fScriptCheckThreads ? &scriptcheckqueue : NULL);
 
     CAmount nFees = 0;
     int nInputs = 0;
@@ -1875,12 +1885,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
                              REJECT_INVALID, "bad-txns-inputs-missingorspent");
 
-        if (!Consensus::VerifyTx(tx, state, view, GetSpendHeight(view), flags, nFees, nSigOps))
+        if (!Consensus::VerifyTx(tx, state, view, GetSpendHeight(view), flags, 
+                                 fScriptChecks && !fScriptCheckThreads, false, nFees, nSigOps))
             return error("%s: Consensus::VerifyTx on %s: %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
 
-        if (!fIsCoinbase && fScriptChecks) {
+        if (!fIsCoinbase && fScriptCheckThreads) {            
             std::vector<CScriptCheck> vChecks;
-            if (!CheckInputsScripts(tx, state, view, flags, false, nScriptCheckThreads ? &vChecks : NULL))
+            if (!CheckTxInputsScriptsThreads(tx, state, view, flags, false, vChecks))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                              tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
