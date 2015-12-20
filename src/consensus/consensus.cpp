@@ -42,6 +42,10 @@ unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Param
 
     // Old softforks with IsSuperMajority: start enforcing in new version blocks when 75% of the network has upgraded:
 
+    // Start enforcing height in coinbase (BIP34), for block.nVersion=2
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindex, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+        flags |= TX_COINBASE_VERIFY_BIP34;
+
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
     if (block.nVersion >= 3 && IsSuperMajority(3, pindex->GetPrev(), consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
         flags |= SCRIPT_VERIFY_DERSIG;
@@ -297,6 +301,20 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     return true;
 }
 
+bool Consensus::CheckTxCoinbase(const CTransaction& tx, CValidationState& state, unsigned flags, const int64_t nHeight)
+{
+    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+    if (flags & TX_COINBASE_VERIFY_BIP34) {
+        const CScript coinbaseSigScript = tx.vin[0].scriptSig;
+        CScript expect = CScript() << nHeight;
+        if (coinbaseSigScript.size() < expect.size() ||
+            !std::equal(expect.begin(), expect.end(), coinbaseSigScript.begin()))
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
+    }
+
+    return true;
+}
+
 bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, bool fScriptChecks, bool cacheStore, const CBlockIndexView* pindexPrev, const CUtxoView& inputs, CAmount& nFees, int64_t& nSigOps)
 {
     const int64_t nLockTimeCutoff = (flags & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : nBlockTime;
@@ -304,7 +322,7 @@ bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const 
         return false;
 
     if (tx.IsCoinBase())
-        return true; // TODO Call to a function with all coinbase-specific validations
+        return CheckTxCoinbase(tx, state, flags, nHeight);
 
     // Check that transaction is BIP68 final
     // BIP68 lock checks (as opposed to nLockTime checks) must
@@ -412,22 +430,6 @@ bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidatio
         if (block.nVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(v%d)", version - 1),
                                  strprintf("rejected nVersion=%d block", version - 1));
-
-    return true;
-}
-bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndexView* pindexPrev)
-{
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->GetHeight() + 1;
-    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-    // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
-    {
-        CScript expect = CScript() << nHeight;
-        if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
-            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
-        }
-    }
 
     return true;
 }

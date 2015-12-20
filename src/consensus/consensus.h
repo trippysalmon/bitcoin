@@ -62,6 +62,12 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const unsign
 bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, unsigned int flags, bool cacheStore);
 
 /**
+ * Checks specific to coinbase transactions.
+ * Preconditions: tx.IsCoinBase() is true.
+ */
+bool CheckTxCoinbase(const CTransaction& tx, CValidationState& state, unsigned flags, const int64_t nHeight);
+
+/**
  * Fully verify a CTransaction.
  *
  * @param in/out nFees: if successful, the tx fees are added to nFees.
@@ -89,10 +95,6 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
  * Context-independent CBlock validity checks
  */
 bool CheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
-/**
- * Context-dependent CBlock validity checks
- */
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, const CBlockIndexView* pindexPrev);
 
 } // namespace Consensus
 
