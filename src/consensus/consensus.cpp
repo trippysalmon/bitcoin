@@ -199,6 +199,39 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     return true;
 }
 
+bool Consensus::CheckNonCoinbaseTxStorage(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, CAmount& nFees, int64_t& nSigOps)
+{
+    if (!Consensus::CheckTxInputs(tx, state, inputs, nSpendHeight, nFees))
+        return false;
+
+    nSigOps += GetLegacySigOpCount(tx);
+    // Add in sigops done by pay-to-script-hash inputs;
+    // this is to prevent a "rogue miner" from creating
+    // an incredibly-expensive-to-validate block.
+    if (flags & SCRIPT_VERIFY_P2SH)
+        nSigOps += GetP2SHSigOpCount(tx, inputs);
+    if (nSigOps > MAX_BLOCK_SIGOPS)
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops");
+
+    return true;
+}
+
+bool Consensus::VerifyCoinbaseTx(const CTransaction& tx, CValidationState& state, int64_t& nSigOps)
+{
+    nSigOps += GetLegacySigOpCount(tx);
+    if (nSigOps > MAX_BLOCK_SIGOPS)
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops");
+
+    return true;
+}
+
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, CAmount& nFees, int64_t& nSigOps)
+{
+    if (tx.IsCoinBase())
+        return VerifyCoinbaseTx(tx, state, nSigOps);
+    return CheckNonCoinbaseTxStorage(tx, state, inputs, nSpendHeight, flags, nFees, nSigOps);
+}
+
 bool Consensus::CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount

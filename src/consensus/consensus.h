@@ -53,6 +53,21 @@ namespace Consensus {
  * Preconditions: tx.IsCoinBase() is false.
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, CAmount& nFees);
+/**
+ * Storage-dependent checks for a tx that is not a coinbase.
+ * Preconditions: tx.IsCoinBase() is false.
+ */
+bool CheckNonCoinbaseTxStorage(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, CAmount& nFees, int64_t& nSigOps);
+/**
+ * Fully verify a coinbase transaction.
+ * Preconditions: tx.IsCoinBase() is true.
+ */
+bool VerifyCoinbaseTx(const CTransaction& tx, CValidationState& state, int64_t& nSigOps);
+/**
+ * Fully verify a CTransaction.
+ * @TODO this is incomplete, among other things, CheckTx() is not called from here yet.
+ */
+bool VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, CAmount& nFees, int64_t& nSigOps);
 
 /** Block Header validation functions */
 
