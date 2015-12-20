@@ -1893,7 +1893,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CAmount nFees = 0;
     int nInputs = 0;
-    unsigned int nSigOps = 0;
+    int64_t nSigOps = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(block.vtx.size());
@@ -1901,39 +1901,19 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
+        if (!Consensus::VerifyTx(tx, state, view, GetSpendHeight(view), flags, nFees, nSigOps))
+            return error("%s: Consensus::VerifyTx on %s: %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
 
-        nInputs += tx.vin.size();
-        nSigOps += GetLegacySigOpCount(tx);
-        if (nSigOps > MAX_BLOCK_SIGOPS)
-            return state.DoS(100, error("ConnectBlock(): too many sigops"),
-                             REJECT_INVALID, "bad-blk-sigops");
-
-        if (!tx.IsCoinBase())
-        {
-            if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees))
-                return error("%s: Consensus::CheckTxInputs on %s: %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
-
-            if (flags & SCRIPT_VERIFY_P2SH)
-            {
-                // Add in sigops done by pay-to-script-hash inputs;
-                // this is to prevent a "rogue miner" from creating
-                // an incredibly-expensive-to-validate block.
-                nSigOps += GetP2SHSigOpCount(tx, view);
-                if (nSigOps > MAX_BLOCK_SIGOPS)
-                    return state.DoS(100, error("ConnectBlock(): too many sigops"),
-                                     REJECT_INVALID, "bad-blk-sigops");
-            }
-
+        if (!tx.IsCoinBase() && fScriptChecks) {
+            std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (fScriptChecks) {
-                std::vector<CScriptCheck> vChecks;
-                if (!CheckInputsScripts(tx, state, view, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
-                    return error("ConnectBlock(): CheckInputs on %s failed with %s",
-                                 tx.GetHash().ToString(), FormatStateMessage(state));
-                control.Add(vChecks);
-            }
+            if (!CheckInputsScripts(tx, state, view, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
+                return error("ConnectBlock(): CheckInputs on %s failed with %s",
+                             tx.GetHash().ToString(), FormatStateMessage(state));
+            control.Add(vChecks);
         }
 
+        nInputs += tx.vin.size();
         CTxUndo undoDummy;
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
