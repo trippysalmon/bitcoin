@@ -98,6 +98,9 @@ enum
      * tx policy, BIP68 can be unambiguously enforced as a consensus rule.
      */
     LOCKTIME_VERIFY_SEQUENCE = (1U << 11),
+
+    /* BIP34: Verify coinbase transactions commit to the current height. */
+    TX_COINBASE_VERIFY_BIP34 = (1U << 12),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
