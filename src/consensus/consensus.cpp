@@ -45,6 +45,10 @@ unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Param
 
     // Old softforks with IsSuperMajority: start enforcing in new version blocks when 75% of the network has upgraded:
 
+    // Start enforcing height in coinbase (BIP34), for block.nVersion=2
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindex, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+        flags |= COINBASE_VERIFY_BIP34;
+
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
     if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
         flags |= SCRIPT_VERIFY_DERSIG;
@@ -219,19 +223,28 @@ bool Consensus::CheckNonCoinbaseTxStorage(const CTransaction& tx, CValidationSta
     return true;
 }
 
-bool Consensus::VerifyCoinbaseTx(const CTransaction& tx, CValidationState& state, int64_t& nSigOps)
+bool Consensus::VerifyCoinbaseTx(const CTransaction& tx, CValidationState& state, const int64_t nHeight, unsigned flags, int64_t& nSigOps)
 {
     nSigOps += GetLegacySigOpCount(tx);
     if (nSigOps > MAX_BLOCK_SIGOPS)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops");
 
+    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+    if (flags & COINBASE_VERIFY_BIP34) {
+        const CScript coinbaseSigScript = tx.vin[0].scriptSig;
+        CScript expect = CScript() << nHeight;
+        if (coinbaseSigScript.size() < expect.size() ||
+            !std::equal(expect.begin(), expect.end(), coinbaseSigScript.begin()))
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height");
+    }
+
     return true;
 }
 
-bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps)
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const int64_t nHeight, int64_t nSpendHeight, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps)
 {
     if (tx.IsCoinBase())
-        return VerifyCoinbaseTx(tx, state, nSigOps);
+        return VerifyCoinbaseTx(tx, state, nHeight, flags, nSigOps);
     return CheckNonCoinbaseTxStorage(tx, state, inputs, nSpendHeight, flags, fScriptChecks, cacheStore, nFees, nSigOps);
 }
 
@@ -337,17 +350,6 @@ bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& stat
                                 : block.GetBlockTime();
         if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal");
-        }
-    }
-
-    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-    // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
-    {
-        CScript expect = CScript() << nHeight;
-        if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
-            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height");
         }
     }
 
