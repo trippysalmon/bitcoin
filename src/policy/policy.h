@@ -49,6 +49,9 @@ static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_
 static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_VERIFY_SEQUENCE |
                                                            LOCKTIME_MEDIAN_TIME_PAST;
 
+/** Validation flags of the default policy (standard). */
+static const unsigned int DEFAULT_POLICY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS | STANDARD_LOCKTIME_VERIFY_FLAGS;
+
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
     /**
      * Check for standard transaction types

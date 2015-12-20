@@ -249,7 +249,7 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeig
     return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, flags, prevHeights, block));
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, int64_t nSpendHeight, CAmount& nFees)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const unsigned int flags, const CUtxoView& inputs, const int64_t nSpendHeight, CAmount& nFees, int64_t& nSigOps)
 {
     if (!inputs.HaveInputs(tx))
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent");
@@ -286,10 +286,18 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     if (!MoneyRange(nTxFee))
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
 
+    // Add in sigops done by pay-to-script-hash inputs;
+    // this is to prevent a "rogue miner" from creating
+    // an incredibly-expensive-to-validate block.
+    if (flags & SCRIPT_VERIFY_P2SH)
+        nSigOps += GetP2SHSigOpCount(tx, inputs);
+    if (nSigOps > MAX_BLOCK_SIGOPS)
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops");
+
     return true;
 }
 
-bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, const CUtxoView& inputs, CAmount& nFees, int64_t& nSigOps)
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, const CBlockIndexView* pindexPrev, const CUtxoView& inputs, CAmount& nFees, int64_t& nSigOps)
 {
     const int64_t nLockTimeCutoff = (flags & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : nBlockTime;
     if (!CheckTxPreInputs(tx, state, nHeight, nLockTimeCutoff, nSigOps))
@@ -298,7 +306,17 @@ bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const 
     if (tx.IsCoinBase())
         return true; // TODO Call to a function with all coinbase-specific validations
 
-    if (!Consensus::CheckTxInputs(tx, state, inputs, nHeight, nFees))
+    // Check that transaction is BIP68 final
+    // BIP68 lock checks (as opposed to nLockTime checks) must
+    // be in ConnectBlock because they require the UTXO set
+    std::vector<int> prevHeights;
+    prevHeights.resize(tx.vin.size());
+    for (size_t j = 0; j < tx.vin.size(); j++)
+        prevHeights[j] = inputs.AccessCoins(tx.vin[j].prevout.hash)->GetHeight();
+    if (!SequenceLocks(tx, flags, &prevHeights, *pindexPrev))
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-bip68-nonfinal");
+
+    if (!Consensus::CheckTxInputs(tx, state, flags, inputs, nHeight, nFees, nSigOps))
         return false;
 
     return true;

@@ -777,6 +777,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                               bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
                               std::vector<uint256>& vHashTxnToUncache)
 {
+    unsigned int flags = DEFAULT_POLICY_FLAGS;
     const uint256 hash = tx.GetHash();
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
@@ -894,8 +895,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             return state.DoS(0, false, REJECT_NONSTANDARD, "non-BIP68-final");
         }
 
+        int64_t nSigOps = GetLegacySigOpCount(tx);
         CAmount nFees = 0;
-        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees))
+        if (!Consensus::CheckTxInputs(tx, state, flags, view, GetSpendHeight(view), nFees, nSigOps))
             return error("%s: Consensus::CheckTxInputs on %s: %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // Check for non-standard pay-to-script-hash in inputs
@@ -907,8 +909,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
         // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
         // merely non-standard transaction.
-        unsigned int nSigOps = GetLegacySigOpCount(tx);
-        nSigOps += GetP2SHSigOpCount(tx, view);
         if (nSigOps > MAX_STANDARD_TX_SIGOPS)
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                 strprintf("%d > %d", nSigOps, MAX_STANDARD_TX_SIGOPS));
@@ -1986,10 +1986,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     const int nHeight = pindex == NULL ? 0 : pindex->nHeight + 1;
     const int64_t nMedianTimePast = pindex->GetMedianTimePast();
     int64_t nSigOps = 0;
-
-    std::vector<int> prevheights;
-    int nLockTimeFlags = 0;
     CAmount nFees = 0;
+
     int nInputs = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
@@ -1998,44 +1996,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
-        if (!Consensus::VerifyTx(tx, state, flags, nHeight, nMedianTimePast, block.nTime, view, nFees, nSigOps))
+        if (!Consensus::VerifyTx(tx, state, flags, nHeight, nMedianTimePast, block.nTime, pindex, view, nFees, nSigOps))
             return error("%s: Consensus::VerifyTx on %s: %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
 
         nInputs += tx.vin.size();
-        if (!tx.IsCoinBase())
-        {
-            // Check that transaction is BIP68 final
-            // BIP68 lock checks (as opposed to nLockTime checks) must
-            // be in ConnectBlock because they require the UTXO set
-            prevheights.resize(tx.vin.size());
-            for (size_t j = 0; j < tx.vin.size(); j++) {
-                prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
-            }
-
-            if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
-                return state.DoS(100, error("%s: contains a non-BIP68-final transaction", __func__),
-                                 REJECT_INVALID, "bad-txns-nonfinal");
-            }
-
-            if (flags & SCRIPT_VERIFY_P2SH)
-            {
-                // Add in sigops done by pay-to-script-hash inputs;
-                // this is to prevent a "rogue miner" from creating
-                // an incredibly-expensive-to-validate block.
-                nSigOps += GetP2SHSigOpCount(tx, view);
-                if (nSigOps > MAX_BLOCK_SIGOPS)
-                    return state.DoS(100, error("ConnectBlock(): too many sigops"),
-                                     REJECT_INVALID, "bad-blk-sigops");
-            }
-
+        if (!tx.IsCoinBase() && fScriptChecks) {
+            std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (fScriptChecks) {
-                std::vector<CScriptCheck> vChecks;
-                if (!CheckInputsScripts(tx, state, view, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
-                    return error("ConnectBlock(): CheckInputs on %s failed with %s",
-                                 tx.GetHash().ToString(), FormatStateMessage(state));
-                control.Add(vChecks);
-            }
+            if (!CheckInputsScripts(tx, state, view, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
+                return error("ConnectBlock(): CheckInputs on %s failed with %s",
+                             tx.GetHash().ToString(), FormatStateMessage(state));
+            control.Add(vChecks);
         }
 
         CTxUndo undoDummy;
