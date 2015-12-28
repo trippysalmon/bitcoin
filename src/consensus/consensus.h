@@ -79,6 +79,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
  * Context-dependent CBlock validity checks
  */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
+bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const CBlockIndex* pindexPrev, bool fCheckPOW=true);
 
 /** Block validation functions */
 
