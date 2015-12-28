@@ -84,6 +84,8 @@ enum
     COINBASE_VERIFY_BIP34 = (1U << 10),
     /* Use GetMedianTimePast() instead of nTime for end point timestamp. See BIP113 */
     LOCKTIME_MEDIAN_TIME_PAST = (1U << 11),
+    /* See BIP30, GetConsensusFlags, Consensus::VerifyTx and http://r6.ca/blog/20120206T005236Z.html for more information */
+    VERIFY_TX_BIP30 = (1U << 12),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
