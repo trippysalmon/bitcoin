@@ -1911,10 +1911,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     const uint64_t nHeight = pindex == NULL ? 0 : pindex->nHeight + 1;
     const int64_t nSpendHeight = GetSpendHeight(view);
+    const int64_t nLockTimeCutoff = GetLockTimeCutoff(block, pindex, flags);
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
-        if (!Consensus::VerifyTx(tx, state, view, nHeight, nSpendHeight, flags, 
+        if (!Consensus::VerifyTx(tx, state, view, nHeight, nSpendHeight, nLockTimeCutoff, flags, 
                                  fScriptChecks && !fScriptCheckThreads, fCacheResults, nFees, nSigOps))
             return error("%s: Consensus::VerifyTx on %s: %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
 
