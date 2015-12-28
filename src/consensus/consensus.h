@@ -65,7 +65,6 @@ bool CheckNonCoinbaseTxStorage(const CTransaction& tx, CValidationState& state, 
 bool VerifyCoinbaseTx(const CTransaction& tx, CValidationState& state, const int64_t nHeight, unsigned flags, int64_t& nSigOps);
 /**
  * Fully verify a CTransaction.
- * @TODO this is incomplete, among other things, CheckTx() is not called from here yet.
  */
 bool VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const int64_t nHeight, const int64_t nSpendHeight, const int64_t nLockTimeCutoff, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps);
 
