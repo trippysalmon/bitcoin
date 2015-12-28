@@ -778,6 +778,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 {
     unsigned int flags = DEFAULT_POLICY_FLAGS;
     const uint256 hash = tx.GetHash();
+    unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS;
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -1138,8 +1139,29 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!Consensus::CheckTxInputsScripts(tx, state, view, STANDARD_SCRIPT_VERIFY_FLAGS, true))
-            return error("%s: Consensus::CheckTxInputsScripts on %s: %s", __func__, hash.ToString(), FormatStateMessage(state));
+        if (!Consensus::CheckTxInputsScripts(tx, state, view, STANDARD_SCRIPT_VERIFY_FLAGS, true)) {
+            CValidationState stateAux;
+            // Check whether the failure was caused by a
+            // non-mandatory script verification check, such as
+            // non-standard DER encodings or non-null dummy
+            // arguments; if so, don't trigger DoS protection to
+            // avoid splitting the network between upgraded and
+            // non-upgraded nodes.
+            if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS && 
+                Consensus::CheckTxInputsScripts(tx, state, view, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, true))
+                    state.Invalid(false, REJECT_NONSTANDARD, stateAux.GetRejectReason());
+            // Failures of other flags indicate a transaction that is
+            // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
+            // such nodes as they are not following the protocol. That
+            // said during an upgrade careful thought should be taken
+            // as to the correct behavior - we may want to continue
+            // peering with non-upgraded nodes even after a soft-fork
+            // super-majority vote has passed.
+            else
+                state.DoS(100,false, REJECT_INVALID, stateAux.GetRejectReason());
+
+            return error("%s: Consensus::CheckTxInputsScripts: %s %s", __func__, hash.ToString(), FormatStateMessage(stateAux));
+        }
 
         // Check again against just the consensus-critical mandatory script
         // verification flags, in case of bugs in the standard flags that cause
@@ -1563,26 +1585,8 @@ bool Consensus::CheckTxInputsScripts(const CTransaction& tx, CValidationState& s
         CachingTransactionSignatureChecker checker(&tx, i, cacheStore);
         ScriptError error;
 
-        if (!VerifyScript(scriptSig, scriptPubKey, flags, checker, &error)) {
-                    if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
-                        // Check whether the failure was caused by a
-                        // non-mandatory script verification check, such as
-                        // non-standard DER encodings or non-null dummy
-                        // arguments; if so, don't trigger DoS protection to
-                        // avoid splitting the network between upgraded and
-                        // non-upgraded nodes.
-                        if (VerifyScript(scriptSig, scriptPubKey, flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, checker, &error))
-                            return state.Invalid(false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(error)));
-                    }
-                    // Failures of other flags indicate a transaction that is
-                    // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
-                    // such nodes as they are not following the protocol. That
-                    // said during an upgrade careful thought should be taken
-                    // as to the correct behavior - we may want to continue
-                    // peering with non-upgraded nodes even after a soft-fork
-                    // super-majority vote has passed.
-                    return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(error)));
-        }
+        if (!VerifyScript(scriptSig, scriptPubKey, flags, checker, &error))
+            return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(error)));
     }
 
     return true;
