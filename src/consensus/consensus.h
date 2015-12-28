@@ -72,7 +72,6 @@ bool CheckTxCoinbase(const CTransaction& tx, CValidationState& state, unsigned f
  *
  * @param in/out nFees: if successful, the tx fees are added to nFees.
  * @param in/out nSigOps: if successful, adds the total tx sigops to nSigOps. Otherwise it may have added the total, a part or nothing. 
- * @TODO this is incomplete, among other things, the scripts are not checked yet.
  */
 bool VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, bool fScriptChecks, bool cacheStore, const CBlockIndexView* pindexPrev, const CUtxoView& inputs, CAmount& nFees, int64_t& nSigOps);
 
