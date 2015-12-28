@@ -143,7 +143,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CUtxoView& mapInput
 /**
  * Get the consensus flags to be enforced according to the block.nVersion history. 
  */
-unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Params& consensusParams, const CBlockIndexView* pindex);
+unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Params& consensusParams, const CBlockIndexView* pindex, bool fNewBlock);
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
