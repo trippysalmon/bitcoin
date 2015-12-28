@@ -516,3 +516,29 @@ bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& s
 
     return true;
 }
+
+bool Consensus::VerifyBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, const CBlockIndexView* pindexPrev, const CUtxoView& inputs, bool fNewBlock, bool fScriptChecks, bool fCacheSigs, bool fCheckPOW, bool fCheckMerkleRoot)
+{
+    unsigned int flags = GetConsensusFlags(block, consensusParams, pindexPrev, fNewBlock);
+    const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
+    const uint64_t nHeight = pindexPrev == NULL ? 0 : pindexPrev->GetHeight() + 1;
+
+    // NOTE: CheckBlockHeader is called by CheckBlock
+    if (!ContextualCheckBlockHeader(block, state, consensusParams, pindexPrev))
+        return false;
+    if (!CheckBlock(block, state, consensusParams, nTime, fCheckPOW))
+        return false;
+
+    CAmount nFees = 0;
+    int64_t nSigOps = 0;
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+        if (!VerifyTx(block.vtx[i], state, flags, nHeight, nMedianTimePast, block.nTime, fScriptChecks, 
+                      fCacheSigs, pindexPrev, inputs, nFees, nSigOps))
+            return false;
+
+    const CAmount blockReward = nFees + GetBlockSubsidy(nHeight, consensusParams);
+    if (block.vtx[0].GetValueOut() > blockReward)
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb-amount");
+
+    return true;
+}

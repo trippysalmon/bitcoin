@@ -98,6 +98,10 @@ bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const
  * Context-independent CBlock validity checks
  */
 bool CheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+/**
+ * Fully verify a CBlock.
+ */
+bool VerifyBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, const CBlockIndexView* pindexPrev, const CUtxoView& inputs, bool fNewBlock, bool fScriptChecks, bool cacheStore, bool fCheckPOW, bool fCheckMerkleRoot);
 
 } // namespace Consensus
 
