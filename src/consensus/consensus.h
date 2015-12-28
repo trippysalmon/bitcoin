@@ -88,6 +88,10 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
  * UTXO-related validity checks are still done in main::ConnectBlock().
  */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndexView* pindexPrev);
+/**
+ * Fully verify a CBlockHeader.
+ */
+bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const CBlockIndexView* pindexPrev, bool fCheckPOW=true);
 
 /** Block validation functions */
 
