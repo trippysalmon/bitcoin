@@ -1533,25 +1533,6 @@ bool CheckTxInputsScriptsThreads(const CTransaction& tx, CValidationState &state
     return true;
 }
 
-bool Consensus::CheckTxInputsScripts(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheStore)
-{
-    for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        const COutPoint& prevout = tx.vin[i].prevout;
-        const CCoins* coins = inputs.AccessCoins(prevout.hash);
-        assert(coins);
-
-        const CScript& scriptSig = tx.vin[i].scriptSig;
-        const CScript& scriptPubKey = coins->vout[prevout.n].scriptPubKey;
-        CachingTransactionSignatureChecker checker(&tx, i, cacheStore);
-        ScriptError error;
-        
-        if (!VerifyScript(scriptSig, scriptPubKey, flags, checker, &error))
-            return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(error)));
-    }
-
-    return true;
-}
-
 namespace {
 
 bool UndoWriteToDisk(const CBlockUndo& blockundo, CDiskBlockPos& pos, const uint256& hashBlock, const CMessageHeader::MessageStartChars& messageStart)
