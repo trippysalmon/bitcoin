@@ -279,6 +279,9 @@ bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const 
     if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal");
 
+    if (!CheckTransaction(tx, state))
+        return false;
+
     if (flags & VERIFY_TX_BIP30) {
         const CCoins* coins = inputs.AccessCoins(tx.GetHash());
         if (coins && !coins->IsPruned())
@@ -341,12 +344,6 @@ bool Consensus::CheckBlock(const CBlock& block, CValidationState& state, const C
     for (unsigned int i = 1; i < block.vtx.size(); i++)
         if (block.vtx[i].IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple");
-
-    // Check transactions
-    BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        if (!CheckTransaction(tx, state))
-            return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
-                                 strprintf("bad-tx-check (tx hash %s) %s", tx.GetHash().ToString(), state.GetDebugMessage()));
 
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
