@@ -343,14 +343,6 @@ bool Consensus::CheckBlock(const CBlock& block, CValidationState& state, const C
         if (block.vtx[i].IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple");
 
-    unsigned int nSigOps = 0;
-    BOOST_FOREACH(const CTransaction& tx, block.vtx)
-    {
-        nSigOps += GetLegacySigOpCount(tx);
-    }
-    if (nSigOps > MAX_BLOCK_SIGOPS)
-        return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", true);
-
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
 
