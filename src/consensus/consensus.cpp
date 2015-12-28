@@ -74,6 +74,11 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     return nSubsidy;
 }
 
+int64_t GetLockTimeCutoff(const CBlockHeader& block, const CBlockIndex* pindexPrev, const unsigned int flags)
+{    
+    return (flags & LOCKTIME_MEDIAN_TIME_PAST) ? pindexPrev->GetMedianTimePast() : block.GetBlockTime();
+}
+
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     if (tx.nLockTime == 0)
@@ -242,8 +247,11 @@ bool Consensus::VerifyCoinbaseTx(const CTransaction& tx, CValidationState& state
     return true;
 }
 
-bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const int64_t nHeight, int64_t nSpendHeight, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps)
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const int64_t nHeight, const int64_t nSpendHeight, const int64_t nLockTimeCutoff, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps)
 {
+    if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
+        return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal");
+
     if (tx.IsCoinBase())
         return VerifyCoinbaseTx(tx, state, nHeight, flags, nSigOps);
     return CheckNonCoinbaseTxStorage(tx, state, inputs, nSpendHeight, flags, fScriptChecks, cacheStore, nFees, nSigOps);
@@ -340,18 +348,5 @@ bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidatio
 }
 bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
-
-    // Check that all transactions are finalized
-    BOOST_FOREACH(const CTransaction& tx, block.vtx) {
-        int nLockTimeFlags = 0;
-        int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
-                                ? pindexPrev->GetMedianTimePast()
-                                : block.GetBlockTime();
-        if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal");
-        }
-    }
-
     return true;
 }

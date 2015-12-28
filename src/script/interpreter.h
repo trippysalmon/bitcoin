@@ -82,6 +82,8 @@ enum
     // See BIP65 for details.
     SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
     COINBASE_VERIFY_BIP34 = (1U << 10),
+    /* Use GetMedianTimePast() instead of nTime for end point timestamp. See BIP113 */
+    LOCKTIME_MEDIAN_TIME_PAST = (1U << 11),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
