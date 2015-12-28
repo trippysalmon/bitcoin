@@ -25,12 +25,6 @@ static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 
-/** Flags for LockTime() */
-enum {
-    /* Use GetMedianTimePast() instead of nTime for end point timestamp. */
-    LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
-};
-
 /**
  * Context-independent CTransaction validity checks.
  * Nobody should spend an extra cycle on a transaction that doesn't pass this.
@@ -73,7 +67,7 @@ bool VerifyCoinbaseTx(const CTransaction& tx, CValidationState& state, const int
  * Fully verify a CTransaction.
  * @TODO this is incomplete, among other things, CheckTx() is not called from here yet.
  */
-bool VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const int64_t nHeight, int64_t nSpendHeight, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps);
+bool VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const int64_t nHeight, const int64_t nSpendHeight, const int64_t nLockTimeCutoff, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps);
 
 /** Block Header validation functions */
 
@@ -93,7 +87,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
  */
 bool CheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 /**
- * Context-dependent CBlock validity checks
+ * @TODO Remove function see Consensus::VerifyTx().
  */
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
 
@@ -101,6 +95,10 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Pa
 
 /** Transaction validation utility functions */
 
+/**
+ * @return the consensus LockTime cutoff (block.nTime before BIP113, pindexPrev->GetMedianTimePast() after).
+ */
+int64_t GetLockTimeCutoff(const CBlockHeader& block, const CBlockIndex* pindexPrev, const unsigned int flags);
 /**
  * Check if transaction is final and can be included in a block with the
  * specified height and time. Consensus critical.
