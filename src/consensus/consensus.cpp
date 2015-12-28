@@ -344,7 +344,3 @@ bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidatio
 
     return true;
 }
-bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
-{
-    return true;
-}

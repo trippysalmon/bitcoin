@@ -86,10 +86,6 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
  * Context-independent CBlock validity checks
  */
 bool CheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
-/**
- * @TODO Remove function see Consensus::VerifyTx().
- */
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
 
 } // namespace Consensus
 
