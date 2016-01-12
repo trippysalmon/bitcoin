@@ -10,13 +10,13 @@
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "script/interpreter.h"
+#include "storage_interfaces_cpp.h"
 #include "tinyformat.h"
 #include "utilmoneystr.h"
 #include "validation.h"
 #include "version.h"
 
 // TODO remove the following dependencies
-#include "chain.h"
 #include "coins.h"
 
 #include <boost/foreach.hpp>
@@ -27,14 +27,14 @@ using namespace std;
  * Returns true if there are nRequired or more blocks of minVersion or above
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
+bool IsSuperMajority(int minVersion, const CBlockIndexView* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
 {
     unsigned int nFound = 0;
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
     {
-        if (pstart->nVersion >= minVersion)
+        if (pstart->GetVersion() >= minVersion)
             ++nFound;
-        pstart = pstart->pprev;
+        pstart = pstart->GetPrev();
     }
     return (nFound >= nRequired);
 }
@@ -157,7 +157,7 @@ bool Consensus::CheckTxPreInputs(const CTransaction& tx, CValidationState& state
     return true;
 }
 
-std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block)
+std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndexView& block)
 {
     assert(prevHeights->size() == tx.vin.size());
 
@@ -196,7 +196,7 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
         int nCoinHeight = (*prevHeights)[txinIndex];
 
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) {
-            int64_t nCoinTime = block.GetAncestor(std::max(nCoinHeight-1, 0))->GetMedianTimePast();
+            int64_t nCoinTime = block.GetAncestorView(std::max(nCoinHeight-1, 0))->GetMedianTimePast();
             // NOTE: Subtract 1 to maintain nLockTime semantics
             // BIP 68 relative lock times have the semantics of calculating
             // the first block or time at which the transaction would be
@@ -219,17 +219,17 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
     return std::make_pair(nMinHeight, nMinTime);
 }
 
-bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> lockPair)
+bool EvaluateSequenceLocks(const CBlockIndexView& block, std::pair<int, int64_t> lockPair)
 {
-    assert(block.pprev);
-    int64_t nBlockTime = block.pprev->GetMedianTimePast();
-    if (lockPair.first >= block.nHeight || lockPair.second >= nBlockTime)
+    assert(block.GetPrev());
+    int64_t nBlockTime = block.GetPrev()->GetMedianTimePast();
+    if (lockPair.first >= block.GetHeight() || lockPair.second >= nBlockTime)
         return false;
 
     return true;
 }
 
-bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block)
+bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndexView& block)
 {
     return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, flags, prevHeights, block));
 }
@@ -358,7 +358,7 @@ bool Consensus::CheckBlock(const CBlock& block, CValidationState& state, const C
     return true;
 }
 
-bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev)
+bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndexView* pindexPrev)
 {
     // Check proof of work
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
@@ -376,9 +376,9 @@ bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidatio
 
     return true;
 }
-bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndexView* pindexPrev)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->GetHeight() + 1;
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
     if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
