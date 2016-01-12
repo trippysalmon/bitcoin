@@ -226,9 +226,7 @@ unsigned int CCoinsViewCache::GetCacheSize() const {
 
 const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input) const
 {
-    const CCoins* coins = AccessCoins(input.prevout.hash);
-    assert(coins && coins->IsAvailable(input.prevout.n));
-    return coins->vout[input.prevout.n];
+    return GetOutput(input.prevout.hash, input.prevout.n);
 }
 
 CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
