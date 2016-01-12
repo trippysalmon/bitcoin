@@ -13,7 +13,7 @@
 
 class CBlock;
 class CBlockHeader;
-class CBlockIndex;
+class CBlockIndexView;
 class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
@@ -67,7 +67,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
  * By "context", we mean only the previous block headers, but not the UTXO set.
  * UTXO-related validity checks are still done in main::ConnectBlock().
  */
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndexView* pindexPrev);
 
 /** Block validation functions */
 
@@ -78,7 +78,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Params& cons
 /**
  * Context-dependent CBlock validity checks
  */
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, const CBlockIndexView* pindexPrev);
 
 } // namespace Consensus
 
@@ -95,13 +95,13 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
  * Also removes from the vector of input heights any entries which did not
  * correspond to sequence locked inputs as they do not affect the calculation.
  */
-std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block);
-bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> lockPair);
+std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndexView& block);
+bool EvaluateSequenceLocks(const CBlockIndexView& block, std::pair<int, int64_t> lockPair);
 /**
  * Check if transaction is final per BIP 68 sequence numbers and can be included in a block.
  * Consensus critical. Takes as input a list of heights at which tx's inputs (in order) confirmed.
  */
-bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block);
+bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndexView& block);
 
 /**
  * Count ECDSA signature operations the old-fashioned (pre-0.6) way
@@ -121,7 +121,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
 /** Block validation utility functions */
 
 // TODO make static again
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
+bool IsSuperMajority(int minVersion, const CBlockIndexView* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
