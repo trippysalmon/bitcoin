@@ -14,8 +14,8 @@
 class CBlock;
 class CBlockHeader;
 class CBlockIndexView;
-class CCoinsViewCache;
 class CTransaction;
+class CUtxoView;
 class CValidationState;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
@@ -54,7 +54,7 @@ namespace Consensus {
  * This does not modify the UTXO set. This does not check scripts and sigs.
  * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight);
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, int nSpendHeight);
 
 /** Block Header validation functions */
 
@@ -116,7 +116,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
  * @return maximum number of sigops required to validate this transaction's inputs
  * @see CTransaction::FetchInputs
  */
-unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CUtxoView& mapInputs);
 
 /** Block validation utility functions */
 
