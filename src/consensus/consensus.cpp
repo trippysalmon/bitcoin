@@ -5,18 +5,19 @@
 
 #include "consensus.h"
 
+#include "consensus/storage_interfaces_cpp.h"
 #include "merkle.h"
 #include "pow.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "script/interpreter.h"
 #include "script/sigcache.h"
+#include "tinyformat.h"
 #include "utilmoneystr.h"
 #include "validation.h"
 #include "version.h"
 
 // TODO remove the following dependencies
-#include "chain.h"
 #include "coins.h"
 
 #include <boost/foreach.hpp>
@@ -27,22 +28,22 @@ using namespace std;
  * Returns true if there are nRequired or more blocks of minVersion or above
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
-static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
+static bool IsSuperMajority(int minVersion, const CBlockIndexView* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
 {
     unsigned int nFound = 0;
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
     {
-        if (pstart->nVersion >= minVersion)
+        if (pstart->GetVersion() >= minVersion)
             ++nFound;
-        pstart = pstart->pprev;
+        pstart = pstart->GetPrev();
     }
     return (nFound >= nRequired);
 }
 
-unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Params& consensusParams, const CBlockIndex* pindex, bool fNewBlock)
+unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Params& consensusParams, const CBlockIndexView* pindex, bool fNewBlock)
 {
     // BIP16 didn't become active until Apr 1 2012
-    bool fStrictPayToScriptHash = pindex->GetBlockTime() >= 1333238400;
+    bool fStrictPayToScriptHash = pindex->GetTime() >= 1333238400;
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Old softforks with IsSuperMajority: start enforcing in new version blocks when 75% of the network has upgraded:
@@ -52,11 +53,11 @@ unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Param
         flags |= COINBASE_VERIFY_BIP34;
 
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
-    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->GetPrev(), consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
         flags |= SCRIPT_VERIFY_DERSIG;
 
     // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for block.nVersion=4
-    if (block.nVersion >= 4 && IsSuperMajority(4, pindex->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+    if (block.nVersion >= 4 && IsSuperMajority(4, pindex->GetPrev(), consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
 
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
@@ -72,8 +73,8 @@ unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Param
     // two in the chain that violate it. This prevents exploiting the issue against nodes during their
     // initial block download.
     bool fEnforceBIP30 = fNewBlock || // Enforce on CreateNewBlock invocations.
-                          !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
-                           (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
+        !((pindex->GetHeight()==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
+          (pindex->GetHeight()==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
 
     // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
     // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
@@ -81,7 +82,7 @@ unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Param
     // before the first had been spent.  Since those coinbases are sufficiently buried its no longer possible to create further
     // duplicate transactions descending from the known pairs either.
     // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
-    CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(consensusParams.BIP34Height);
+    const CBlockIndexView* pindexBIP34height = pindex->GetAncestorView(consensusParams.BIP34Height);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
     if (fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == consensusParams.BIP34Hash)))
         flags |= VERIFY_TX_BIP30;
@@ -102,7 +103,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     return nSubsidy;
 }
 
-int64_t GetLockTimeCutoff(const CBlockHeader& block, const CBlockIndex* pindexPrev, const unsigned int flags)
+int64_t GetLockTimeCutoff(const CBlockHeader& block, const CBlockIndexView* pindexPrev, const unsigned int flags)
 {    
     return (flags & LOCKTIME_MEDIAN_TIME_PAST) ? pindexPrev->GetMedianTimePast() : block.GetBlockTime();
 }
@@ -371,7 +372,7 @@ bool Consensus::CheckBlock(const CBlock& block, CValidationState& state, const C
     return true;
 }
 
-bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev)
+bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndexView* pindexPrev)
 {
     // Check proof of work
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
@@ -389,7 +390,7 @@ bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidatio
     return true;
 }
 
-bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const CBlockIndex* pindexPrev, bool fCheckPOW)
+bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const CBlockIndexView* pindexPrev, bool fCheckPOW)
 {
     if (!CheckBlockHeader(block, state, consensusParams, nTime, fCheckPOW))
         return false;
@@ -400,7 +401,7 @@ bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& s
     return true;
 }
 
-bool Consensus::VerifyBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, const CBlockIndex* pindexPrev, const CCoinsViewCache& inputs, bool fNewBlock, bool fScriptChecks, bool cacheStore, bool fCheckPOW, bool fCheckMerkleRoot)
+bool Consensus::VerifyBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, const CBlockIndexView* pindexPrev, const CCoinsViewCache& inputs, bool fNewBlock, bool fScriptChecks, bool cacheStore, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, consensusParams, pindexPrev))
@@ -410,14 +411,14 @@ bool Consensus::VerifyBlock(const CBlock& block, CValidationState& state, const 
 
     unsigned int flags = GetConsensusFlags(block, consensusParams, pindexPrev, fNewBlock);
     const int64_t nLockTimeCutoff = GetLockTimeCutoff(block, pindexPrev, flags);
-    const uint64_t nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    const uint64_t nHeight = pindexPrev == NULL ? 0 : pindexPrev->GetHeight() + 1;
     CAmount nFees = 0;
     int64_t nSigOps = 0;
     for (unsigned int i = 0; i < block.vtx.size(); i++)
         if (!VerifyTx(block.vtx[i], state, inputs, nHeight, nSpendHeight, nLockTimeCutoff, flags, fScriptChecks, cacheStore, nFees, nSigOps))
             return false;
     
-    const CAmount blockReward = nFees + GetBlockSubsidy(pindexPrev->nHeight, consensusParams); 
+    const CAmount blockReward = nFees + GetBlockSubsidy(pindexPrev->GetHeight(), consensusParams); 
     if (block.vtx[0].GetValueOut() > blockReward)
         return state.DoS(100, false, REJECT_INVALID, "bad-cb-amount");
 
