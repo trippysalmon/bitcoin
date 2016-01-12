@@ -16,9 +16,6 @@
 #include "validation.h"
 #include "version.h"
 
-// TODO remove the following dependencies
-#include "coins.h"
-
 #include <boost/foreach.hpp>
 
 /**
@@ -77,7 +74,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
     return nSigOps;
 }
 
-unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
+unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CUtxoView& inputs)
 {
     if (tx.IsCoinBase())
         return 0;
@@ -85,9 +82,10 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     unsigned int nSigOps = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
-        const CTxOut &prevout = inputs.GetOutputFor(tx.vin[i]);
-        if (prevout.scriptPubKey.IsPayToScriptHash())
-            nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
+        const CCoinsInterface* coins = inputs.AccessCoins(tx.vin[i].prevout.hash);
+        const CScript& prevoutScript = coins->GetScriptPubKey(tx.vin[i].prevout.n);
+        if (prevoutScript.IsPayToScriptHash())
+            nSigOps += prevoutScript.GetSigOpCount(tx.vin[i].scriptSig);
     }
     return nSigOps;
 }
@@ -232,7 +230,7 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeig
     return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, flags, prevHeights, block));
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, int nSpendHeight)
 {
     // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
     // for an attacker to attempt to split the network.
@@ -244,19 +242,20 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
 
         const COutPoint &prevout = tx.vin[i].prevout;
-        const CCoins *coins = inputs.AccessCoins(prevout.hash);
+        const CCoinsInterface* coins = inputs.AccessCoins(prevout.hash);
         assert(coins);
 
         // If prev is coinbase, check that it's matured
         if (coins->IsCoinBase()) {
-            if (nSpendHeight - coins->nHeight < COINBASE_MATURITY)
+            if (nSpendHeight - coins->GetHeight() < COINBASE_MATURITY)
                 return state.Invalid(false, REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
-                                     strprintf("tried to spend coinbase at depth %d", nSpendHeight - coins->nHeight));
+                                     strprintf("tried to spend coinbase at depth %d", nSpendHeight - coins->GetHeight()));
         }
 
         // Check for negative or overflow input values
-        nValueIn += coins->vout[prevout.n].nValue;
-        if (!MoneyRange(coins->vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+        const CAmount& outputAmount = coins->GetAmount(prevout.n);
+        nValueIn += outputAmount;
+        if (!MoneyRange(outputAmount) || !MoneyRange(nValueIn))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
     }
 
