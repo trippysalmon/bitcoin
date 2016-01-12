@@ -14,8 +14,8 @@
 class CBlock;
 class CBlockHeader;
 class CBlockIndexView;
-class CCoinsViewCache;
 class CTransaction;
+class CUtxoView;
 class CValidationState;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
@@ -46,18 +46,18 @@ namespace Consensus {
  * If successful, It also adds the tx fees to nFees.
  * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, CAmount& nFees);
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, int64_t nSpendHeight, CAmount& nFees);
 /**
  * Check whether that all scripts (and signatures) of the inputs of this transaction are valid.
  * This does not modify the UTXO set.
  * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckTxInputsScripts(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheStore);
+bool CheckTxInputsScripts(const CTransaction& tx, CValidationState &state, const CUtxoView &inputs, unsigned int flags, bool cacheStore);
 /**
  * Storage-dependent checks for a tx that is not a coinbase.
  * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckNonCoinbaseTxStorage(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int64_t nSpendHeight, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps);
+bool CheckNonCoinbaseTxStorage(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, int64_t nSpendHeight, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps);
 /**
  * Fully verify a coinbase transaction.
  * Preconditions: tx.IsCoinBase() is true.
@@ -66,7 +66,7 @@ bool VerifyCoinbaseTx(const CTransaction& tx, CValidationState& state, const int
 /**
  * Fully verify a CTransaction.
  */
-bool VerifyTx(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const int64_t nHeight, const int64_t nSpendHeight, const int64_t nLockTimeCutoff, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps);
+bool VerifyTx(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, const int64_t nHeight, const int64_t nSpendHeight, const int64_t nLockTimeCutoff, unsigned int flags, bool fScriptChecks, bool cacheStore, CAmount& nFees, int64_t& nSigOps);
 
 /** Block Header validation functions */
 
@@ -92,7 +92,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Params& cons
 /**
  * Fully verify a CBlock.
  */
-bool VerifyBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, const CBlockIndexView* pindexPrev, const CCoinsViewCache& inputs, bool fNewBlock, bool fScriptChecks, bool cacheStore, bool fCheckPOW, bool fCheckMerkleRoot);
+bool VerifyBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, const CBlockIndexView* pindexPrev, const CUtxoView& inputs, bool fNewBlock, bool fScriptChecks, bool cacheStore, bool fCheckPOW, bool fCheckMerkleRoot);
 
 } // namespace Consensus
 
@@ -120,7 +120,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
  * @return maximum number of sigops required to validate this transaction's inputs
  * @see CTransaction::FetchInputs
  */
-unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CUtxoView& mapInputs);
 
 /** Block validation utility functions */
 
