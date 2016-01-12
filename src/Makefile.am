@@ -119,7 +119,6 @@ BITCOIN_CORE_H = \
   noui.h \
   policy/fees.h \
   policy/policy.h \
-  pow.h \
   protocol.h \
   random.h \
   reverselock.h \
@@ -185,7 +184,6 @@ libbitcoin_server_a_SOURCES = \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
-  pow.cpp \
   rest.cpp \
   rpcblockchain.cpp \
   rpcmining.cpp \
@@ -262,6 +260,8 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/versionbits.h \
   hash.cpp \
   hash.h \
+  pow.cpp \
+  pow.h \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
