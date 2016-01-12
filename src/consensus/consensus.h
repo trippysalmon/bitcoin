@@ -13,7 +13,7 @@
 
 class CBlock;
 class CBlockHeader;
-class CBlockIndex;
+class CBlockIndexView;
 class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
@@ -77,11 +77,11 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
 /**
  * Context-dependent CBlockHeader validity checks
  */
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndexView* pindexPrev);
 /**
  * Fully verify a CBlockHeader.
  */
-bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const CBlockIndex* pindexPrev, bool fCheckPOW=true);
+bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const CBlockIndexView* pindexPrev, bool fCheckPOW=true);
 
 /** Block validation functions */
 
@@ -92,7 +92,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Params& cons
 /**
  * Fully verify a CBlock.
  */
-bool VerifyBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, const CBlockIndex* pindexPrev, const CCoinsViewCache& inputs, bool fNewBlock, bool fScriptChecks, bool cacheStore, bool fCheckPOW, bool fCheckMerkleRoot);
+bool VerifyBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, const CBlockIndexView* pindexPrev, const CCoinsViewCache& inputs, bool fNewBlock, bool fScriptChecks, bool cacheStore, bool fCheckPOW, bool fCheckMerkleRoot);
 
 } // namespace Consensus
 
@@ -101,7 +101,7 @@ bool VerifyBlock(const CBlock& block, CValidationState& state, const Params& con
 /**
  * @return the consensus LockTime cutoff (block.nTime before BIP113, pindexPrev->GetMedianTimePast() after).
  */
-int64_t GetLockTimeCutoff(const CBlockHeader& block, const CBlockIndex* pindexPrev, const unsigned int flags);
+int64_t GetLockTimeCutoff(const CBlockHeader& block, const CBlockIndexView* pindexPrev, const unsigned int flags);
 /**
  * Check if transaction is final and can be included in a block with the
  * specified height and time. Consensus critical.
@@ -127,7 +127,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
 /**
  * Get the consensus flags to be enforced according to the block.nVersion history. 
  */
-unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Params& consensusParams, const CBlockIndex* pindex, bool fNewBlock);
+unsigned int GetConsensusFlags(const CBlockHeader& block, const Consensus::Params& consensusParams, const CBlockIndexView* pindex, bool fNewBlock);
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
