@@ -250,6 +250,7 @@ libbitcoin_consensus_a_SOURCES = \
   arith_uint256.h \
   consensus/consensus.cpp \
   consensus/consensus.h \
+  consensus/interfaces.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
