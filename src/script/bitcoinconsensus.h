@@ -73,6 +73,19 @@ EXPORT_SYMBOL int bitcoinconsensus_verify_tx(const unsigned char* tx, unsigned i
                                              unsigned int flags, int fScriptChecks, int fCacheSigs, uint64_t& nFees, int64_t& nSigOps, 
                                              bitcoinconsensus_error* err);
 
+/**
+ * Fully verify a CBlock. This is exposed mostly for testing.
+ * This is the potentially more optimal (and thus recommended) way
+ * to use libbitcoinconsensus to verify per-block instead:
+ * 1) Call bitcoinconsensus_verify_header()
+ * 2) Call bitcoinconsensus_get_flags()
+ * 3) TODO Call Consensus::CheckBlock(), with fCheckPOW=0 and flags=<result_in_step2>
+ * 4) Check subsidy/no-coinbase-money-creation
+ * 5) foreach tx: Parallelize tx checking by calling bitcoinconsensus_verify_tx() with fScriptChecks=0 and flags=<result_in_step2>
+ * 6) foreach tx foreach input:Parallelize script checking by calling bitcoinconsensus_verify_script() with flags=<result_in_step2>
+ */
+EXPORT_SYMBOL int bitcoinconsensus_verify_block(const unsigned char* block, unsigned int blockLen, const Consensus::Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, void* pindexPrev, const Consensus::BlockIndexInterface& indexInterface, const void* inputs, const Consensus::CoinsIndexInterface& inputsInterface, bool fNewBlock, bool fScriptChecks, bool cacheStore, bool fCheckPOW, bitcoinconsensus_error* err);
+
 EXPORT_SYMBOL unsigned int bitcoinconsensus_version();
 
 #ifdef __cplusplus
