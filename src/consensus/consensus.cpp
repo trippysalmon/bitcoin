@@ -503,6 +503,14 @@ bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& s
     return true;
 }
 
+bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const void* pindexPrev, const BlockIndexInterface& indexInterface)
+{
+    const CBlockIndexView* indexView = new CBlockIndexCPPViewFromCInterface(indexInterface, pindexPrev);
+    bool toReturn = VerifyBlockHeader(block, state, consensusParams, nTime, indexView, true);
+    delete indexView;
+    return toReturn;
+}
+
 bool Consensus::VerifyBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, const CBlockIndexView* pindexPrev, const CUtxoView& inputs, bool fNewBlock, bool fScriptChecks, bool fCacheSigs, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     unsigned int flags = GetConsensusFlags(block, consensusParams, pindexPrev, fNewBlock);
