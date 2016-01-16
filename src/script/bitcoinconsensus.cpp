@@ -135,6 +135,28 @@ unsigned int bitcoinconsensus_get_flags(const unsigned char* blockHeader, unsign
     }    
 }
 
+int bitcoinconsensus_verify_tx(const unsigned char* tx, unsigned int txLen, void* inputs, const Consensus::CoinsIndexInterface& inputsInterface, const int64_t nHeight, const int64_t nSpendHeight, const int64_t nLockTimeCutoff, unsigned int flags, int fScriptChecks, int cacheStore, uint64_t& nFees, int64_t& nSigOps, bitcoinconsensus_error* err)
+{
+    try {
+        ObjectInputStream stream(SER_NETWORK, PROTOCOL_VERSION, tx, txLen);
+        CTransaction tx;
+        stream >> tx;
+        if (tx.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) != txLen)
+            return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
+
+        // Regardless of the verification result, the tx did not error.
+        set_error(err, bitcoinconsensus_ERR_OK);
+
+        CValidationState state;
+        const CUtxoView* inputsView = new CUtxoViewFromCInterface(inputsInterface, inputs);
+        CAmount& aFees = (CAmount&)nFees;
+        return Consensus::VerifyTx(tx, state, *inputsView, nHeight, nSpendHeight, nLockTimeCutoff, flags, fScriptChecks, cacheStore, aFees, nSigOps);
+    } catch (const std::exception&) {
+        return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+    }
+}
+
+
 unsigned int bitcoinconsensus_version()
 {
     // Just use the API version for now
