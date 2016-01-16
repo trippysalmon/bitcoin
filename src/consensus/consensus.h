@@ -7,6 +7,7 @@
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
 #include "amount.h"
+#include "consensus/interfaces.h"
 #include "consensus/params.h"
 
 #include <stdint.h>
@@ -82,6 +83,10 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
  * Fully verify a CBlockHeader.
  */
 bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const CBlockIndexView* pindexPrev, bool fCheckPOW=true);
+/**
+ *  Fully verify CBlockHeader. C-friendly interface
+ */
+bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const void* pindexPrev, const BlockIndexInterface& indexInterface);
 
 /** Block validation functions */
 
