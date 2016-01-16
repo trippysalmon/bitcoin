@@ -10,6 +10,8 @@
 #include "primitives/transaction.h"
 #include "uint256.h"
 
+#include <algorithm>
+
 class CTransaction;
 class CTxOut;
 
@@ -33,7 +35,20 @@ public:
     {
         return GetAncestorView(GetHeight() - 1);
     };
-    virtual int64_t GetMedianTimePast() const = 0;
+    virtual int64_t GetMedianTimePast() const
+    {
+        unsigned nMedianTimeSpan = 11; // Consensus::Params? Not a priority
+        int64_t pmedian[nMedianTimeSpan];
+        int64_t* pbegin = &pmedian[nMedianTimeSpan];
+        int64_t* pend = &pmedian[nMedianTimeSpan];
+
+        const CBlockIndexView* pindex = this;
+        for (unsigned i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->GetPrev())
+            *(--pbegin) = pindex->GetTime();
+
+        std::sort(pbegin, pend);
+        return pbegin[(pend - pbegin)/2];
+    }
 };
 
 class CCoinsInterface
