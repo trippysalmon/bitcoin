@@ -6,6 +6,9 @@
 #ifndef BITCOIN_BITCOINCONSENSUS_H
 #define BITCOIN_BITCOINCONSENSUS_H
 
+#include "consensus/interfaces.h"
+#include "consensus/params.h"
+
 #if defined(BUILD_BITCOIN_INTERNAL) && defined(HAVE_CONFIG_H)
 #include "config/bitcoin-config.h"
   #if defined(_WIN32)
@@ -57,6 +60,8 @@ enum
 EXPORT_SYMBOL int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err);
+
+EXPORT_SYMBOL int bitcoinconsensus_verify_header(const unsigned char* blockHeader, unsigned int blockHeaderLen, const Consensus::Params& consensusParams, int64_t nTime, void* pindexPrev, const Consensus::BlockIndexInterface& indexInterface, bitcoinconsensus_error* err);
 
 EXPORT_SYMBOL unsigned int bitcoinconsensus_version();
 
