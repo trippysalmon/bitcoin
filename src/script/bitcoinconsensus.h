@@ -63,6 +63,8 @@ EXPORT_SYMBOL int bitcoinconsensus_verify_script(const unsigned char *scriptPubK
 
 EXPORT_SYMBOL int bitcoinconsensus_verify_header(const unsigned char* blockHeader, unsigned int blockHeaderLen, const Consensus::Params& consensusParams, int64_t nTime, void* pindexPrev, const Consensus::BlockIndexInterface& indexInterface, bitcoinconsensus_error* err);
 
+EXPORT_SYMBOL unsigned int bitcoinconsensus_get_flags(const unsigned char* blockHeader, unsigned int blockHeaderLen, const Consensus::Params& consensusParams, void* pindexPrev, const Consensus::BlockIndexInterface& indexInterface, bitcoinconsensus_error* err);
+
 EXPORT_SYMBOL unsigned int bitcoinconsensus_version();
 
 #ifdef __cplusplus
