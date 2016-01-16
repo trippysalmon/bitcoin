@@ -156,6 +156,26 @@ int bitcoinconsensus_verify_tx(const unsigned char* tx, unsigned int txLen, void
     }
 }
 
+int bitcoinconsensus_verify_block(const unsigned char* block, unsigned int blockLen, const Consensus::Params& consensusParams, int64_t nTime, const int64_t nSpendHeight, void* pindexPrev, const Consensus::BlockIndexInterface& indexInterface, const void* inputs, const Consensus::CoinsIndexInterface& inputsInterface, bool fNewBlock, bool fScriptChecks, bool cacheStore, bool fCheckPOW, bitcoinconsensus_error* err)
+{
+    try {
+        ObjectInputStream stream(SER_NETWORK, PROTOCOL_VERSION, block, blockLen);
+        CBlock block;
+        stream >> block;
+        if (block.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) != blockLen)
+            return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
+
+        // Regardless of the verification result, the tx did not error.
+        set_error(err, bitcoinconsensus_ERR_OK);
+
+        CValidationState state;
+        const CBlockIndexView* pindex = new CBlockIndexCPPViewFromCInterface(indexInterface, pindexPrev);
+        const CUtxoView* inputsView = new CUtxoViewFromCInterface(inputsInterface, inputs);
+        return Consensus::VerifyBlock(block, state, consensusParams, nTime, nSpendHeight, pindex, *inputsView, false, fScriptChecks, cacheStore, fCheckPOW, true);
+    } catch (const std::exception&) {
+        return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+    }
+}
 
 unsigned int bitcoinconsensus_version()
 {
