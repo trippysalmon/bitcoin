@@ -6,6 +6,7 @@
 #include "bitcoinconsensus.h"
 
 #include "consensus/consensus.h"
+#include "consensus/storage_interfaces_cpp.h"
 #include "consensus/validation.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
@@ -113,6 +114,25 @@ int bitcoinconsensus_verify_header(const unsigned char* blockHeader, unsigned in
     } catch (const std::exception&) {
         return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }
+}
+
+unsigned int bitcoinconsensus_get_flags(const unsigned char* blockHeader, unsigned int blockHeaderLen, const Consensus::Params& consensusParams, void* pindexPrev, const Consensus::BlockIndexInterface& indexInterface, bitcoinconsensus_error* err)
+{
+    try {
+        ObjectInputStream stream(SER_NETWORK, PROTOCOL_VERSION, blockHeader, blockHeaderLen);
+        CBlockHeader header;
+        stream >> header;
+        if (header.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) != blockHeaderLen)
+            return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
+
+        // Regardless of the verification result, the tx did not error.
+        set_error(err, bitcoinconsensus_ERR_OK);
+
+        const CBlockIndexView* pindex = new CBlockIndexCPPViewFromCInterface(indexInterface, pindexPrev);
+        return GetConsensusFlags(header, consensusParams, pindex, false);
+    } catch (const std::exception&) {
+        return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+    }    
 }
 
 unsigned int bitcoinconsensus_version()
