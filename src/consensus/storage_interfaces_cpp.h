@@ -10,8 +10,16 @@
 #include "primitives/transaction.h"
 #include "uint256.h"
 
+#include <algorithm>
+
 class CTransaction;
 class CTxOut;
+
+/**
+ * Window of previous blocks to use for calculating the median time.
+ * This constant is consensus critical.
+ */
+static const unsigned int MEDIAN_TIME_SPAN = 11;
 
 // CPP storage interfaces
 
@@ -33,7 +41,19 @@ public:
     {
         return GetAncestorView(GetHeight() - 1);
     };
-    virtual int64_t GetMedianTimePast() const = 0;
+    virtual int64_t GetMedianTimePast() const
+    {
+        int64_t pmedian[MEDIAN_TIME_SPAN];
+        int64_t* pbegin = &pmedian[MEDIAN_TIME_SPAN];
+        int64_t* pend = &pmedian[MEDIAN_TIME_SPAN];
+
+        const CBlockIndexView* pindex = this;
+        for (unsigned i = 0; i < MEDIAN_TIME_SPAN && pindex; i++, pindex = pindex->GetPrev())
+            *(--pbegin) = pindex->GetTime();
+
+        std::sort(pbegin, pend);
+        return pbegin[(pend - pbegin)/2];
+    }
 };
 
 class CCoinsInterface
