@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CONSENSUS_STORAGE_INTERFACES_CPP_H
 #define BITCOIN_CONSENSUS_STORAGE_INTERFACES_CPP_H
 
+#include "consensus/interfaces.h"
 #include "uint256.h"
 
 #include <algorithm>
@@ -87,5 +88,120 @@ public:
     };
 
 };
+
+// Interface translators
+
+// Interface translators: from C to CPP
+
+class CBlockIndexCPPViewFromCInterface : public CBlockIndexView
+{
+    const Consensus::BlockIndexInterface& interface;
+    const void* indexObject;
+public:
+    CBlockIndexCPPViewFromCInterface(const Consensus::BlockIndexInterface& interfaceIn, const void* indexObjectIn) : 
+        interface(interfaceIn), indexObject(indexObjectIn) 
+    {}
+    virtual ~CBlockIndexCPPViewFromCInterface() {}
+
+    virtual int64_t GetHeight() const
+    {
+        return interface.Height(indexObject);
+    }
+    virtual int32_t GetVersion() const
+    {
+        return interface.Version(indexObject);
+    }
+    virtual int32_t GetTime() const
+    {
+        return interface.Time(indexObject);
+    }
+    virtual int32_t GetBits() const
+    {
+        return interface.Bits(indexObject);
+    }
+    //! Efficiently find an ancestor of this block.
+    virtual const uint256 GetBlockHash() const
+    {
+        return interface.Hash(indexObject);
+    }
+    virtual const CBlockIndexView* GetAncestorView(int64_t height) const
+    {
+        return new CBlockIndexCPPViewFromCInterface(interface, interface.Ancestor(indexObject, height));
+    }
+    virtual const CBlockIndexView* GetPrev() const
+    {
+        if (interface.Prev == NULL) // No optimization implemented
+            return this->GetAncestorView(this->GetHeight() - 1);
+        return new CBlockIndexCPPViewFromCInterface(interface, interface.Prev(indexObject));
+    }
+    virtual int64_t GetMedianTimePast() const
+    {
+        if (interface.MedianTime == NULL) // No optimization implemented
+            return CBlockIndexView::GetMedianTimePast();
+        return interface.MedianTime(indexObject);
+    }
+};
+
+// Interface translators: from CPP to C
+
+namespace {
+static const void* ChainAncestorGetter(const void* indexObject, const int64_t height)
+{
+    return ((const CBlockIndexView*)indexObject)->GetAncestorView(height);
+}
+static const uint256 ChainHashGetter(const void* indexObject)
+{
+    return ((const CBlockIndexView*)indexObject)->GetBlockHash();
+}
+static int64_t ChainHeightGetter(const void* indexObject)
+{
+    return ((const CBlockIndexView*)indexObject)->GetHeight();
+}
+static int32_t ChainVersionGetter(const void* indexObject)
+{
+    return ((const CBlockIndexView*)indexObject)->GetVersion();
+}
+static int32_t ChainTimeGetter(const void* indexObject)
+{
+    return ((const CBlockIndexView*)indexObject)->GetTime();
+}
+static int32_t ChainBitsGetter(const void* indexObject)
+{
+    return ((const CBlockIndexView*)indexObject)->GetBits();
+}
+inline const void* ChainPrevGetter(const void* indexObject)
+{
+    return ((const CBlockIndexView*)indexObject)->GetPrev();
+}
+inline int64_t ChainMedianTimeGetter(const void* indexObject)
+{
+    return ((const CBlockIndexView*)indexObject)->GetMedianTimePast();
+}
+static void ChainIndexDeallocator(void* indexObject)
+{
+    // Bitcoin Core keeps the index in memory: Don't free anything. 
+}
+} // Anonymous namespace 
+
+/**
+ * Bitcoin Core implementation of Consensus::BlockIndexInterface.
+ */
+struct ChainInterface : public Consensus::BlockIndexInterface
+{
+    ChainInterface()
+    {
+        Ancestor = ChainAncestorGetter;
+        Hash = ChainHashGetter;
+        Height = ChainHeightGetter;
+        Version = ChainVersionGetter;
+        Time = ChainTimeGetter;
+        Bits = ChainBitsGetter;
+        Prev = ChainPrevGetter;
+        MedianTime = ChainMedianTimeGetter;
+        deleteIndex = ChainIndexDeallocator;
+    }
+
+};
+static const ChainInterface CHAIN_INTERFACE;
 
 #endif // BITCOIN_CONSENSUS_STORAGE_INTERFACES_CPP_H
