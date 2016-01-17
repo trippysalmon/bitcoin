@@ -136,6 +136,81 @@ public:
     }
 };
 
+class CCoinsInterfaceFromCToCpp : public CCoinsInterface
+{
+    const Consensus::CoinsIndexInterface& interface;
+    const void* coinsObject;
+    // FIXME We're assuming only one of the scriptPubKey per transactions is
+    // going to be needed at once here
+    CScript copiedScript;
+public:
+    CCoinsInterfaceFromCToCpp(const Consensus::CoinsIndexInterface& interfaceIn, const void* coinsObjectIn) : 
+        interface(interfaceIn), coinsObject(coinsObjectIn) 
+    {}
+    virtual ~CCoinsInterfaceFromCToCpp() {}
+
+    //! check whether a particular output is still available or spent
+    virtual bool IsAvailable(int32_t nPos) const
+    {
+        return interface.IsAvailable(coinsObject, nPos);
+    }
+    virtual bool IsCoinBase() const
+    {
+        return interface.IsCoinBase(coinsObject);
+    }
+    //! check whether the entire CCoins is spent
+    //! note that only !IsPruned() CCoins can be serialized
+    virtual bool IsPruned() const
+    {
+        return interface.IsPruned(coinsObject);
+    }
+    virtual const CAmount& GetAmount(int32_t nPos) const
+    {
+        return interface.Amount(coinsObject, nPos);
+    }
+    const CScript& GetScriptPubKey(int32_t nPos)
+    {
+        const Consensus::ObjectInterface& rawScript = interface.Script(coinsObject, nPos);
+        copiedScript = CScript((unsigned char*)rawScript.ptr, (unsigned char*)rawScript.ptr + rawScript.length);
+        return copiedScript;
+    }
+    virtual const CScript& GetScriptPubKey(int32_t nPos) const
+    {
+        return const_cast<CCoinsInterfaceFromCToCpp*>(this)->GetScriptPubKey(nPos);
+    }
+    virtual int64_t GetHeight() const
+    {
+        return interface.Height(coinsObject);
+    }
+};
+
+class CUtxoViewFromCInterface : public CUtxoView
+{
+    const Consensus::CoinsIndexInterface& interface;
+    const void* indexObject;
+public:
+    CUtxoViewFromCInterface(const Consensus::CoinsIndexInterface& interfaceIn, const void* indexObjectIn) : 
+        interface(interfaceIn), indexObject(indexObjectIn) 
+    {}
+    virtual ~CUtxoViewFromCInterface() {}
+
+    //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
+    virtual bool HaveInputs(const CTransaction& tx) const
+    {
+        return false;
+    }
+    /**
+     * Return a pointer to CCoins in the cache, or NULL if not found. This is
+     * more efficient than GetCoins. Modifications to other cache entries are
+     * allowed while accessing the returned pointer.
+     */
+    virtual const CCoinsInterface* AccessCoins(const uint256& txid) const
+    {
+        return new CCoinsInterfaceFromCToCpp(interface, interface.Access(txid));
+    }
+};
+
+
 // Interface translators: from CPP to C
 
 namespace {
