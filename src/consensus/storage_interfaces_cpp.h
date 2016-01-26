@@ -65,19 +65,6 @@ public:
      * allowed while accessing the returned pointer.
      */
     virtual const CCoinsInterface* AccessCoins(const uint256 &txid) const = 0;
-    //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
-    virtual bool HaveInputs(const CTransaction& tx) const
-    {
-        if (!tx.IsCoinBase()) {
-            for (unsigned int i = 0; i < tx.vin.size(); i++) {
-                const COutPoint& prevout = tx.vin[i].prevout;
-                const CCoinsInterface* coins = AccessCoins(prevout.hash);
-                if (!coins || !coins->IsAvailable(prevout.n))
-                    return false;
-            }
-        }
-        return true;
-    }
 };
 
 #endif // BITCOIN_CONSENSUS_STORAGE_INTERFACES_CPP_H
