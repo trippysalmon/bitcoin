@@ -136,6 +136,10 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
  * @see CTransaction::FetchInputs
  */
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CUtxoView& mapInputs);
+/**
+ * Check whether all prevouts of the transaction are present in the UTXO set represented by this view.
+ */
+bool CheckTxHasInputs(const CTransaction& tx, const CUtxoView& inputs);
 
 /** Block validation utility functions */
 
