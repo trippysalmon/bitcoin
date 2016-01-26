@@ -147,6 +147,20 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CUtxoView& inputs)
     return nSigOps;
 }
 
+//! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
+bool CheckTxHasInputs(const CTransaction& tx, const CUtxoView& inputs)
+{
+    if (!tx.IsCoinBase()) {
+        for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            const COutPoint& prevout = tx.vin[i].prevout;
+            const CCoinsInterface* coins = inputs.AccessCoins(prevout.hash);
+            if (!coins || !coins->IsAvailable(prevout.n))
+                return false;
+        }
+    }
+    return true;
+}
+
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
     // Basic checks that don't depend on any context
@@ -197,7 +211,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
 bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CUtxoView& inputs, int64_t nSpendHeight, CAmount& nFees)
 {
-    if (!inputs.HaveInputs(tx))
+    if (!CheckTxHasInputs(tx, inputs))
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent");
 
     CAmount nValueIn = 0;
