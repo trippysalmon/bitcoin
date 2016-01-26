@@ -890,7 +890,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // This redundant check doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network (Consensus::CheckTxInputs also checks this).
-        if (!view.HaveInputs(tx))
+        if (!CheckTxHasInputs(tx, view))
             return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
 
         // Bring the best block into scope
