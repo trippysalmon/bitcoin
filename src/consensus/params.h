@@ -15,6 +15,7 @@ namespace Consensus {
 enum DeploymentPos
 {
     DEPLOYMENT_TESTDUMMY,
+    BIP113, // TODO remove
     MAX_VERSION_BITS_DEPLOYMENTS
 };
 
