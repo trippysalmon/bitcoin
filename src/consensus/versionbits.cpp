@@ -209,6 +209,9 @@ unsigned int Consensus::GetFlags(const CBlockIndex* pindexPrev, const Params& co
     if (!pVersionBitsState)
         return flags;
 
+    if (pVersionBitsState->vStates[BIP113] == ACTIVATED)
+        flags |= LOCKTIME_MEDIAN_TIME_PAST;
+
     return flags;
 }
 
