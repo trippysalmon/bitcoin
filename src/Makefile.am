@@ -262,6 +262,8 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/merkle.h \
   consensus/params.h \
   consensus/validation.h \
+  consensus/versionbits.cpp \
+  consensus/versionbits.h \
   hash.cpp \
   hash.h \
   prevector.h \
