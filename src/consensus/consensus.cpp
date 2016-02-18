@@ -9,6 +9,8 @@
 #include "pow.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
+#include "script/interpreter.h"
+#include "tinyformat.h"
 #include "utilmoneystr.h"
 #include "validation.h"
 #include "version.h"
@@ -140,12 +142,21 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-/**
- * Calculates the block height and previous block's median time past at
- * which the transaction will be considered final in the context of BIP 68.
- * Also removes from the vector of input heights any entries which did not
- * correspond to sequence locked inputs as they do not affect the calculation.
- */
+bool Consensus::CheckTxPreInputs(const CTransaction& tx, CValidationState& state, const int nHeight, int64_t nLockTimeCutoff, int64_t& nSigOps)
+{
+    if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
+        return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal", false, "non-final transaction");
+
+    if (!CheckTransaction(tx, state))
+        return false;
+
+    nSigOps += GetLegacySigOpCount(tx);
+    if (nSigOps > MAX_BLOCK_SIGOPS)
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", "too many sigops");
+
+    return true;
+}
+
 std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block)
 {
     assert(prevHeights->size() == tx.vin.size());
@@ -266,6 +277,15 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     return true;
 }
 
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, int64_t& nSigOps)
+{
+    const int64_t nLockTimeCutoff = (flags & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : nBlockTime;
+    if (!CheckTxPreInputs(tx, state, nHeight, nLockTimeCutoff, nSigOps))
+        return false;
+
+    return true;
+}
+
 bool Consensus::CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
@@ -359,18 +379,6 @@ bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidatio
 bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
-
-    // Check that all transactions are finalized
-    BOOST_FOREACH(const CTransaction& tx, block.vtx) {
-        int nLockTimeFlags = 0;
-        int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
-                                ? pindexPrev->GetMedianTimePast()
-                                : block.GetBlockTime();
-        if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal", false, "non-final transaction");
-        }
-    }
-
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
     if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))

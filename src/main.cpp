@@ -1961,11 +1961,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
 
+    const int nHeight = pindex == NULL ? 0 : pindex->GetHeight() + 1;
+    const int64_t nMedianTimePast = pindex->GetMedianTimePast();
+    int64_t nSigOps = 0;
+
     std::vector<int> prevheights;
     int nLockTimeFlags = 0;
     CAmount nFees = 0;
     int nInputs = 0;
-    unsigned int nSigOps = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(block.vtx.size());
@@ -1973,13 +1976,10 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
+        if (!Consensus::VerifyTx(tx, state, flags, nHeight, nMedianTimePast, block.nTime, nSigOps))
+            return error("%s: Consensus::VerifyTx on %s: %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
 
         nInputs += tx.vin.size();
-        nSigOps += GetLegacySigOpCount(tx);
-        if (nSigOps > MAX_BLOCK_SIGOPS)
-            return state.DoS(100, error("ConnectBlock(): too many sigops"),
-                             REJECT_INVALID, "bad-blk-sigops");
-
         if (!tx.IsCoinBase())
         {
             if (!view.HaveInputs(tx))

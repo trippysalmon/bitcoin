@@ -25,15 +25,6 @@ static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 
-/** Flags for nSequence and nLockTime locks */
-enum {
-    /* Interpret sequence numbers as relative lock-time constraints. */
-    LOCKTIME_VERIFY_SEQUENCE = (1 << 0),
-
-    /* Use GetMedianTimePast() instead of nTime for end point timestamp. */
-    LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
-};
-
 /**
  * Context-independent CTransaction validity checks.
  * Nobody should spend an extra cycle on a transaction that doesn't pass this.
@@ -50,11 +41,23 @@ namespace Consensus {
 /** Transaction validation functions */
 
 /**
+ * Performs all tx the checks that are common for coinbase and regular transactions.
+ * It doesn't require knowledge of the inputs (utxo).
+ */
+bool CheckTxPreInputs(const CTransaction& tx, CValidationState& state, const int nHeight, int64_t nLockTimeCutoff, int64_t& nSigOps);
+
+/**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
  * This does not modify the UTXO set. This does not check scripts and sigs.
  * Preconditions: tx.IsCoinBase() is false.
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight);
+
+/**
+ * Fully verify a CTransaction.
+ * @TODO this is incomplete, among other things, the scripts are not checked yet.
+ */
+bool VerifyTx(const CTransaction& tx, CValidationState& state, const unsigned int flags, const int nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, int64_t& nSigOps);
 
 /** Block Header validation functions */
 
