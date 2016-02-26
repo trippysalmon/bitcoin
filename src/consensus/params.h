@@ -75,7 +75,8 @@ enum DeploymentState
 struct CVersionBitsState
 {
     DeploymentState vStates[MAX_VERSION_BITS_DEPLOYMENTS];
-    uint32_t usedBitsMaskCache;
+    uint32_t usedBitsMaskCache; // TODO this thing is too cheap to
+                                // store as shown by sipa
 };
 
 } // namespace Consensus
