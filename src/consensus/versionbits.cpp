@@ -9,6 +9,8 @@
 
 using namespace Consensus;
 
+static uint32_t usedBitsMaskCache; // TODO s/usedBitsMaskCache/GetUsedBitsMaskCache(bitversionState)
+
 /**
  * Initialize state of the deployments as DEFINED, perform some basic checks
  * and initialize the BIP9 states cache.
@@ -116,6 +118,38 @@ public:
     }
 };
 
+// TODO template<unsigned MAX_STATE_DEPLOYMENTS = MAX_VERSION_BITS_DEPLOYMENTS> C++11
+template<unsigned MAX_STATE_DEPLOYMENTS>
+static void PartToAbstract(const CBlockIndex* pindexPrev, const Params& consensusParams, const int64_t nMedianTime, const CVersionBitsState* pVersionBitsState, const CVersionBitsState& newVersionBitsState)
+{
+    // Create the new state in the cache from the old one
+    newVersionBitsState.usedBitsMaskCache = pVersionBitsState->usedBitsMaskCache; // Copy from the previous State
+    for (int i = 0; i < MAX_STATE_DEPLOYMENTS; ++i) {
+        const BIP9Deployment& deployment = consensusParams.vDeployments[i];
+        newVersionBitsState.vStates[i] = CalculateNextState(pVersionBitsState->vStates[i], deployment, consensusParams, pindexPrev, nMedianTime, newVersionBitsState.usedBitsMaskCache);
+    }
+}
+
+template<unsigned MAX_STATE_DEPLOYMENTS>
+static void AlsoWarning(const CBlockIndex* pindexPrev, const Params& consensusParams, const int64_t nMedianTime, const CVersionBitsState* pVersionBitsState, const CVersionBitsState& newVersionBitsState)
+{
+    PartToAbstract<MAX_STATE_DEPLOYMENTS>(pVersionBitsState, newVersionBitsState);
+
+    // Check if there's unkown softforks being locked in.
+    const uint32_t unusedBits = ~pVersionBitsState->usedBitsMaskCache;
+    if (unusedBits && !fUnkownSoftforkFound && nCurrentStateHeight > nOldestSfToNotify) {
+        BIP9Deployment deployment;
+        deployment.nStartTime = 0;
+        deployment.nTimeout = std::numeric_limits<int64_t>::max();
+        uint32_t usedBitsMaskCache = RESERVED_BITS_MASK;
+        deployment.bitmask = unusedBits;
+        if (LOCKED_IN == CalculateNextState(STARTED, deployment, consensusParams, itBlockIndex, nMedianTime, usedBitsMaskCache)) {
+            nOldestSfToNotify = nCurrentStateHeight;
+            fUnkownSoftforkFound = true;
+        }
+    }
+}
+
 /**
  * Get the last updated state for a given CBlockIndex.
  *
@@ -166,26 +200,11 @@ static const CVersionBitsState* GetVersionBitsState(const CBlockIndex* pindexPre
         itBlockIndex = pindexPrev->GetAncestor(nCurrentStateHeight);
         const int64_t nMedianTime = itBlockIndex->GetMedianTimePast();
 
-        // Create the new state in the cache from the old one
-        newVersionBitsState.usedBitsMaskCache = pVersionBitsState->usedBitsMaskCache; // Copy from the previous State
-        for (int i = 0; i < MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
-            const BIP9Deployment& deployment = consensusParams.vDeployments[i];
-            newVersionBitsState.vStates[i] = CalculateNextState(pVersionBitsState->vStates[i], deployment, consensusParams, itBlockIndex, nMedianTime, newVersionBitsState.usedBitsMaskCache);
-        }
-
-        // Check if there's unkown softforks being locked in.
-        const uint32_t unusedBits = ~pVersionBitsState->usedBitsMaskCache;
-        if (unusedBits && !fUnkownSoftforkFound && nCurrentStateHeight > nOldestSfToNotify) {
-            BIP9Deployment deployment;
-            deployment.nStartTime = 0;
-            deployment.nTimeout = std::numeric_limits<int64_t>::max();
-            uint32_t usedBitsMaskCache = RESERVED_BITS_MASK;
-            deployment.bitmask = unusedBits;
-            if (LOCKED_IN == CalculateNextState(STARTED, deployment, consensusParams, itBlockIndex, nMedianTime, usedBitsMaskCache)) {
-                nOldestSfToNotify = nCurrentStateHeight;
-                fUnkownSoftforkFound = true;
-            }
-        }
+        bool fWarningsToo = true;
+        if (fWarningsToo)
+            AlsoWarning<MAX_STATE_DEPLOYMENTS>(pVersionBitsState, newVersionBitsState);
+        else
+            PartToAbstract<MAX_STATE_DEPLOYMENTS>(pVersionBitsState, newVersionBitsState);
 
         versionBitsCache.Set(itBlockIndex, newVersionBitsState);
         pVersionBitsState = versionBitsCache.Get(itBlockIndex);
