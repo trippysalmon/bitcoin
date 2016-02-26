@@ -83,9 +83,9 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.vDeployments[Consensus::BIP113].bitmask = 1;
-        consensus.vDeployments[Consensus::BIP113].nTimeout = 1;
-        consensus.vDeployments[Consensus::BIP113].nStartTime = 1; 
+        consensus.vDeployments[Consensus::BIP68_BIP112].bitmask = 1;
+        consensus.vDeployments[Consensus::BIP68_BIP112].nTimeout = 1;
+        consensus.vDeployments[Consensus::BIP68_BIP112].nStartTime = 1; 
 
         /** 
          * The message start string is designed to be unlikely to occur in normal data.
@@ -170,9 +170,9 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.vDeployments[Consensus::BIP113].bitmask = 1;
-        consensus.vDeployments[Consensus::BIP113].nTimeout = 1;
-        consensus.vDeployments[Consensus::BIP113].nStartTime = 1; 
+        consensus.vDeployments[Consensus::BIP68_BIP112].bitmask = 1;
+        consensus.vDeployments[Consensus::BIP68_BIP112].nTimeout = 1;
+        consensus.vDeployments[Consensus::BIP68_BIP112].nStartTime = 1; 
 
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
@@ -239,9 +239,9 @@ public:
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.vDeployments[Consensus::BIP113].bitmask = 1;
-        consensus.vDeployments[Consensus::BIP113].nTimeout = 1;
-        consensus.vDeployments[Consensus::BIP113].nStartTime = 1; 
+        consensus.vDeployments[Consensus::BIP68_BIP112].bitmask = 1;
+        consensus.vDeployments[Consensus::BIP68_BIP112].nTimeout = 1;
+        consensus.vDeployments[Consensus::BIP68_BIP112].nStartTime = 1; 
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;

@@ -209,8 +209,11 @@ unsigned int Consensus::GetFlags(const CBlockIndex* pindexPrev, const Params& co
     if (!pVersionBitsState)
         return flags;
 
-    if (pVersionBitsState->vStates[BIP113] == ACTIVATED)
-        flags |= LOCKTIME_MEDIAN_TIME_PAST;
+    // TODO remove this comment after review anybody "rgreping" BIP68,
+    // BIP112, SCRIPT_VERIFY_CHECKSEQUENCEVERIFY or
+    // LOCKTIME_VERIFY_SEQUENCE should get here too.
+    if (pVersionBitsState->vStates[BIP68_BIP112] == ACTIVATED)
+        flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY | LOCKTIME_VERIFY_SEQUENCE;
 
     return flags;
 }
