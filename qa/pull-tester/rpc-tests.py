@@ -100,6 +100,10 @@ testScripts = [
     'sendheaders.py',
     'keypool.py',
     'prioritise_transaction.py',
+    'invalidblockrequest.py',
+    'invalidtxrequest.py',
+    'abandonconflict.py',
+    'p2p-versionbits-warning.py',
 ]
 testScriptsExt = [
     'bip65-cltv.py',
