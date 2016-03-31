@@ -6,11 +6,11 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include "amount.h"
 #include "bloom.h"
 #include "compat.h"
 #include "limitedmap.h"
 #include "netbase.h"
+#include "policy/feerate.h"
 #include "protocol.h"
 #include "random.h"
 #include "streams.h"

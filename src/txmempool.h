@@ -9,8 +9,8 @@
 #include <list>
 #include <set>
 
-#include "amount.h"
 #include "coins.h"
+#include "policy/feerate.h"
 #include "policy/policy.h" // For DEFAULT_MIN_RELAY_TX_FEE
 #include "primitives/transaction.h"
 #include "sync.h"

@@ -8,6 +8,7 @@
 
 #include "amount.h"
 #include "consensus/consensus.h"
+#include "feerate.h"
 #include "interface.h"
 #include "script/interpreter.h"
 #include "script/standard.h"
