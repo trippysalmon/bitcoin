@@ -450,6 +450,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
 
     AppendParamsHelpMessages(strUsage, showDebug);
+    Policy::AppendHelpMessages(strUsage, showDebug);
 
     strUsage += HelpMessageGroup(_("Node relay options:"));
     if (showDebug)
@@ -923,6 +924,16 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     nConnectTimeout = GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0)
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
+
+    try {
+        CPolicy* pPolicy = Policy::Factory(Policy::STANDARD);
+        if(!pPolicy)
+            return InitError(strprintf(_("Error: Unable to initialize policy '%s'"), Policy::STANDARD));
+        pPolicy->InitFromArgs(mapArgs);
+        globalPolicy.reset(pPolicy);
+    } catch(const std::exception& e) {
+        return InitError(strprintf(_("Error while initializing policy: %s"), e.what()));
+    }
 
     // Fee-per-kilobyte amount considered the same as "free"
     // If you are mining, be careful setting this:
