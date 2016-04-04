@@ -10,6 +10,7 @@
 #include "main.h"
 #include "tinyformat.h"
 #include "util.h"
+#include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
@@ -156,11 +157,21 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 std::vector<std::pair<std::string, std::string> > CDefaultPolicy::GetOptionsHelp() const
 {
     std::vector<std::pair<std::string, std::string> > optionsHelp;
+    optionsHelp.push_back(std::make_pair("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
+        CURRENCY_UNIT, FormatMoney(minRelayFee.GetFee(1000)))));
     return optionsHelp;
 }
 
 void CDefaultPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
+    // Fee-per-kilobyte amount considered the same as "free"
+    // If you are mining, be careful setting this:
+    // if you set it to zero then
+    // a transaction spammer can cheaply fill blocks using
+    // 1-satoshi-fee transactions. It should be set above the real
+    // cost to you of processing a transaction.
+    minRelayFee = CFeeRate(ParseAmountFromArgs("-minrelaytxfee", minRelayFee.GetFee(1000), mapArgs));
+    minRelayTxFee = minRelayFee; // TODO unify global minRelayTxFee
 }
 
 /** Factory and init help */
