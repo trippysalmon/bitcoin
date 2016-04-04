@@ -193,7 +193,6 @@ void CDefaultPolicy::InitFromArgs(const std::map<std::string, std::string>& mapA
     // 1-satoshi-fee transactions. It should be set above the real
     // cost to you of processing a transaction.
     minRelayFee = CFeeRate(ParseAmountFromArgs("-minrelaytxfee", minRelayFee.GetFee(1000), mapArgs));
-    minRelayTxFee = minRelayFee; // TODO unify global minRelayTxFee
 }
 
 /** Factory and init help */
