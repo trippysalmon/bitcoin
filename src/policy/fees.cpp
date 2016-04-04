@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "policy/fees.h"
-#include "policy/policy.h"
 
 #include "primitives/transaction.h"
 #include "random.h"
@@ -300,7 +299,8 @@ void CBlockPolicyEstimator::removeTx(uint256 hash)
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
-    : nBestSeenHeight(0)
+    : CDefaultPolicy(_minRelayFee), 
+      nBestSeenHeight(0)
 {
     minTrackedFee = _minRelayFee < CFeeRate(MIN_FEERATE) ? CFeeRate(MIN_FEERATE) : _minRelayFee;
     std::vector<double> vfeelist;

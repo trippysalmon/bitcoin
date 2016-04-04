@@ -6,6 +6,7 @@
 #define BITCOIN_POLICYESTIMATOR_H
 
 #include "feerate.h"
+#include "policy.h"
 #include "uint256.h"
 
 #include <map>
@@ -215,7 +216,7 @@ static const double PRI_SPACING = 2;
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
  * stats on the transactions included in that block
  */
-class CBlockPolicyEstimator
+class CBlockPolicyEstimator : public CDefaultPolicy
 {
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
