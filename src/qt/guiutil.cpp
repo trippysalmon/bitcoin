@@ -11,7 +11,8 @@
 
 #include "primitives/transaction.h"
 #include "init.h"
-#include "main.h" // For minRelayTxFee
+#include "main.h" // For globalPolicy
+#include "policy/interface.h"
 #include "protocol.h"
 #include "script/script.h"
 #include "script/standard.h"
@@ -235,10 +236,11 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
 
 bool isDust(const QString& address, const CAmount& amount)
 {
+    const CPolicy& policy = *globalPolicy;
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script = GetScriptForDestination(dest);
     CTxOut txOut(amount, script);
-    return txOut.IsDust(::minRelayTxFee);
+    return !policy.AcceptDust(txOut);
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine)

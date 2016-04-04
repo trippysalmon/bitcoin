@@ -7,13 +7,35 @@
 
 #include "policy/policy.h"
 
-#include "main.h"
+#include "main.h" // TODO decouple from main
 #include "tinyformat.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
+
+CAmount CDefaultPolicy::GetDustThreshold(const CTxOut& txout) const
+{
+    // "Dust" is defined in terms of CBlockPolicyEstimator::minRelayFee,
+    // which has units satoshis-per-kilobyte.
+    // If you'd pay more than 1/3 in fees
+    // to spend something, then we consider it dust.
+    // A typical spendable txout is 34 bytes big, and will
+    // need a CTxIn of at least 148 bytes to spend:
+    // so dust is a spendable txout less than
+    // 546*minRelayFee/1000 (in satoshis)
+    if (txout.scriptPubKey.IsUnspendable())
+        return 0;
+
+    size_t nSize = txout.GetSerializeSize(SER_DISK,0) + 148u;
+    return 3 * minRelayFee.GetFee(nSize);
+}
+
+bool CDefaultPolicy::AcceptDust(const CTxOut& txout) const
+{
+    return txout.nValue >= GetDustThreshold(txout);
+}
 
     /**
      * Check transaction inputs to mitigate two
@@ -103,7 +125,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (txout.IsDust(globalPolicy->GetMinRelayFee())) {
+        } else if (!globalPolicy->AcceptDust(txout)) {
             reason = "dust";
             return false;
         }
