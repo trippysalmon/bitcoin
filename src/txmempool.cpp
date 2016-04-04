@@ -353,7 +353,7 @@ CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee) :
     nCheckFrequency = 0;
 
     minerPolicyEstimator = new CBlockPolicyEstimator(_minReasonableRelayFee);
-    minReasonableRelayFee = _minReasonableRelayFee;
+    minReasonableRelayFee = minerPolicyEstimator->GetMinRelayFee();
 }
 
 CTxMemPool::~CTxMemPool()
