@@ -11,6 +11,7 @@
 
 #include "amount.h"
 #include "coins.h"
+#include "policy/policy.h" // For DEFAULT_MIN_RELAY_TX_FEE
 #include "primitives/transaction.h"
 #include "sync.h"
 
@@ -485,7 +486,7 @@ public:
      *  around what it "costs" to relay a transaction around the network and
      *  below which we would reasonably say a transaction has 0-effective-fee.
      */
-    CTxMemPool(const CFeeRate& _minReasonableRelayFee);
+    CTxMemPool(const CFeeRate& _minReasonableRelayFee=CFeeRate(DEFAULT_MIN_RELAY_TX_FEE));
     ~CTxMemPool();
 
     /**
