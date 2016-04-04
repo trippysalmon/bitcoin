@@ -1970,6 +1970,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nC
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
                                 int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
 {
+    const CPolicy& policy = *globalPolicy;
     CAmount nValue = 0;
     unsigned int nSubtractFeeFromAmount = 0;
     BOOST_FOREACH (const CRecipient& recipient, vecSend)
@@ -2239,7 +2240,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
-                if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
+                if (nFeeNeeded < policy.GetMinRelayFee().GetFee(nBytes))
                 {
                     strFailReason = _("Transaction too large for fee policy");
                     return false;
@@ -2324,7 +2325,8 @@ bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB & pw
 
 CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
 {
-    return std::max(minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
+    const CPolicy& policy = *globalPolicy; // TODO make parameter
+    return std::max(minTxFee.GetFee(nTxBytes), policy.GetMinRelayFee().GetFee(nTxBytes));
 }
 
 CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool)
@@ -3192,7 +3194,7 @@ bool CWallet::InitLoadWallet()
     return true;
 }
 
-bool CWallet::ParameterInteraction()
+bool CWallet::ParameterInteraction(const CFeeRate& minRelayTxFee)
 {
     if (mapArgs.count("-mintxfee"))
     {
@@ -3219,10 +3221,10 @@ bool CWallet::ParameterInteraction()
         if (nFeePerK > HIGH_TX_FEE_PER_KB)
             UIWarning(_("-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
         payTxFee = CFeeRate(nFeePerK, 1000);
-        if (payTxFee < ::minRelayTxFee)
+        if (payTxFee < minRelayTxFee)
         {
             return UIError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-                                       mapArgs["-paytxfee"], ::minRelayTxFee.ToString()));
+                                       mapArgs["-paytxfee"], minRelayTxFee.ToString()));
         }
     }
     if (mapArgs.count("-maxtxfee"))
@@ -3233,10 +3235,10 @@ bool CWallet::ParameterInteraction()
         if (nMaxFee > HIGH_MAX_TX_FEE)
             UIWarning(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         maxTxFee = nMaxFee;
-        if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
+        if (CFeeRate(maxTxFee, 1000) < minRelayTxFee)
         {
             return UIError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-                                       mapArgs["-maxtxfee"], ::minRelayTxFee.ToString()));
+                                       mapArgs["-maxtxfee"], minRelayTxFee.ToString()));
         }
     }
     nTxConfirmTarget = GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);

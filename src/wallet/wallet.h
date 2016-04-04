@@ -882,7 +882,7 @@ public:
     static bool InitLoadWallet();
 
     /* Wallets parameter interaction */
-    static bool ParameterInteraction();
+    static bool ParameterInteraction(const CFeeRate& minRelayTxFee);
 };
 
 /** A key allocated from the key pool. */

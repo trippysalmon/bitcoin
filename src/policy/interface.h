@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+class CFeeRate;
+
 /**
  * Abstract interface for extensible policy.
  */
@@ -17,6 +19,9 @@ class CPolicy
 {
 public:
     virtual ~CPolicy() {}; // Extend before instantiate, this is an interface
+
+    /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
+    virtual CFeeRate GetMinRelayFee() const = 0;
 
     /**
      * @return a vector with strings {"option", "description"} pairs, with the policy options.

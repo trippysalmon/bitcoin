@@ -932,6 +932,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     } catch(const std::exception& e) {
         return InitError(strprintf(_("Error while initializing policy: %s"), e.what()));
     }
+    const CPolicy& policy = *globalPolicy;
 
     fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard());
     if (Params().RequireStandard() && !fRequireStandard)
@@ -939,7 +940,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     nBytesPerSigOp = GetArg("-bytespersigop", nBytesPerSigOp);
 
 #ifdef ENABLE_WALLET
-    if (!CWallet::ParameterInteraction())
+    if (!CWallet::ParameterInteraction(policy.GetMinRelayFee()))
         return false;
 #endif // ENABLE_WALLET
 

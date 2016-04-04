@@ -82,6 +82,8 @@ protected:
 public:
     CDefaultPolicy(const CFeeRate& minRelayFeeIn=CFeeRate(DEFAULT_MIN_RELAY_TX_FEE)) : minRelayFee(minRelayFeeIn) {};
 
+    virtual CFeeRate GetMinRelayFee() const { return minRelayFee; };
+
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>& argMap);
 };
