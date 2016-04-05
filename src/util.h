@@ -16,6 +16,7 @@
 
 #include "amount.h"
 #include "compat.h"
+#include "globals/common.h" // TODO remove circular dependency
 #include "tinyformat.h"
 #include "utiltime.h"
 
@@ -40,22 +41,7 @@ public:
     /** Translate a message to the native language of the user. */
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
-
-extern std::map<std::string, std::string> mapArgs;
-extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
-extern bool fDebug;
-extern bool fPrintToConsole;
-extern bool fPrintToDebugLog;
-extern bool fServer;
-extern std::string strMiscWarning;
-extern bool fLogTimestamps;
-extern bool fLogTimeMicros;
-extern bool fLogIPs;
-extern volatile bool fReopenDebugLog;
 extern CTranslationInterface translationInterface;
-
-extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_PID_FILENAME;
 
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.

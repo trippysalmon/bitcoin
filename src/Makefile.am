@@ -106,6 +106,7 @@ BITCOIN_CORE_H = \
   consensus/consensus.h \
   core_io.h \
   core_memusage.h \
+  globals/common.h \
   httprpc.h \
   httpserver.h \
   init.h \
@@ -299,6 +300,7 @@ libbitcoin_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  globals/common.cpp \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
@@ -339,6 +341,7 @@ endif
 libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_cli_a_SOURCES = \
+  globals/common.cpp \
   rpc/client.cpp \
   $(BITCOIN_CORE_H)
 
