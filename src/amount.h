@@ -38,8 +38,11 @@ inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <=
 class CFeeRate
 {
 private:
-    CAmount nSatoshisPerK; //! unit is satoshis-per-1000-bytes
+    CAmount nSatoshisPerK; //! unit is satoshis-per-PRECISION_MULTIPLIER-bytes
 public:
+    //! Eventually PRECISION_MULTIPLIER could be KB*N (Rename nSatoshisPerK when that happens)
+    static const int64_t PRECISION_MULTIPLIER = KB; 
+
     /** Fee rate of 0 satoshis per kB */
     CFeeRate() : nSatoshisPerK(0) { }
     explicit CFeeRate(const CAmount& _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
