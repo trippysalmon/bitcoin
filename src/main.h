@@ -317,6 +317,8 @@ struct CNodeStateStats {
 };
 
 
+/** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
+int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
 /** 
  * Count ECDSA signature operations the old-fashioned (pre-0.6) way
