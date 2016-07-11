@@ -4,10 +4,10 @@
 
 #include "consensus.h"
 
+#include "block.h"
 #include "hash.h"
+#include "interpreter.h"
 #include "merkle.h"
-#include "primitives/block.h"
-#include "script/interpreter.h"
 #include "tinyformat.h"
 #include "validation.h"
 #include "version.h"

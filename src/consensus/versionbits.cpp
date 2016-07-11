@@ -4,9 +4,9 @@
 
 #include "versionbits.h"
 
-#include "consensus/params.h"
-#include "consensus/validation.h"
-#include "script/interpreter.h" // TODO Don't violate laters
+#include "interpreter.h" // TODO Don't violate laters
+#include "params.h"
+#include "validation.h"
 
 // TODO remove the following dependencies
 #include "chain.h"
