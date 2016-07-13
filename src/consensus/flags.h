@@ -21,6 +21,9 @@ enum
 
     /* BIP30: See Consensus::GetFlags(), Consensus::VerifyTx() and http://r6.ca/blog/20120206T005236Z.html for more information */
     bitcoinconsensus_TX_VERIFY_BIP30 = (1U << 14),
+
+    /* BIP68: Interpret sequence numbers as relative lock-time constraints. */
+    LOCKTIME_VERIFY_SEQUENCE = (1 << 16),
 };
 
 #endif // BITCOIN_CONSENSUS_FLAGS_H
