@@ -75,4 +75,7 @@ int64_t GetFlags(const CBlockIndex* pindexPrev, const Consensus::Params& consens
 
 } // namespace Consensus
 
+// TODO: make static again
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
+
 #endif

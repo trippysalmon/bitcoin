@@ -150,6 +150,23 @@ void VersionBitsCache::Clear()
     }
 }
 
+// TODO this is planned to be REPLACED isntead of MOVEONLY
+/**
+ * Returns true if there are nRequired or more blocks of minVersion or above
+ * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
+ */
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
+{
+    unsigned int nFound = 0;
+    for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
+    {
+        if (pstart->nVersion >= minVersion)
+            ++nFound;
+        pstart = pstart->pprev;
+    }
+    return (nFound >= nRequired);
+}
+
 int64_t Consensus::GetFlags(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache)
 {
     int64_t flags = SCRIPT_VERIFY_NONE;
