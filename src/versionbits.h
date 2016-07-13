@@ -71,7 +71,7 @@ namespace Consensus {
  * Get consensus flags.
  * @TODO incomplete, not all consensus flags yet.
  */
-int64_t GetFlags(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache);
+int64_t GetFlags(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, VersionBitsCache& cache);
 
 } // namespace Consensus
 
