@@ -5,6 +5,7 @@
 
 #include "bitcoinconsensus.h"
 
+#include "consensus/flags.h"
 #include "primitives/transaction.h"
 #include "pubkey.h"
 #include "script/interpreter.h"

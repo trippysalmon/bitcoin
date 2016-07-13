@@ -186,6 +186,21 @@ int64_t Consensus::GetFlags(const CBlockIndex* pindex, const Consensus::Params& 
     if (fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == consensusParams.BIP34Hash)))
         flags |= bitcoinconsensus_TX_VERIFY_BIP30;
 
+    // Start enforcing the DERSIG (BIP66) rule
+    if (pindex->nHeight >= consensusParams.BIP66Height) {
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG;
+    }
+
+    // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
+    if (pindex->nHeight >= consensusParams.BIP65Height) {
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
+    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
+    if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY;
+    }
+
     // Start enforcing WITNESS rules using versionbits logic.
     if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE)
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS;
