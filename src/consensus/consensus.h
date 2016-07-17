@@ -12,12 +12,14 @@
 #include <stdint.h>
 #include <vector>
 
+class CBlock;
 class CBlockHeader;
 class CBlockIndex;
 class CCoinsViewCache;
 class CTransaction;
 class CUtxoView;
 class CValidationState;
+class VersionBitsCache;
 
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
 static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
@@ -88,6 +90,15 @@ bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const
 
 } // namespace Consensus
 
+/** Block validation functions */
+
+/** Context-independent validity checks */
+bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+
+/** Context-dependent validity checks */
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const int64_t flags, const CBlockIndex* pindexPrev);
+
+
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */
 
 /**
@@ -135,5 +146,13 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
  * Consensus critical. Takes as input a list of heights at which tx's inputs (in order) confirmed.
  */
 bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block);
+
+/** Auxiliary functions for block validation (ideally should not be exposed) */
+
+/**
+ * Compute at which vout of the block's coinbase transaction the witness
+ * commitment occurs, or -1 if not found.
+ */
+int GetWitnessCommitmentIndex(const CBlock& block);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
