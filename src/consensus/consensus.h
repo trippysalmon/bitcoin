@@ -98,6 +98,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 /** Context-dependent validity checks */
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const int64_t flags, const CBlockIndex* pindexPrev);
 
+namespace Consensus {
+
+/**
+ * Fully verify a CBlock.
+ */
+bool VerifyBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindex, VersionBitsCache& versionbitscache, const int64_t nHeight, const int64_t nMedianTimePast, int64_t nAdjustedTime, const CCoinsViewCache& inputs, const int64_t nSpendHeight, bool fScriptChecks, bool cacheStore);
+
+} // namespace Consensus
+
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */
 
