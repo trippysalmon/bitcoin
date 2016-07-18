@@ -138,3 +138,26 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
 
     return true;
 }
+
+bool Consensus::VerifyBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, VersionBitsCache& versionbitscache, const int64_t nHeight, const int64_t nMedianTimePast, int64_t nAdjustedTime, const CCoinsViewCache& inputs, const int64_t nSpendHeight, bool fScriptChecks, bool cacheStore)
+{
+    const int64_t flags = Consensus::GetFlags(block, pindexPrev, consensusParams, versionbitscache);
+
+    const CBlockHeader& header = block.GetBlockHeader();
+    if (!VerifyBlockHeader(header, state, consensusParams, nAdjustedTime, pindexPrev, true))
+        return false;
+
+    if (!CheckBlock(block, state, consensusParams, false, true))
+        return false;
+
+    if (!ContextualCheckBlock(block, state, consensusParams, pindexPrev, versionbitscache, flags))
+        return false;
+
+    CAmount nFees = 0;
+    int64_t nSigOpsCost = 0;
+    for (const auto& tx : block.vtx)
+        if (!VerifyTx(tx, state, flags, nHeight, nMedianTimePast, block.GetBlockTime(), inputs, nSpendHeight, pindexPrev, fScriptChecks, cacheStore, nFees, nSigOpsCost))
+            return false;
+        
+    return true;
+}
