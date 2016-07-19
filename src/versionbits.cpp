@@ -5,6 +5,7 @@
 #include "versionbits.h"
 
 #include "consensus/params.h"
+#include "script/interpreter.h" // TODO Don't violate laters
 
 const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
     {
@@ -147,4 +148,15 @@ void VersionBitsCache::Clear()
     for (unsigned int d = 0; d < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; d++) {
         caches[d].clear();
     }
+}
+
+int64_t Consensus::GetFlags(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache)
+{
+    int64_t flags = SCRIPT_VERIFY_NONE;
+
+    // Start enforcing WITNESS rules using versionbits logic.
+    if (VersionBitsState(pindexPrev->pprev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE)
+        flags |= SCRIPT_VERIFY_WITNESS;
+
+    return flags;
 }
