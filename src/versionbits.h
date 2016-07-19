@@ -65,4 +65,14 @@ struct VersionBitsCache
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
+namespace Consensus {
+
+/**
+ * Get consensus flags.
+ * @TODO incomplete, not all consensus flags yet.
+ */
+int64_t GetFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache);
+
+} // namespace Consensus
+
 #endif
