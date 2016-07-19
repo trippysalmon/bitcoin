@@ -1713,6 +1713,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint("bench", "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
 
+    int64_t flags = GetConsensusFlags(pindex, chainparams.GetConsensus(), versionbitscache);
+
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
     // If such overwrites are allowed, coinbases and transactions depending upon those
@@ -1748,22 +1750,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         }
     }
 
-    // BIP16 didn't become active until Apr 1 2012
-    int64_t nBIP16SwitchTime = 1333238400;
-    bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
-
-    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
-
-    // Start enforcing the DERSIG (BIP66) rule
-    if (pindex->nHeight >= chainparams.GetConsensus().BIP66Height) {
-        flags |= SCRIPT_VERIFY_DERSIG;
-    }
-
-    // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
-    if (pindex->nHeight >= chainparams.GetConsensus().BIP65Height) {
-        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
-    }
-
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     int nLockTimeFlags = 0;
     if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
@@ -1771,11 +1757,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
-    // Start enforcing WITNESS rules using versionbits logic.
-    if (IsWitnessEnabled(pindex->pprev, chainparams.GetConsensus())) {
-        flags |= SCRIPT_VERIFY_WITNESS;
-        flags |= SCRIPT_VERIFY_NULLDUMMY;
-    }
+    const uint64_t scriptFlags = ScriptFlagsFromConsensus(flags);
 
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint("bench", "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
@@ -1824,7 +1806,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // * legacy (always)
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
-        nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
+        nSigOpsCost += GetTransactionSigOpCost(tx, view, scriptFlags);
         if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST)
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
@@ -1836,7 +1818,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
+            if (!CheckInputs(tx, state, view, fScriptChecks, scriptFlags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);

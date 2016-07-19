@@ -4,6 +4,7 @@
 
 #include "versionbits.h"
 
+#include "consensus/flags.h"
 #include "consensus/params.h"
 
 const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
@@ -182,4 +183,32 @@ void VersionBitsCache::Clear()
     for (unsigned int d = 0; d < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; d++) {
         caches[d].clear();
     }
+}
+
+int64_t GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache)
+{
+    int64_t flags = bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE;
+
+    // BIP16 didn't become active until Apr 1 2012
+    const int64_t nBIP16SwitchTime = 1333238400;
+    if (pindex->GetBlockTime() >= nBIP16SwitchTime)
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH;
+
+    // Start enforcing the DERSIG (BIP66) rule
+    if (pindex->nHeight >= consensusParams.BIP66Height) {
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG;
+    }
+
+    // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
+    if (pindex->nHeight >= consensusParams.BIP65Height) {
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
+    // Start enforcing WITNESS rules using versionbits logic.
+    if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS;
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY;
+    }
+
+    return flags;
 }

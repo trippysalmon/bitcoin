@@ -67,4 +67,10 @@ ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
+/**
+ * Get consensus flags.
+ * @TODO incomplete, not all consensus flags yet.
+ */
+int64_t GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache);
+
 #endif
