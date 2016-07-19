@@ -1431,10 +1431,11 @@ void ThreadScriptCheck() {
 }
 
 /**
- * Get all the current active consensus script flags for the given chain of headers.
+ * Get all the current active consensus flags for the given chain of headers.
  * It encapsulates activations older than versionbits and bip9.
+ * @TODO incomplete, not all consensus flags yet.
  */
-static unsigned int GetScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache)
+static unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache)
 {
     // BIP16 didn't become active until Apr 1 2012
     int64_t nBIP16SwitchTime = 1333238400;
@@ -1444,23 +1445,23 @@ static unsigned int GetScriptFlags(const CBlockIndex* pindex, const Consensus::P
 
     // Start enforcing the DERSIG (BIP66) rule
     if (pindex->nHeight >= consensusParams.BIP66Height) {
-        flags |= SCRIPT_VERIFY_DERSIG;
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG;
     }
 
     // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
     if (pindex->nHeight >= consensusParams.BIP65Height) {
-        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
-        flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
     // Start enforcing WITNESS rules using versionbits logic.
     if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
-        flags |= SCRIPT_VERIFY_WITNESS;
-        flags |= SCRIPT_VERIFY_NULLDUMMY;
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS;
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY;
     }
 
     return flags;
@@ -1614,7 +1615,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         }
     }
 
-    const unsigned int flags = GetScriptFlags(pindex, chainparams.GetConsensus(), versionbitscache);
+    const unsigned int flags = GetConsensusFlags(pindex, chainparams.GetConsensus(), versionbitscache);
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     int nLockTimeFlags = 0;
@@ -1639,6 +1640,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
+    const unsigned int scriptFlags = ScriptFlagsFromConsensus(flags);
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
@@ -1669,7 +1671,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         // * legacy (always)
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
-        nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
+        nSigOpsCost += GetTransactionSigOpCost(tx, view, scriptFlags);
         if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST)
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
@@ -1681,7 +1683,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
+            if (!CheckInputs(tx, state, view, fScriptChecks, scriptFlags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
