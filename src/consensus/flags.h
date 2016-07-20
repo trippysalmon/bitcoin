@@ -18,6 +18,9 @@ enum
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9), // enable CHECKLOCKTIMEVERIFY (BIP65)
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10), // enable CHECKSEQUENCEVERIFY (BIP112)
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
+
+    /* BIP30: See Consensus::GetFlags(), Consensus::VerifyTx() and http://r6.ca/blog/20120206T005236Z.html for more information */
+    bitcoinconsensus_TX_VERIFY_BIP30 = (1U << 14),
 };
 
 #endif // BITCOIN_CONSENSUS_FLAGS_H
