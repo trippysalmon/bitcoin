@@ -154,6 +154,11 @@ int64_t Consensus::GetFlags(const CBlockIndex* pindex, const Consensus::Params& 
 {
     int64_t flags = bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE;
 
+    // BIP16 didn't become active until Apr 1 2012
+    const int64_t nBIP16SwitchTime = 1333238400;
+    if (pindex->GetBlockTime() >= nBIP16SwitchTime)
+        flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH;
+
     // Start enforcing WITNESS rules using versionbits logic.
     if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE)
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS;
