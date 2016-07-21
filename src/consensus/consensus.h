@@ -34,6 +34,12 @@ namespace Consensus {
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight);
 
+/**
+ * Fully verify a CTransaction.
+ * @TODO this is incomplete, among other things, the scripts are not checked yet.
+ */
+bool VerifyTx(const CTransaction& tx, CValidationState& state, const int64_t flags);
+
 } // namespace Consensus
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
