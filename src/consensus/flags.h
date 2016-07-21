@@ -19,6 +19,9 @@ enum
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10), // enable CHECKSEQUENCEVERIFY (BIP112)
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
 
+    /* BIP34: Verify coinbase transactions commit to the current height. */
+    bitcoinconsensus_TX_COINBASE_VERIFY_BIP34 = (1U << 13),
+
     /* BIP30: See Consensus::GetFlags(), Consensus::VerifyTx() and http://r6.ca/blog/20120206T005236Z.html for more information */
     bitcoinconsensus_TX_VERIFY_BIP30 = (1U << 14),
 

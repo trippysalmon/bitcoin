@@ -186,6 +186,10 @@ int64_t Consensus::GetFlags(const CBlockIndex* pindex, const Consensus::Params& 
     if (fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == consensusParams.BIP34Hash)))
         flags |= bitcoinconsensus_TX_VERIFY_BIP30;
 
+    // Enforce rule that the coinbase starts with serialized block height
+    if (pindex->nHeight >= consensusParams.BIP34Height)
+        flags |= bitcoinconsensus_TX_COINBASE_VERIFY_BIP34;
+
     // Start enforcing the DERSIG (BIP66) rule
     if (pindex->nHeight >= consensusParams.BIP66Height) {
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG;
