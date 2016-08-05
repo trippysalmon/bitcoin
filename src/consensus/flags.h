@@ -22,6 +22,9 @@ enum
     /* BIP30: See Consensus::GetFlags(), Consensus::VerifyTx() and http://r6.ca/blog/20120206T005236Z.html for more information */
     bitcoinconsensus_TX_VERIFY_BIP30 = (1U << 14),
 
+    /* BIP113: Use GetMedianTimePast() instead of nTime for end point timestamp. */
+    LOCKTIME_MEDIAN_TIME_PAST = (1U << 15),
+
     /* BIP68: Interpret sequence numbers as relative lock-time constraints. */
     LOCKTIME_VERIFY_SEQUENCE = (1 << 16),
 };

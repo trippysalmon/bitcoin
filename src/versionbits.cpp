@@ -196,6 +196,10 @@ int64_t Consensus::GetFlags(const CBlockIndex* pindex, const Consensus::Params& 
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
+    // Start enforcing BIP113 (Median Time Past) using versionbits logic.
+    if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE)
+        flags |= LOCKTIME_MEDIAN_TIME_PAST;
+
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
         flags |= LOCKTIME_VERIFY_SEQUENCE & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY;
