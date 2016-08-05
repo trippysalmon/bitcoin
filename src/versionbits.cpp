@@ -181,7 +181,7 @@ int64_t Consensus::GetFlags(const CBlockIndex* pindex, const Consensus::Params& 
     // before the first had been spent.  Since those coinbases are sufficiently buried its no longer possible to create further
     // duplicate transactions descending from the known pairs either.
     // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
-    CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(consensusParams.BIP34Height);
+    const CBlockIndex* pindexBIP34height = pindex->pprev ? pindex->pprev->GetAncestor(consensusParams.BIP34Height) : NULL;
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
     if (fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == uint256A(consensusParams.pBIP34Hash))))
         flags |= bitcoinconsensus_TX_VERIFY_BIP30;
