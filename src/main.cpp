@@ -12,6 +12,7 @@
 #include "checkpoints.h"
 #include "checkqueue.h"
 #include "consensus/consensus.h"
+#include "consensus/cppwrappers.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
 #include "hash.h"
