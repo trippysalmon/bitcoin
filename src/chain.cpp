@@ -143,3 +143,57 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
     }
     return sign * r.GetLow64();
 }
+
+// Interface translators: from CPP to C
+
+namespace {
+static const void* ChainAncestorGetter(const void* indexObject, const int64_t height)
+{
+    return ((const CBlockIndex*)indexObject)->GetAncestor(height);
+}
+static const unsigned char* ChainHashGetter(const void* indexObject)
+{
+    return ((const CBlockIndex*)indexObject)->GetBlockHash().GetDataArray();
+}
+static int64_t ChainHeightGetter(const void* indexObject)
+{
+    return ((const CBlockIndex*)indexObject)->nHeight;
+}
+static int32_t ChainVersionGetter(const void* indexObject)
+{
+    return ((const CBlockIndex*)indexObject)->nVersion;
+}
+static int32_t ChainTimeGetter(const void* indexObject)
+{
+    return ((const CBlockIndex*)indexObject)->nTime;
+}
+static int32_t ChainBitsGetter(const void* indexObject)
+{
+    return ((const CBlockIndex*)indexObject)->nBits;
+}
+inline const void* ChainPrevGetter(const void* indexObject)
+{
+    return ((const CBlockIndex*)indexObject)->pprev;
+}
+inline int64_t ChainMedianTimeGetter(const void* indexObject)
+{
+    return ((const CBlockIndex*)indexObject)->GetMedianTimePast();
+}
+static void ChainIndexDeallocator(void* indexObject)
+{
+    // Bitcoin Core keeps the index in memory: Don't free anything. 
+}
+} // Anonymous namespace 
+
+CoreIndexInterface::CoreIndexInterface()
+{
+    Ancestor = ChainAncestorGetter;
+    Hash = ChainHashGetter;
+    Height = ChainHeightGetter;
+    Version = ChainVersionGetter;
+    Time = ChainTimeGetter;
+    Bits = ChainBitsGetter;
+    Prev = ChainPrevGetter;
+    MedianTime = ChainMedianTimeGetter;
+    deleteIndex = ChainIndexDeallocator;
+}
