@@ -6,6 +6,8 @@
 #ifndef BITCOIN_BITCOINCONSENSUS_H
 #define BITCOIN_BITCOINCONSENSUS_H
 
+#include "consensus/interfaces.h"
+
 #include <stdint.h>
 
 #if defined(BUILD_BITCOIN_INTERNAL) && defined(HAVE_CONFIG_H)
@@ -71,6 +73,8 @@ EXPORT_SYMBOL int bitcoinconsensus_verify_script_with_amount(const unsigned char
 EXPORT_SYMBOL void* bitcoinconsensus_create_consensus_parameters(unsigned char* pHashGenesisBlock, int nSubsidyHalvingInterval, int BIP34Height, unsigned char* pBIP34Hash, int BIP65Height, int BIP66Height, uint32_t nRuleChangeActivationThreshold, uint32_t nMinerConfirmationWindow, int bitDeploymentCsv, int64_t nStartTimeDeploymentCsv, int64_t nTimeoutDeploymentCsv, int bitDeploymentSegwit, int64_t nStartTimeDeploymentSegwit, int64_t nTimeoutDeploymentSegwit, unsigned char* pPowLimit, bool fPowAllowMinDifficultyBlocks, bool fPowNoRetargeting, int64_t nPowTargetSpacing, int64_t nPowTargetTimespan);
 
 EXPORT_SYMBOL void bitcoinconsensus_destroy_consensus_parameters(void* consensusParams);
+
+EXPORT_SYMBOL int bitcoinconsensus_verify_header(const unsigned char* header, unsigned int headerLen, const void* consensusParams, const void* indexObject, const BlockIndexInterface* iBlockIndex, int64_t nAdjustedTime, bool fCheckPOW, bitcoinconsensus_error* err);
 
 EXPORT_SYMBOL unsigned int bitcoinconsensus_version();
 

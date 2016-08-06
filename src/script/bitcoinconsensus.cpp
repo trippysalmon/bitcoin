@@ -5,7 +5,10 @@
 
 #include "bitcoinconsensus.h"
 
+#include "consensus/consensus.h"
 #include "consensus/params.h"
+#include "consensus/validation.h"
+#include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "pubkey.h"
 #include "script/interpreter.h"
@@ -146,6 +149,19 @@ void* bitcoinconsensus_create_consensus_parameters(unsigned char* pHashGenesisBl
 void bitcoinconsensus_destroy_consensus_parameters(void* consensusParams)
 {
     delete ((Consensus::Params*)consensusParams);
+}
+
+int bitcoinconsensus_verify_header(const unsigned char* header, unsigned int headerLen, const void* consensusParams, const void* indexObject, const BlockIndexInterface* iBlockIndex, int64_t nAdjustedTime, bool fCheckPOW, bitcoinconsensus_error* err)
+{
+    try {
+        TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, header, headerLen);
+        CBlockHeader blockHeader;
+        stream >> blockHeader;
+        CValidationState state;
+        return Consensus::VerifyHeader(blockHeader, state, *(const Consensus::Params*)consensusParams, indexObject, *iBlockIndex, nAdjustedTime, fCheckPOW);
+    } catch (const std::exception&) {
+        return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+    }
 }
 
 unsigned int bitcoinconsensus_version()
