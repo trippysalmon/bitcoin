@@ -11,8 +11,8 @@
 #include <stdint.h>
 
 class CBlockHeader;
-class CBlockIndex;
 class CValidationState;
+struct BlockIndexInterface;
 
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
 static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
@@ -44,7 +44,7 @@ namespace Consensus {
 /** Context-dependent validity checks.
  *  By "context", we mean only the previous block headers, but not the UTXO
  *  set; UTXO-related validity checks are done in ConnectBlock(). */
-bool ContextualCheckHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime);
+bool ContextualCheckHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const void* indexObject, const BlockIndexInterface& iBlockIndex, int64_t nAdjustedTime);
 
 } // namespace Consensus
 

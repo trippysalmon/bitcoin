@@ -8,17 +8,19 @@
 #include "consensus.h"
 #include "pow.h"
 
+static const CoreIndexInterface coreIndexInterface;
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& consensusParams)
 {
-    return PowGetNextWorkRequired(pindexLast, pblock, consensusParams);
+    return PowGetNextWorkRequired(pindexLast, coreIndexInterface, pblock, consensusParams);
 }
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& consensusParams)
 {
-    return PowCalculateNextWorkRequired(pindexLast, nFirstBlockTime, consensusParams);
+    return PowCalculateNextWorkRequired(pindexLast, coreIndexInterface, nFirstBlockTime, consensusParams);
 }
 
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
 {
-    return Consensus::ContextualCheckHeader(block, state, consensusParams, pindexPrev, nAdjustedTime);
+    return Consensus::ContextualCheckHeader(block, state, consensusParams, pindexPrev, coreIndexInterface, nAdjustedTime);
 }
