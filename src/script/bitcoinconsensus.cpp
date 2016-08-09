@@ -16,18 +16,18 @@
 
 namespace {
 
-/** A class that deserializes a single CTransaction one time. */
-class TxInputStream
+/** A class that deserializes a single serializable object one time. */
+class SerializableInputStream
 {
 public:
-    TxInputStream(int nTypeIn, int nVersionIn, const unsigned char *txTo, size_t txToLen) :
+    SerializableInputStream(int nTypeIn, int nVersionIn, const unsigned char *txTo, size_t txToLen) :
     m_type(nTypeIn),
     m_version(nVersionIn),
     m_data(txTo),
     m_remaining(txToLen)
     {}
 
-    TxInputStream& read(char* pch, size_t nSize)
+    SerializableInputStream& read(char* pch, size_t nSize)
     {
         if (nSize > m_remaining)
             throw std::ios_base::failure(std::string(__func__) + ": end of data");
@@ -45,7 +45,7 @@ public:
     }
 
     template<typename T>
-    TxInputStream& operator>>(T& obj)
+    SerializableInputStream& operator>>(T& obj)
     {
         ::Unserialize(*this, obj, m_type, m_version);
         return *this;
@@ -78,7 +78,7 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
     try {
-        TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);
+        SerializableInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);
         CTransaction tx;
         stream >> tx;
         if (nIn >= tx.vin.size())
@@ -154,7 +154,7 @@ void bitcoinconsensus_destroy_consensus_parameters(void* consensusParams)
 int bitcoinconsensus_verify_header(const unsigned char* header, unsigned int headerLen, const void* consensusParams, const void* indexObject, const BlockIndexInterface* iBlockIndex, int64_t nAdjustedTime, bool fCheckPOW, bitcoinconsensus_error* err)
 {
     try {
-        TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, header, headerLen);
+        SerializableInputStream stream(SER_NETWORK, PROTOCOL_VERSION, header, headerLen);
         CBlockHeader blockHeader;
         stream >> blockHeader;
         CValidationState state;
