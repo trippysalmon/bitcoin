@@ -19,8 +19,9 @@ unsigned int PowGetNextWorkRequired(const void* indexObject, const BlockIndexInt
     if (indexObject == NULL)
         return nProofOfWorkLimit;
 
+    int64_t difficultyAdjustmentInterval = params.nPowTargetTimespan / params.nPowTargetSpacing;
     // Only change once per difficulty adjustment interval
-    if ((iBlockIndex.Height(indexObject)+1) % params.DifficultyAdjustmentInterval() != 0)
+    if ((iBlockIndex.Height(indexObject)+1) % difficultyAdjustmentInterval != 0)
     {
         if (params.fPowAllowMinDifficultyBlocks)
         {
@@ -34,7 +35,7 @@ unsigned int PowGetNextWorkRequired(const void* indexObject, const BlockIndexInt
                 // Return the last non-special-min-difficulty-rules-block
                 const void* pindex = indexObject;
                 while (iBlockIndex.Prev(pindex) &&
-                       iBlockIndex.Height(pindex) % params.DifficultyAdjustmentInterval() != 0 && iBlockIndex.Bits(pindex) == nProofOfWorkLimit)
+                       iBlockIndex.Height(pindex) % difficultyAdjustmentInterval != 0 && iBlockIndex.Bits(pindex) == nProofOfWorkLimit)
                     pindex = iBlockIndex.Prev(pindex);
                 return iBlockIndex.Bits(pindex);
             }
@@ -43,7 +44,7 @@ unsigned int PowGetNextWorkRequired(const void* indexObject, const BlockIndexInt
     }
 
     // Go back by what we want to be 14 days worth of blocks
-    int nHeightFirst = iBlockIndex.Height(indexObject) - (params.DifficultyAdjustmentInterval()-1);
+    int nHeightFirst = iBlockIndex.Height(indexObject) - (difficultyAdjustmentInterval-1);
     assert(nHeightFirst >= 0);
     const void* pindexFirst = iBlockIndex.Ancestor(indexObject, nHeightFirst);
     assert(pindexFirst);
