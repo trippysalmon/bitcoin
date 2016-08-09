@@ -42,6 +42,21 @@ public:
         memset(data, 0, sizeof(data));
     }
 
+    void SetFromArray(const unsigned char* arrayData)
+    {
+        std::memcpy(data, arrayData, WIDTH);
+    }
+
+    void CopyToArray(unsigned char* arrayData)
+    {
+        std::memcpy(arrayData, data, WIDTH);
+    }
+
+    const unsigned char* GetDataArray()
+    {
+        return data;
+    }
+
     inline int Compare(const base_blob& other) const { return memcmp(data, other.data, sizeof(data)); }
 
     friend inline bool operator==(const base_blob& a, const base_blob& b) { return a.Compare(b) == 0; }
@@ -160,6 +175,16 @@ inline uint256 uint256S(const std::string& str)
 {
     uint256 rv;
     rv.SetHex(str);
+    return rv;
+}
+
+/** 
+ * uint256 from const unsigned char *.
+ */
+inline uint256 uint256A(const unsigned char* arrayData)
+{
+    uint256 rv;
+    rv.SetFromArray(arrayData);
     return rv;
 }
 
