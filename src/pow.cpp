@@ -12,7 +12,8 @@
 
 unsigned int PowGetNextWorkRequired(const void* indexObject, const BlockIndexInterface& iBlockIndex, const CBlockHeader *pblock, const Consensus::Params& params)
 {
-    unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+    arith_uint256 arith_uint256_powLimit = UintToArith256(uint256A(params.pPowLimit));
+    unsigned int nProofOfWorkLimit = arith_uint256_powLimit.GetCompact();
 
     // Genesis block
     if (indexObject == NULL)
@@ -63,7 +64,7 @@ unsigned int PowCalculateNextWorkRequired(const void* indexObject, const BlockIn
         nActualTimespan = params.nPowTargetTimespan*4;
 
     // Retarget
-    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    const arith_uint256 bnPowLimit = UintToArith256(uint256A(params.pPowLimit));
     arith_uint256 bnNew;
     bnNew.SetCompact(iBlockIndex.Bits(indexObject));
     bnNew *= nActualTimespan;
@@ -84,7 +85,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(uint256A(params.pPowLimit)))
         return false;
 
     // Check proof of work matches claimed amount
