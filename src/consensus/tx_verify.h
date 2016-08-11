@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <vector>
 
+#include "amount.h"
+
 class CBlockIndex;
 class CCoinsViewCache;
 class CTransaction;
@@ -22,9 +24,10 @@ namespace Consensus {
 /**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
  * This does not modify the UTXO set. This does not check scripts and sigs.
+ * @param[out] tx_fees this serves to get the fees of the tx as output. 
  * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight);
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& tx_fees);
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */
