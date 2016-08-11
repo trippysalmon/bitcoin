@@ -2399,6 +2399,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     vPos.reserve(block.vtx.size());
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     const int nHeight = pindex->pprev == NULL ? 0 : pindex->pprev->nHeight + 1;
+    // Note that GetSpendHeight(view) will fail with empty blocks
     const int64_t nSpendHeight = block.vtx.size() > 1 ? GetSpendHeight(view) : nHeight;
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
