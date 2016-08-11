@@ -1968,6 +1968,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
 {
+    assert(fScriptChecks); // TODO Remove fScriptChecks as parameter: it should always be true or don't call this function
     if (!tx.IsCoinBase())
     {
         if (pvChecks)
