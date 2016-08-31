@@ -5,6 +5,7 @@
 
 #include "bitcoinconsensus.h"
 
+#include "consensus/params.h"
 #include "primitives/transaction.h"
 #include "pubkey.h"
 #include "script/interpreter.h"
@@ -110,6 +111,41 @@ int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned i
 
     CAmount am(0);
     return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
+}
+
+void* bitcoinconsensus_create_consensus_parameters(unsigned char* pHashGenesisBlock, int nSubsidyHalvingInterval, int BIP34Height, unsigned char* pBIP34Hash, int BIP65Height, int BIP66Height, uint32_t nRuleChangeActivationThreshold, uint32_t nMinerConfirmationWindow, int bitDeploymentCsv, int64_t nStartTimeDeploymentCsv, int64_t nTimeoutDeploymentCsv, int bitDeploymentSegwit, int64_t nStartTimeDeploymentSegwit, int64_t nTimeoutDeploymentSegwit, unsigned char* pPowLimit, bool fPowAllowMinDifficultyBlocks, bool fPowNoRetargeting, int64_t nPowTargetSpacing, int64_t nPowTargetTimespan)
+{
+    Consensus::Params* consensusParams = new Consensus::Params();
+
+    consensusParams->nSubsidyHalvingInterval = nSubsidyHalvingInterval;
+    consensusParams->BIP34Height = BIP34Height;
+    consensusParams->BIP65Height = BIP65Height;
+    consensusParams->BIP66Height = BIP66Height;
+    consensusParams->nRuleChangeActivationThreshold = nRuleChangeActivationThreshold;
+    consensusParams->nMinerConfirmationWindow = nMinerConfirmationWindow;
+    consensusParams->fPowAllowMinDifficultyBlocks = fPowAllowMinDifficultyBlocks;
+    consensusParams->fPowNoRetargeting = fPowNoRetargeting;
+    consensusParams->nPowTargetSpacing = nPowTargetSpacing;
+    consensusParams->nPowTargetTimespan = nPowTargetTimespan;
+
+    // TODO
+    // unsigned char* pHashGenesisBlock,
+    // unsigned char* pBIP34Hash,
+    // unsigned char* pPowLimit,
+
+    consensusParams->vDeployments[Consensus::DEPLOYMENT_CSV].bit = bitDeploymentCsv;
+    consensusParams->vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = nStartTimeDeploymentCsv;
+    consensusParams->vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = nTimeoutDeploymentCsv;
+    consensusParams->vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = bitDeploymentSegwit;
+    consensusParams->vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = nStartTimeDeploymentSegwit;
+    consensusParams->vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = nTimeoutDeploymentSegwit;
+
+    return consensusParams;
+}
+
+void bitcoinconsensus_destroy_consensus_parameters(void* consensusParams)
+{
+    delete ((Consensus::Params*)consensusParams);
 }
 
 unsigned int bitcoinconsensus_version()
