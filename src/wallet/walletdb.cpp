@@ -7,6 +7,7 @@
 
 #include "base58.h"
 #include "consensus/validation.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "main.h" // For CheckTransaction
 #include "protocol.h"
 #include "serialize.h"

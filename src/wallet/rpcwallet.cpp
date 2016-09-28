@@ -7,6 +7,7 @@
 #include "base58.h"
 #include "chain.h"
 #include "core_io.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "init.h"
 #include "main.h"
 #include "net.h"

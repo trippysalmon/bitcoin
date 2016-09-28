@@ -9,6 +9,7 @@
 
 #include "paymentrequestplus.h"
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "util.h"
 
 #include <stdexcept>

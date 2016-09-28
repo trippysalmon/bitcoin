@@ -399,11 +399,6 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault, const std::map<std::
     return nDefault;
 }
 
-bool GetBoolArg(const std::string& strArg, bool fDefault)
-{
-    return GetBoolArg(strArg, fDefault, mapArgs);
-}
-
 bool GetBoolArg(const std::string& strArg, bool fDefault, const std::map<std::string, std::string>& mapArgs)
 {
     std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);

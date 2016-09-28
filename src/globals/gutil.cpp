@@ -28,3 +28,8 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
     return GetArg(strArg, nDefault, mapArgs);
 }
+
+bool GetBoolArg(const std::string& strArg, bool fDefault)
+{
+    return GetBoolArg(strArg, fDefault, mapArgs);
+}

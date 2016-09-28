@@ -12,6 +12,7 @@
 #include "transactiontablemodel.h"
 
 #include "base58.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "keystore.h"
 #include "main.h"
 #include "sync.h"

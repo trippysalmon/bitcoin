@@ -31,6 +31,7 @@
 #include "macdockiconhandler.h"
 #endif
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "init.h"
 #include "ui_interface.h"
 #include "util.h"

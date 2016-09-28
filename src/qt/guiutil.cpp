@@ -9,6 +9,7 @@
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "primitives/transaction.h"
 #include "init.h"
 #include "main.h" // For minRelayTxFee

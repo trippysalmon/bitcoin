@@ -25,6 +25,7 @@
 #include "walletmodel.h"
 #endif
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "init.h"
 #include "rpc/server.h"
 #include "scheduler.h"

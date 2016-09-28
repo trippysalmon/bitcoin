@@ -10,6 +10,7 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "compat.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "rpc/server.h"
 #include "init.h"
 #include "noui.h"

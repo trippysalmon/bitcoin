@@ -18,6 +18,7 @@
 #include "guiutil.h"
 
 #include "clientversion.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "init.h"
 #include "util.h"
 

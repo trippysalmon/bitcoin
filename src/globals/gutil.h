@@ -8,6 +8,7 @@
 #include "chainparamsbase.h"
 
 int64_t GetArg(const std::string& strArg, int64_t nDefault);
+bool GetBoolArg(const std::string& strArg, bool fDefault);
 
 /**
  * Return the currently selected parameters. This won't change after app

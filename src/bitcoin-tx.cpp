@@ -11,6 +11,7 @@
 #include "coins.h"
 #include "consensus/consensus.h"
 #include "core_io.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "keystore.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
