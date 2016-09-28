@@ -8,6 +8,8 @@
 
 static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
 
+std::map<std::string, std::string> mapArgs;
+
 const CBaseChainParams& BaseParams()
 {
     assert(globalChainBaseParams.get());
