@@ -503,7 +503,7 @@ static boost::filesystem::path pathCached;
 static boost::filesystem::path pathCachedNetSpecific;
 static CCriticalSection csPathCached;
 
-const boost::filesystem::path &GetDataDir(bool fNetSpecific)
+const boost::filesystem::path &GetDataDir(const std::string& dataDir, bool fNetSpecific)
 {
     namespace fs = boost::filesystem;
 
@@ -516,8 +516,8 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     if (!path.empty())
         return path;
 
-    if (mapArgs.count("-datadir")) {
-        path = fs::system_complete(mapArgs["-datadir"]);
+    if (dataDir != "") {
+        path = fs::system_complete(dataDir);
         if (!fs::is_directory(path)) {
             path = "";
             return path;
