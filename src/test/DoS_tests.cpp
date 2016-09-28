@@ -5,6 +5,7 @@
 // Unit tests for denial-of-service detection/prevention code
 
 #include "chainparams.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "keystore.h"
 #include "main.h"
 #include "net.h"

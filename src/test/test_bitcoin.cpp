@@ -9,6 +9,7 @@
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "key.h"
 #include "main.h"
 #include "miner.h"
