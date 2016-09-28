@@ -7,6 +7,7 @@
 
 #include "chainparamsbase.h"
 
+std::string GetArg(const std::string& strArg, const std::string& strDefault);
 int64_t GetArg(const std::string& strArg, int64_t nDefault);
 bool GetBoolArg(const std::string& strArg, bool fDefault);
 

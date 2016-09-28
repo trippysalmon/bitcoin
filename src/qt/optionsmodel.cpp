@@ -12,6 +12,7 @@
 #include "guiutil.h"
 
 #include "amount.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "init.h"
 #include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "torcontrol.h"
 #include "utilstrencodings.h"
 #include "netbase.h"

@@ -246,7 +246,7 @@ void Shutdown()
 
 #ifndef WIN32
     try {
-        boost::filesystem::remove(GetPidFile());
+        boost::filesystem::remove(GetPidFile(mapArgs));
     } catch (const boost::filesystem::filesystem_error& e) {
         LogPrintf("%s: Unable to remove pidfile: %s\n", __func__, e.what());
     }
@@ -1057,7 +1057,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
 #ifndef WIN32
-    CreatePidFile(GetPidFile(), getpid());
+    CreatePidFile(GetPidFile(mapArgs), getpid());
 #endif
     if (GetBoolArg("-shrinkdebugfile", !fDebug))
         ShrinkDebugFile();

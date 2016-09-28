@@ -105,7 +105,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 void ClearDatadirCache();
 boost::filesystem::path GetConfigFile(const std::string& confPath);
 #ifndef WIN32
-boost::filesystem::path GetPidFile();
+boost::filesystem::path GetPidFile(const std::map<std::string, std::string>& mapArgs);
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
 #endif
 void ReadConfigFile(const std::string& confPath, std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
@@ -132,7 +132,6 @@ inline bool IsSwitchChar(char c)
  * @param default (e.g. "1")
  * @return command-line argument or default value
  */
-std::string GetArg(const std::string& strArg, const std::string& strDefault);
 std::string GetArg(const std::string& strArg, const std::string& strDefault, const std::map<std::string, std::string>& mapArgs);
 
 /**

@@ -5,6 +5,7 @@
 
 #include "rpc/protocol.h"
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "random.h"
 #include "tinyformat.h"
 #include "util.h"

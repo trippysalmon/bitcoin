@@ -24,6 +24,11 @@ bool AreBaseParamsConfigured()
     return globalChainBaseParams.get();
 }
 
+std::string GetArg(const std::string& strArg, const std::string& strDefault)
+{
+    return GetArg(strArg, strDefault, mapArgs);
+}
+
 int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
     return GetArg(strArg, nDefault, mapArgs);

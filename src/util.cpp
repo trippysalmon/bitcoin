@@ -378,11 +378,6 @@ void ParseParameters(int argc, const char* const argv[])
     }
 }
 
-std::string GetArg(const std::string& strArg, const std::string& strDefault)
-{
-    return GetArg(strArg, strDefault, mapArgs);
-}
-
 std::string GetArg(const std::string& strArg, const std::string& strDefault, const std::map<std::string, std::string>& mapArgs)
 {
     std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
@@ -579,9 +574,9 @@ void ReadConfigFile(const std::string& confPath,
 }
 
 #ifndef WIN32
-boost::filesystem::path GetPidFile()
+boost::filesystem::path GetPidFile(const std::map<std::string, std::string>& mapArgs)
 {
-    boost::filesystem::path pathPidFile(GetArg("-pid", BITCOIN_PID_FILENAME));
+    boost::filesystem::path pathPidFile(GetArg("-pid", BITCOIN_PID_FILENAME, mapArgs));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }
