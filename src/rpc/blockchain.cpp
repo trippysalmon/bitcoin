@@ -9,6 +9,7 @@
 #include "checkpoints.h"
 #include "coins.h"
 #include "consensus/validation.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "main.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
