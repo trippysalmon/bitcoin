@@ -653,7 +653,7 @@ void TorController::Reconnect()
 
 std::string TorController::GetPrivateKeyFile()
 {
-    return (GetDataDir() / "onion_private_key").string();
+    return (GetDataDir(GetArg("-datadir", "")) / "onion_private_key").string();
 }
 
 void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)

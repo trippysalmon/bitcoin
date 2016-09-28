@@ -8,6 +8,7 @@
 #include "addrman.h"
 #include "chainparams.h"
 #include "clientversion.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "hash.h"
 #include "random.h"
 #include "streams.h"
@@ -18,7 +19,7 @@
 
 CBanDB::CBanDB()
 {
-    pathBanlist = GetDataDir() / "banlist.dat";
+    pathBanlist = GetDataDir(GetArg("-datadir", "")) / "banlist.dat";
 }
 
 bool CBanDB::Write(const banmap_t& banSet)
@@ -36,7 +37,7 @@ bool CBanDB::Write(const banmap_t& banSet)
     ssBanlist << hash;
 
     // open temp output file, and associate with CAutoFile
-    boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
+    boost::filesystem::path pathTmp = GetDataDir(GetArg("-datadir", "")) / tmpfn;
     FILE *file = fopen(pathTmp.string().c_str(), "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())
@@ -115,7 +116,7 @@ bool CBanDB::Read(banmap_t& banSet)
 
 CAddrDB::CAddrDB()
 {
-    pathAddr = GetDataDir() / "peers.dat";
+    pathAddr = GetDataDir(GetArg("-datadir", "")) / "peers.dat";
 }
 
 bool CAddrDB::Write(const CAddrMan& addr)
@@ -133,7 +134,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
     ssPeers << hash;
 
     // open temp output file, and associate with CAutoFile
-    boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
+    boost::filesystem::path pathTmp = GetDataDir(GetArg("-datadir", "")) / tmpfn;
     FILE *file = fopen(pathTmp.string().c_str(), "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())

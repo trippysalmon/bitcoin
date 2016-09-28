@@ -213,7 +213,7 @@ void OpenDebugLog()
 
     assert(fileout == NULL);
     assert(vMsgsBeforeOpenLog);
-    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+    boost::filesystem::path pathDebug = GetDataDir(GetArg("-datadir", ""), mapArgs) / "debug.log";
     fileout = fopen(pathDebug.string().c_str(), "a");
     if (fileout) setbuf(fileout, NULL); // unbuffered
 
@@ -314,7 +314,7 @@ int LogPrintStr(const std::string &str)
             // reopen the log file, if requested
             if (fReopenDebugLog) {
                 fReopenDebugLog = false;
-                boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+                boost::filesystem::path pathDebug = GetDataDir(GetArg("-datadir", "")) / "debug.log";
                 if (freopen(pathDebug.string().c_str(),"a",fileout) != NULL)
                     setbuf(fileout, NULL); // unbuffered
             }
@@ -543,7 +543,7 @@ boost::filesystem::path GetConfigFile(const std::string& confPath)
 {
     boost::filesystem::path pathConfigFile(confPath);
     if (!pathConfigFile.is_complete())
-        pathConfigFile = GetDataDir(false) / pathConfigFile;
+        pathConfigFile = GetDataDir(GetArg("-datadir", "")false) / pathConfigFile;
 
     return pathConfigFile;
 }
@@ -577,7 +577,7 @@ void ReadConfigFile(const std::string& confPath,
 boost::filesystem::path GetPidFile(const std::map<std::string, std::string>& mapArgs)
 {
     boost::filesystem::path pathPidFile(GetArg("-pid", BITCOIN_PID_FILENAME, mapArgs));
-    if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
+    if (!pathPidFile.is_complete()) pathPidFile = GetDataDir(GetArg("-datadir", "")) / pathPidFile;
     return pathPidFile;
 }
 
@@ -719,7 +719,7 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
 void ShrinkDebugFile()
 {
     // Scroll debug.log if it's getting too big
-    boost::filesystem::path pathLog = GetDataDir() / "debug.log";
+    boost::filesystem::path pathLog = GetDataDir(GetArg("-datadir", "")) / "debug.log";
     FILE* file = fopen(pathLog.string().c_str(), "r");
     if (file && boost::filesystem::file_size(pathLog) > 10 * 1000000)
     {
