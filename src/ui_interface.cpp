@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "ui_interface.h"
+
+#include "globals/gutil.h"
 #include "util.h"
 
 CClientUIInterface uiInterface;

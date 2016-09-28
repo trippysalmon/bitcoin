@@ -5,6 +5,7 @@
 
 #include "noui.h"
 
+#include "globals/gutil.h"
 #include "ui_interface.h"
 #include "util.h"
 

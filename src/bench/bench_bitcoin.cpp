@@ -4,6 +4,7 @@
 
 #include "bench.h"
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "key.h"
 #include "main.h"
 #include "util.h"

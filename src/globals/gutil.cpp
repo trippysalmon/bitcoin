@@ -6,9 +6,23 @@
 
 #include "util.h"
 
+const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
+const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
+
 static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
 
 std::map<std::string, std::string> mapArgs;
+std::map<std::string, std::vector<std::string> > mapMultiArgs;
+bool fDebug = false;
+bool fPrintToConsole = false;
+bool fPrintToDebugLog = true;
+bool fServer = false;
+std::string strMiscWarning;
+bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
+bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
+bool fLogIPs = DEFAULT_LOGIPS;
+std::atomic<bool> fReopenDebugLog(false);
+CTranslationInterface translationInterface;
 
 const CBaseChainParams& BaseParams()
 {

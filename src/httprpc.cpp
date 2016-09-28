@@ -12,6 +12,7 @@
 #include "rpc/server.h"
 #include "random.h"
 #include "sync.h"
+#include "ui_interface.h"
 #include "util.h"
 #include "ui_interface.h"
 #include "crypto/hmac_sha256.h"
