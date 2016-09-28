@@ -75,8 +75,8 @@ CBaseChainParams* CBaseChainParams::Factory(const std::string& chain)
 
 std::string ChainNameFromCommandLine()
 {
-    bool fRegTest = GetBoolArg("-regtest", false);
-    bool fTestNet = GetBoolArg("-testnet", false);
+    bool fRegTest = GetBoolArg("-regtest", false, mapArgs);
+    bool fTestNet = GetBoolArg("-testnet", false, mapArgs);
 
     if (fTestNet && fRegTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");
