@@ -93,6 +93,7 @@ BITCOIN_CORE_H = \
   consensus/consensus.h \
   core_io.h \
   core_memusage.h \
+  globals/gserver.h \
   globals/gutil.h \
   httprpc.h \
   httpserver.h \
@@ -317,6 +318,7 @@ libbitcoin_util_a_SOURCES = \
   rpc/protocol.cpp \
   support/cleanse.cpp \
   sync.cpp \
+  globals/gserver.cpp \
   globals/gutil.cpp \
   util.cpp \
   utilmoneystr.cpp \

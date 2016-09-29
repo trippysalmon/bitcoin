@@ -13,6 +13,7 @@
 #include "amount.h"
 #include "chain.h"
 #include "coins.h"
+#include "globals/gserver.h" // TODO shame
 #include "net.h"
 #include "script/script_error.h"
 #include "sync.h"
@@ -157,7 +158,6 @@ extern BlockMap mapBlockIndex;
 extern uint64_t nLastBlockTx;
 extern uint64_t nLastBlockSize;
 extern uint64_t nLastBlockWeight;
-extern const std::string strMessageMagic;
 extern CWaitableCriticalSection csBestBlock;
 extern CConditionVariable cvBlockChange;
 extern bool fImporting;
