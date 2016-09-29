@@ -43,10 +43,6 @@ using namespace std;
 // pool, we select by highest priority or fee rate, so we might consider
 // transactions that depend on transactions that aren't yet in the block.
 
-uint64_t nLastBlockTx = 0;
-uint64_t nLastBlockSize = 0;
-uint64_t nLastBlockWeight = 0;
-
 class ScoreCompare
 {
 public:

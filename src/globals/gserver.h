@@ -18,5 +18,8 @@ extern bool fTxIndex;
 extern bool fHavePruned;
 /** True if we're running in -prune mode. */
 extern bool fPruneMode;
+extern uint64_t nLastBlockTx;
+extern uint64_t nLastBlockSize;
+extern uint64_t nLastBlockWeight;
 
 #endif // BITCOIN_GLOBALS_GSERVER_H

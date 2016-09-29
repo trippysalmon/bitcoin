@@ -10,3 +10,8 @@ bool fReindex = false;
 bool fTxIndex = false;
 bool fHavePruned = false;
 bool fPruneMode = false;
+
+// Miner specific things follow:
+uint64_t nLastBlockTx = 0;
+uint64_t nLastBlockSize = 0;
+uint64_t nLastBlockWeight = 0;
