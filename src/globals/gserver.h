@@ -10,5 +10,13 @@
 #include "amount.h"
 
 extern const std::string strMessageMagic;
+extern bool fImporting;
+extern bool fReindex;
+extern bool fTxIndex;
+/** Pruning-related variables and constants */
+/** True if any block files have ever been pruned. */
+extern bool fHavePruned;
+/** True if we're running in -prune mode. */
+extern bool fPruneMode;
 
 #endif // BITCOIN_GLOBALS_GSERVER_H
