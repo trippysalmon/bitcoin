@@ -15,3 +15,9 @@ bool fPruneMode = false;
 uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 uint64_t nLastBlockWeight = 0;
+
+int nScriptCheckThreads = 0;
+bool fRequireStandard = true;
+bool fCheckBlockIndex = false;
+size_t nCoinCacheUsage = 5000 * 300;
+uint64_t nPruneTarget = 0;

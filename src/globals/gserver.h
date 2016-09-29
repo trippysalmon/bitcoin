@@ -21,5 +21,11 @@ extern bool fPruneMode;
 extern uint64_t nLastBlockTx;
 extern uint64_t nLastBlockSize;
 extern uint64_t nLastBlockWeight;
+extern int nScriptCheckThreads;
+extern bool fRequireStandard;
+extern bool fCheckBlockIndex;
+extern size_t nCoinCacheUsage;
+/** Number of MiB of block files that we're trying to stay below. */
+extern uint64_t nPruneTarget;
 
 #endif // BITCOIN_GLOBALS_GSERVER_H

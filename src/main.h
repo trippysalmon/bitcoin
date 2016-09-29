@@ -157,12 +157,8 @@ typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;
 extern CWaitableCriticalSection csBestBlock;
 extern CConditionVariable cvBlockChange;
-extern int nScriptCheckThreads;
 extern bool fIsBareMultisigStd;
-extern bool fRequireStandard;
-extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
-extern size_t nCoinCacheUsage;
 /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
 extern CFeeRate minRelayTxFee;
 /** Absolute maximum transaction fee (in satoshis) used by wallet and mempool (rejects high fee in sendrawtransaction) */
@@ -177,8 +173,6 @@ extern CBlockIndex *pindexBestHeader;
 /** Minimum disk space required - used in CheckDiskSpace() */
 static const uint64_t nMinDiskSpace = 52428800;
 
-/** Number of MiB of block files that we're trying to stay below. */
-extern uint64_t nPruneTarget;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of chainActive.Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 
