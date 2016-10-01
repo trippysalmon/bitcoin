@@ -9,6 +9,7 @@
 
 #include "chainparamsbase.h"
 #include "clientversion.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "rpc/client.h"
 #include "rpc/protocol.h"
 #include "util.h"

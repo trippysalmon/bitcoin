@@ -8,6 +8,7 @@
 
 #include "timedata.h"
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "netaddress.h"
 #include "sync.h"
 #include "ui_interface.h"

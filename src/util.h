@@ -142,7 +142,6 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault, con
  * @param default (e.g. 1)
  * @return command-line argument (0 if invalid number) or default value
  */
-int64_t GetArg(const std::string& strArg, int64_t nDefault);
 int64_t GetArg(const std::string& strArg, int64_t nDefault, const std::map<std::string, std::string>& mapArgs);
 
 /**

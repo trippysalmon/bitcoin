@@ -11,6 +11,7 @@
 
 #include "guiutil.h"
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "util.h"
 
 #include <boost/filesystem.hpp>

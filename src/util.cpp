@@ -390,11 +390,6 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault, con
     return strDefault;
 }
 
-int64_t GetArg(const std::string& strArg, int64_t nDefault)
-{
-    return GetArg(strArg, nDefault, mapArgs);
-}
-
 int64_t GetArg(const std::string& strArg, int64_t nDefault, const std::map<std::string, std::string>& mapArgs)
 {
     std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);

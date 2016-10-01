@@ -6,6 +6,7 @@
 #include "db.h"
 
 #include "addrman.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "hash.h"
 #include "protocol.h"
 #include "util.h"

@@ -7,6 +7,7 @@
 #include "policy/policy.h"
 
 #include "amount.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "primitives/transaction.h"
 #include "random.h"
 #include "streams.h"

@@ -5,6 +5,7 @@
 
 #include "sigcache.h"
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "memusage.h"
 #include "pubkey.h"
 #include "random.h"

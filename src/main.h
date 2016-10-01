@@ -13,6 +13,7 @@
 #include "amount.h"
 #include "chain.h"
 #include "coins.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "net.h"
 #include "script/script_error.h"
 #include "sync.h"

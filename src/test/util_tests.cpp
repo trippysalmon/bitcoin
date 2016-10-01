@@ -5,6 +5,7 @@
 #include "util.h"
 
 #include "clientversion.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "primitives/transaction.h"
 #include "random.h"
 #include "sync.h"

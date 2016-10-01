@@ -6,6 +6,7 @@
 
 #include "chainparamsbase.h"
 #include "compat.h"
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "util.h"
 #include "netbase.h"
 #include "rpc/protocol.h" // For HTTP status codes
