@@ -6,6 +6,24 @@
 
 #include "util.h"
 
+static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
+
+const CBaseChainParams& BaseParams()
+{
+    assert(globalChainBaseParams.get());
+    return *globalChainBaseParams;
+}
+
+void SelectBaseParams(const std::string& chain)
+{
+    globalChainBaseParams.reset(CBaseChainParams::Factory(chain));
+}
+
+bool AreBaseParamsConfigured()
+{
+    return globalChainBaseParams.get();
+}
+
 int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
     return GetArg(strArg, nDefault, mapArgs);

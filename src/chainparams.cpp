@@ -6,6 +6,7 @@
 #include "chainparams.h"
 #include "consensus/merkle.h"
 
+#include "globals/gutil.h" // TODO Remove includes from global
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"

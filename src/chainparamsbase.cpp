@@ -60,14 +60,6 @@ public:
     }
 };
 
-static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
-
-const CBaseChainParams& BaseParams()
-{
-    assert(globalChainBaseParams.get());
-    return *globalChainBaseParams;
-}
-
 CBaseChainParams* CBaseChainParams::Factory(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
@@ -78,11 +70,6 @@ CBaseChainParams* CBaseChainParams::Factory(const std::string& chain)
         return new CBaseRegTestParams();
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
-}
-
-void SelectBaseParams(const std::string& chain)
-{
-    globalChainBaseParams.reset(CBaseChainParams::Factory(chain));
 }
 
 std::string ChainNameFromCommandLine()
@@ -97,9 +84,4 @@ std::string ChainNameFromCommandLine()
     if (fTestNet)
         return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
-}
-
-bool AreBaseParamsConfigured()
-{
-    return globalChainBaseParams.get();
 }
