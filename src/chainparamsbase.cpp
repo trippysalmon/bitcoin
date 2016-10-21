@@ -17,11 +17,13 @@ const std::string CBaseChainParams::REGTEST = "regtest";
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
     strUsage += HelpMessageGroup(_("Chain selection options:"));
-    strUsage += HelpMessageOpt("-chain=<chain>", _("Use the chain <chain> (default: main). Allowed values: main, testnet, regtest"));
+    strUsage += HelpMessageOpt("-chain=<chain>", _("Use the chain <chain> (default: main). Reserved values: main, test, regtest"));
     strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
     if (debugHelp) {
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
                                    "This is intended for regression testing tools and app development.");
+        strUsage += HelpMessageGroup(_("Custom chain selection options (only for -chain=<custom> other than main, test or regtest):"));
+        strUsage += HelpMessageOpt("-con_nsubsidyhalvinginterval=<int>", _("Custom subsidy halving interval."));
     }
 }
 
@@ -63,6 +65,17 @@ public:
     }
 };
 
+/** Custom tests */
+class CBaseCustomParams : public CBaseChainParams
+{
+public:
+    CBaseCustomParams(const std::string& chain)
+    {
+        nRPCPort = 18332;
+        strDataDir = chain;
+    }
+};
+
 static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
 
 const CBaseChainParams& BaseParams()
@@ -79,8 +92,8 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
         return std::unique_ptr<CBaseChainParams>(new CBaseTestNetParams());
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CBaseChainParams>(new CBaseRegTestParams());
-    else
-        throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+
+    return std::unique_ptr<CBaseChainParams>(new CBaseCustomParams(chain));
 }
 
 void SelectBaseParams(const std::string& chain)
