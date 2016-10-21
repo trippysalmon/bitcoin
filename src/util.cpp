@@ -378,22 +378,40 @@ void ParseParameters(int argc, const char* const argv[])
 
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
-    if (mapArgs.count(strArg))
-        return mapArgs[strArg];
+    return GetArg(mapArgs, strArg, strDefault);;
+}
+
+std::string GetArg(const std::map<std::string, std::string>& mapArgs, const std::string& strArg, const std::string& strDefault)
+{
+    std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
+    if (it != mapArgs.end())
+        return it->second;
     return strDefault;
 }
 
 int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
-    if (mapArgs.count(strArg))
-        return atoi64(mapArgs[strArg]);
+    return GetArg(mapArgs, strArg, nDefault);
+}
+
+int64_t GetArg(const std::map<std::string, std::string>& mapArgs, const std::string& strArg, int64_t nDefault)
+{
+    std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
+    if (it != mapArgs.end())
+        return atoi64(it->second);
     return nDefault;
 }
 
 bool GetBoolArg(const std::string& strArg, bool fDefault)
 {
-    if (mapArgs.count(strArg))
-        return InterpretBool(mapArgs[strArg]);
+    return GetBoolArg(mapArgs, strArg, fDefault);
+}
+
+bool GetBoolArg(const std::map<std::string, std::string>& mapArgs, const std::string& strArg, bool fDefault)
+{
+    std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
+    if (it != mapArgs.end())
+        return InterpretBool(it->second);
     return fDefault;
 }
 

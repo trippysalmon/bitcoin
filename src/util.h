@@ -132,6 +132,7 @@ inline bool IsSwitchChar(char c)
  * @return command-line argument or default value
  */
 std::string GetArg(const std::string& strArg, const std::string& strDefault);
+std::string GetArg(const std::map<std::string, std::string>& mapArgs, const std::string& strArg, const std::string& strDefault);
 
 /**
  * Return integer argument or default value
@@ -141,6 +142,7 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault);
  * @return command-line argument (0 if invalid number) or default value
  */
 int64_t GetArg(const std::string& strArg, int64_t nDefault);
+int64_t GetArg(const std::map<std::string, std::string>& mapArgs, const std::string& strArg, int64_t nDefault);
 
 /**
  * Return boolean argument or default value
@@ -150,6 +152,7 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault);
  * @return command-line argument or default value
  */
 bool GetBoolArg(const std::string& strArg, bool fDefault);
+bool GetBoolArg(const std::map<std::string, std::string>& mapArgs, const std::string& strArg, bool fDefault);
 
 /**
  * Set an argument if it doesn't already have a value
