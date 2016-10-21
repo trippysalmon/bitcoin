@@ -118,6 +118,6 @@ const CChainParams &Params();
  * Sets the params returned by Params() to those for the given BIP70 chain name.
  * @throws std::runtime_error when the chain is not supported.
  */
-void SelectParams(const std::string& chain);
+void SelectParams(const std::string& chain, ArgsManager& argsMan);
 
 #endif // BITCOIN_CHAINPARAMS_H

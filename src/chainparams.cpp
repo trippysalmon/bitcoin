@@ -492,10 +492,10 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
     return CreateChainParams(chain, chainArgsMan);
 }
 
-void SelectParams(const std::string& network)
+void SelectParams(const std::string& network, ArgsManager& argsMan)
 {
     SelectBaseParams(network);
     ArgsManager chainArgsMan;
-    chainArgsMan.ReadConfigFile(argsGlobal.GetArg("-chainconf", CHAINPARAMS_CONF_FILENAME));
+    chainArgsMan.ReadConfigFile(argsMan.GetArg("-chainconf", CHAINPARAMS_CONF_FILENAME));
     globalChainParams = CreateChainParams(network, chainArgsMan);
 }

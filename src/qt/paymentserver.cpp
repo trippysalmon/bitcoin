@@ -225,12 +225,12 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
 
                 if (address.IsValid(*tempChainParams))
                 {
-                    SelectParams(CBaseChainParams::MAIN);
+                    SelectParams(CBaseChainParams::MAIN, argsGlobal);
                 }
                 else {
                     tempChainParams = CreateChainParams(CBaseChainParams::TESTNET);
                     if (address.IsValid(*tempChainParams))
-                        SelectParams(CBaseChainParams::TESTNET);
+                        SelectParams(CBaseChainParams::TESTNET, argsGlobal);
                 }
             }
         }
@@ -243,11 +243,11 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             {
                 if (request.getDetails().network() == "main")
                 {
-                    SelectParams(CBaseChainParams::MAIN);
+                    SelectParams(CBaseChainParams::MAIN, argsGlobal);
                 }
                 else if (request.getDetails().network() == "test")
                 {
-                    SelectParams(CBaseChainParams::TESTNET);
+                    SelectParams(CBaseChainParams::TESTNET, argsGlobal);
                 }
             }
         }

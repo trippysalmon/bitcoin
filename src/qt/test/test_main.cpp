@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     ECC_Start();
     SetupEnvironment();
     SetupNetworking();
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(CBaseChainParams::MAIN, argsGlobal);
     noui_connect();
 
     bool fInvalid = false;

@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
     UniValue tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
     CBitcoinSecret secret;
     CBitcoinAddress addr;
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(CBaseChainParams::MAIN, argsGlobal);
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
@@ -139,9 +139,9 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
         if (isTestnet)
-            SelectParams(CBaseChainParams::TESTNET);
+            SelectParams(CBaseChainParams::TESTNET, argsGlobal);
         else
-            SelectParams(CBaseChainParams::MAIN);
+            SelectParams(CBaseChainParams::MAIN, argsGlobal);
         if(isPrivkey)
         {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
@@ -193,9 +193,9 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
         if (isTestnet)
-            SelectParams(CBaseChainParams::TESTNET);
+            SelectParams(CBaseChainParams::TESTNET, argsGlobal);
         else
-            SelectParams(CBaseChainParams::MAIN);
+            SelectParams(CBaseChainParams::MAIN, argsGlobal);
         if(isPrivkey)
         {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
     CTxDestination nodest = CNoDestination();
     BOOST_CHECK(!dummyAddr.Set(nodest));
 
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(CBaseChainParams::MAIN, argsGlobal);
 }
 
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
