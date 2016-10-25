@@ -28,6 +28,7 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
         strUsage += HelpMessageOpt("-chainpetname=<name>", _("Alternative name for custom chain (default: custom). This changes the genesis block."));
         strUsage += HelpMessageOpt("-con_fsignblockchain", _("Use signed blocks instead of pow: (default: true))"));
         strUsage += HelpMessageOpt("-con_signblockscript=<hexScript>", _("Specify the scriptPubKey for block signing: (default: OP_TRUE))"));
+        strUsage += HelpMessageOpt("-bip9params=deployment:start:end", "Use given start/end times for specified BIP9 deployment (regtest and custom chains only)");
     }
 }
 

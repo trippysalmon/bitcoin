@@ -12,9 +12,17 @@
 
 #include <assert.h>
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/assign/list_of.hpp>
 
 #include "chainparamsseeds.h"
+
+static const std::string VersionBitsDeployments[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
+    "testdummy",
+    "csv",
+    "segwit"
+};
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, bool fSignBlock)
 {
@@ -57,12 +65,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, false);
-}
-
-void CChainParams::UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
-{
-    consensus.vDeployments[d].nStartTime = nStartTime;
-    consensus.vDeployments[d].nTimeout = nTimeout;
 }
 
 /**
@@ -356,6 +358,13 @@ static CScript StrHexToScript(std::string strScript)
  */
 class CCustomParams : public CChainParams {
 
+    void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+    {
+        consensus.vDeployments[d].nStartTime = nStartTime;
+        consensus.vDeployments[d].nTimeout = nTimeout;
+    }
+    void UpdateBIP9ParametersFromArgs(ArgsManager& argsMan);
+
     void UpdateFromArgs(ArgsManager& argsMan)
     {
         strNetworkID = argsMan.GetArg("-chainpetname", "custom");
@@ -376,6 +385,7 @@ class CCustomParams : public CChainParams {
         consensus.fSignBlockChain = argsMan.GetBoolArg("-con_fsignblockchain", false);
         fSignBlocksGlobal = consensus.fSignBlockChain;
         consensus.blocksignScript = StrHexToScript(argsMan.GetArg("-con_signblockscript", "51")); // OP_TRUE == 51
+        this->UpdateBIP9ParametersFromArgs(argsMan);
 
         nDefaultPort = argsMan.GetArg("-ndefaultport", 18444);
         nPruneAfterHeight = argsMan.GetArg("-npruneafterheight", 1000);
@@ -422,6 +432,39 @@ public:
     }
 };
 
+void CCustomParams::UpdateBIP9ParametersFromArgs(ArgsManager& argsMan)
+{
+    if (argsMan.IsArgSet("-bip9params")) {
+        for (auto i : argsMan.ArgsAt("-bip9params")) {
+            std::vector<std::string> vDeploymentParams;
+            boost::split(vDeploymentParams, i, boost::is_any_of(":"));
+            if (vDeploymentParams.size() != 3) {
+                throw std::runtime_error("BIP9 parameters malformed, expecting deployment:start:end");
+            }
+            int64_t nStartTime, nTimeout;
+            if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
+                throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
+            }
+            if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
+                throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
+            }
+            bool found = false;
+            for (int j=0; j<(int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j)
+            {
+                if (vDeploymentParams[0].compare(VersionBitsDeployments[j].c_str()) == 0) {
+                    UpdateBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
+                    found = true;
+                    LogPrintf("Setting BIP9 activation parameters for %s to start=%ld, timeout=%ld\n", vDeploymentParams[0], nStartTime, nTimeout);
+                    break;
+                }
+            }
+            if (!found) {
+                throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
+            }
+        }
+    }
+}
+
 static std::unique_ptr<CChainParams> globalChainParams;
 
 const CChainParams &Params() {
@@ -456,9 +499,3 @@ void SelectParams(const std::string& network)
     chainArgsMan.ReadConfigFile(argsGlobal.GetArg("-chainconf", CHAINPARAMS_CONF_FILENAME));
     globalChainParams = CreateChainParams(network, chainArgsMan);
 }
-
-void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
-{
-    globalChainParams->UpdateBIP9Parameters(d, nStartTime, nTimeout);
-}
- 
