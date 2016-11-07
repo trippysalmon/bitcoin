@@ -200,7 +200,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 pindexNew->nTx            = diskindex.nTx;
 
                 CBlockHeader block = pindexNew->GetBlockHeader();
-                if (!CheckBlockHeader(block, state, Params().GetConsensus())) {
+                if (!CheckBlockHeader(block, state, Params().GetConsensus()) &&
+                    pindexNew->GetBlockHash() != Params().GetConsensus().hashGenesisBlock) {
                     return error("%s: CheckProof: %s, %s", __func__, pindexNew->GetBlockHash().ToString(), pindexNew->ToString());
                 }
                 pcursor->Next();
