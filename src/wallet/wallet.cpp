@@ -3559,18 +3559,19 @@ void CWallet::postInitProcess(boost::thread_group& threadGroup)
     threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(this->strWalletFile)));
 }
 
-bool CWallet::ParameterInteraction()
+bool CWallet::ParameterInteraction(const std::map<std::string, std::string>& mapArgs)
 {
-    if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+    if (GetBoolArg(mapArgs, "-disablewallet", DEFAULT_DISABLE_WALLET))
         return true;
 
-    if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && SoftSetBoolArg("-walletbroadcast", false)) {
+    // TODO jtimon: SoftSetBoolArg does not modify the const mapArgs
+    if (GetBoolArg(mapArgs, "-blocksonly", DEFAULT_BLOCKSONLY) && SoftSetBoolArg("-walletbroadcast", false)) {
         LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
     }
 
-    if (GetBoolArg("-sysperms", false))
+    if (GetBoolArg(mapArgs, "-sysperms", false))
         return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
-    if (GetArg("-prune", 0) && GetBoolArg("-rescan", false))
+    if (GetArg(mapArgs, "-prune", 0) && GetBoolArg(mapArgs, "-rescan", false))
         return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
 
     if (::minRelayTxFee.GetFeePerK() > HIGH_TX_FEE_PER_KB)
@@ -3579,9 +3580,10 @@ bool CWallet::ParameterInteraction()
 
     if (mapArgs.count("-mintxfee"))
     {
+        std::string strMinFee = mapArgs.find("-mintxfee")->second;
         CAmount n = 0;
-        if (!ParseMoney(mapArgs["-mintxfee"], n) || 0 == n)
-            return InitError(AmountErrMsg("mintxfee", mapArgs["-mintxfee"]));
+        if (!ParseMoney(strMinFee, n) || 0 == n)
+            return InitError(AmountErrMsg("mintxfee", strMinFee));
         if (n > HIGH_TX_FEE_PER_KB)
             InitWarning(AmountHighWarn("-mintxfee") + " " +
                         _("This is the minimum transaction fee you pay on every transaction."));
@@ -3589,9 +3591,10 @@ bool CWallet::ParameterInteraction()
     }
     if (mapArgs.count("-fallbackfee"))
     {
+        std::string strFallbackFee = mapArgs.find("-fallbackfee")->second;
         CAmount nFeePerK = 0;
-        if (!ParseMoney(mapArgs["-fallbackfee"], nFeePerK))
-            return InitError(strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), mapArgs["-fallbackfee"]));
+        if (!ParseMoney(strFallbackFee, nFeePerK))
+            return InitError(strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), strFallbackFee));
         if (nFeePerK > HIGH_TX_FEE_PER_KB)
             InitWarning(AmountHighWarn("-fallbackfee") + " " +
                         _("This is the transaction fee you may pay when fee estimates are not available."));
@@ -3599,9 +3602,10 @@ bool CWallet::ParameterInteraction()
     }
     if (mapArgs.count("-paytxfee"))
     {
+        std::string strPayTxFee = mapArgs.find("-paytxfee")->second;
         CAmount nFeePerK = 0;
-        if (!ParseMoney(mapArgs["-paytxfee"], nFeePerK))
-            return InitError(AmountErrMsg("paytxfee", mapArgs["-paytxfee"]));
+        if (!ParseMoney(strPayTxFee, nFeePerK))
+            return InitError(AmountErrMsg("paytxfee", strPayTxFee));
         if (nFeePerK > HIGH_TX_FEE_PER_KB)
             InitWarning(AmountHighWarn("-paytxfee") + " " +
                         _("This is the transaction fee you will pay if you send a transaction."));
@@ -3610,27 +3614,28 @@ bool CWallet::ParameterInteraction()
         if (payTxFee < ::minRelayTxFee)
         {
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-                                       mapArgs["-paytxfee"], ::minRelayTxFee.ToString()));
+                                       strPayTxFee, ::minRelayTxFee.ToString()));
         }
     }
     if (mapArgs.count("-maxtxfee"))
     {
+        std::string strMaxFee = mapArgs.find("-maxtxfee")->second;
         CAmount nMaxFee = 0;
-        if (!ParseMoney(mapArgs["-maxtxfee"], nMaxFee))
-            return InitError(AmountErrMsg("maxtxfee", mapArgs["-maxtxfee"]));
+        if (!ParseMoney(strMaxFee, nMaxFee))
+            return InitError(AmountErrMsg("maxtxfee", strMaxFee));
         if (nMaxFee > HIGH_MAX_TX_FEE)
             InitWarning(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         maxTxFee = nMaxFee;
         if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
         {
             return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-                                       mapArgs["-maxtxfee"], ::minRelayTxFee.ToString()));
+                                       strMaxFee, ::minRelayTxFee.ToString()));
         }
     }
-    nTxConfirmTarget = GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
-    bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
-    fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
-    fWalletRbf = GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
+    nTxConfirmTarget = GetArg(mapArgs, "-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
+    bSpendZeroConfChange = GetBoolArg(mapArgs, "-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
+    fSendFreeTransactions = GetBoolArg(mapArgs, "-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
+    fWalletRbf = GetBoolArg(mapArgs, "-walletrbf", DEFAULT_WALLET_RBF);
 
     return true;
 }

@@ -920,7 +920,7 @@ public:
     void postInitProcess(boost::thread_group& threadGroup);
 
     /* Wallets parameter interaction */
-    static bool ParameterInteraction();
+    static bool ParameterInteraction(const std::map<std::string, std::string>& mapArgs);
 
     bool BackupWallet(const std::string& strDest);
 
