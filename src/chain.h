@@ -196,7 +196,7 @@ public:
     int nVersion;
     uint256 hashMerkleRoot;
     unsigned int nTime;
-    union UnionProof proof;
+    UnionProof proof;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;

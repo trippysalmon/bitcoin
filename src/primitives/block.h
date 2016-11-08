@@ -17,7 +17,7 @@ struct PowProof {
     uint32_t nNonce;
 };
 
-union UnionProof {
+struct UnionProof {
     PowProof pow;
     CScript* script;
 };
@@ -37,7 +37,7 @@ public:
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
     uint32_t nTime;
-    union UnionProof proof;
+    UnionProof proof;
 
     CBlockHeader()
     {
