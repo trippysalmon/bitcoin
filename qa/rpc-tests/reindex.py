@@ -16,8 +16,9 @@ import time
 
 class ReindexTest(BitcoinTestFramework):
 
-    def __init__(self):
+    def __init__(self, chainIn="regtest"):
         super().__init__()
+        self.chain = chainIn
         self.setup_clean_chain = True
         self.num_nodes = 1
 
