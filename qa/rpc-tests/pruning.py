@@ -26,6 +26,7 @@ class PruneTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
+        self.chain = "regtest"
         self.setup_clean_chain = True
         self.num_nodes = 6
 
