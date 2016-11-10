@@ -32,9 +32,10 @@ class TestNode():
     To make things easier for the test writer, a bit of magic is happening under the covers.
     Any unrecognised messages will be dispatched to the RPC connection."""
 
-    def __init__(self, i, dirname, extra_args, rpchost, timewait, binary, stderr, mocktime, coverage_dir):
+    def __init__(self, i, dirname, extra_args, chain, rpchost, timewait, binary, stderr, mocktime, coverage_dir):
         self.index = i
         self.datadir = os.path.join(dirname, "node" + str(i))
+        self.chain = chain
         self.rpchost = rpchost
         if timewait:
             self.rpc_timeout = timewait
@@ -78,7 +79,7 @@ class TestNode():
         for _ in range(poll_per_s * self.rpc_timeout):
             assert self.process.poll() is None, "bitcoind exited with status %i during initialization" % self.process.returncode
             try:
-                self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, coveragedir=self.coverage_dir)
+                self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.chain, self.rpchost), self.index, coveragedir=self.coverage_dir)
                 self.rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
                 self.rpc_connected = True
