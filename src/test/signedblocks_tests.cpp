@@ -8,10 +8,12 @@
 #include "consensus/header_verify.h"
 #include "consensus/validation.h"
 #include "keystore.h"
+#include "miner.h"
 #include "primitives/block.h"
 #include "script/generic.hpp"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "validation.h" // For chainActive
 
 #include <boost/test/unit_test.hpp>
 
@@ -179,6 +181,15 @@ BOOST_AUTO_TEST_CASE(BasicSignBlock)
     // TODO signblocks: These 2 seems to be dependent on GenericSignWithRegularBlocks
     // BOOST_CHECK(GenerateProof(chainparams->GetConsensus(), &block, &keystore));
     // BOOST_CHECK(CheckProof(chainparams->GetConsensus(), block));
+
+    // BOOST_CHECK(chainActive.Tip());
+    // indexPrev.nHeight = chainActive.Tip()->nHeight + 1;
+    // indexprev.pprev = chainActive.Tip();
+
+    key.MakeNewKey(true);
+    CScript scriptPubKeyCoinbase = CScript() << ParseHex(HexStr(key.GetPubKey())) << OP_CHECKSIG;
+    // std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(*chainparams).CreateNewBlock(scriptPubKeyCoinbase));
+    // BOOST_CHECK(!pblocktemplate.get());
 
     // Also test multisig scripts
 
