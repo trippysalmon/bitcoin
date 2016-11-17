@@ -832,11 +832,11 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.old_node = TestNode()  # version 1 peer <--> segwit node
 
         connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.test_node))
+        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.test_node, net=self.chain))
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1],
-                    self.segwit_node, services=NODE_NETWORK|NODE_WITNESS))
+                    self.segwit_node, net=self.chain, services=NODE_NETWORK|NODE_WITNESS))
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1],
-                    self.old_node, services=NODE_NETWORK))
+                    self.old_node, net=self.chain, services=NODE_NETWORK))
         self.test_node.add_connection(connections[0])
         self.segwit_node.add_connection(connections[1])
         self.old_node.add_connection(connections[2])
