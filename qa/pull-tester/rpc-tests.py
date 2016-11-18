@@ -98,10 +98,13 @@ if ENABLE_ZMQ:
         # ENABLE_ZMQ=0
         raise
 
-testScripts = [
+slowTests = [
     # longest test should go first, to favor running tests in parallel
     'wallet-hd.py',
     'walletbackup.py',
+]
+    
+testScripts = [
     # vv Tests less than 5m vv
     'p2p-fullblocktest.py',
     'fundrawtransaction.py',
@@ -159,10 +162,13 @@ testScripts = [
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
 
-testScriptsExt = [
+slowTestsExt = [
     'pruning.py',
     # vv Tests less than 20m vv
     'smartfees.py',
+]
+    
+testScriptsExt = [
     # vv Tests less than 5m vv
     'maxuploadtarget.py',
     'mempool_packages.py',
@@ -193,7 +199,11 @@ def runtests():
     test_list = []
     if '-extended' in opts:
         test_list = testScripts + testScriptsExt
+        if '-skipslow' not in opts:
+            test_list += slowTests + slowTestsExt
     elif len(opts) == 0 or (len(opts) == 1 and "-win" in opts):
+        test_list = testScripts + slowTests
+    elif len(opts) == 1 and "-skipslow" in opts:
         test_list = testScripts
     else:
         for t in testScripts + testScriptsExt:
