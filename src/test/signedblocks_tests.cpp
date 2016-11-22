@@ -65,6 +65,7 @@ BOOST_AUTO_TEST_CASE(GenericSignWithRegularBlocks)
     CScript scriptPubKey;
     unsigned int flags = SCRIPT_VERIFY_NONE;
     CBasicKeyStore keystore;
+    CKey key;
     SignatureData scriptSigData;
     SignatureData scriptSig1;
     SignatureData scriptSig2;
@@ -74,7 +75,6 @@ BOOST_AUTO_TEST_CASE(GenericSignWithRegularBlocks)
     BOOST_CHECK(!GenericSignScript(keystore, block, scriptPubKey, scriptSigData));
     BOOST_CHECK(!GenericVerifyScript(scriptSig, scriptPubKey, flags, block));
 
-    CKey key;
     key.MakeNewKey(true);
     CPubKey pubkey = key.GetPubKey();
     keystore.AddKeyPubKey(key, pubkey);
@@ -105,6 +105,7 @@ BOOST_AUTO_TEST_CASE(BasicSignBlock)
 
     // Generate and check proofs on custom blocksigned chains
     CBasicKeyStore keystore;
+    CKey key;
     CBlockHeader block;
     CBlockIndex indexPrev;
     CValidationState state;
@@ -115,6 +116,37 @@ BOOST_AUTO_TEST_CASE(BasicSignBlock)
     std::unique_ptr<CChainParams> chainparams = CreateChainParams(CBaseChainParams::CUSTOM, testArgs);
 
     // TODO signblocks: Make sure BasicSignBlock is independent from GenericSignWithRegularBlocks
+
+    CScript scriptSig;
+    CScript scriptPubKey;
+    unsigned int flags = SCRIPT_VERIFY_NONE;
+    SignatureData scriptSigData;
+    SignatureData scriptSig1;
+    SignatureData scriptSig2;
+
+    // Make sure that the generic templates compile for CBlockHeader
+    SignatureData scriptExpected = GenericCombineSignatures(scriptPubKey, block, scriptSig1, scriptSig2);
+    BOOST_CHECK(!GenericSignScript(keystore, block, scriptPubKey, scriptSigData));
+    BOOST_CHECK(!GenericVerifyScript(scriptSig, scriptPubKey, flags, block));
+
+    key.MakeNewKey(true);
+    CPubKey pubkey = key.GetPubKey();
+    keystore.AddKeyPubKey(key, pubkey);
+    const CScript scriptCode;
+    SigVersion sigversion = SIGVERSION_WITNESS_V0;
+    const std::vector<unsigned char> vchPubKey = ToByteVector(pubkey);
+    std::vector<unsigned char> vchScriptSig;
+    SimpleSignatureCreator simpleSignatureCreator(&keystore, SerializeHash(block));
+
+    BOOST_CHECK(simpleSignatureCreator.CreateSig(vchScriptSig, pubkey.GetID(), scriptCode, sigversion));
+    BOOST_CHECK(simpleSignatureCreator.Checker().CheckSig(vchScriptSig, vchPubKey, scriptCode, sigversion));
+
+    scriptPubKey << ParseHex(HexStr(pubkey)) << OP_CHECKSIG;
+    BOOST_CHECK(ProduceSignature(simpleSignatureCreator, scriptPubKey, scriptSigData));
+    BOOST_CHECK(VerifyScript(scriptSigData.scriptSig, scriptPubKey, NULL, flags, simpleSignatureCreator.Checker()));
+
+    BOOST_CHECK(GenericSignScript(keystore, block, scriptPubKey, scriptSigData));
+    BOOST_CHECK(GenericVerifyScript(scriptSigData.scriptSig, scriptPubKey, flags, block));
 
     // Default -con_signblockscript with -con_fsignblockchain=1 is OP_TRUE
 
@@ -136,7 +168,6 @@ BOOST_AUTO_TEST_CASE(BasicSignBlock)
 
     // Also Choose one signing key
 
-    CKey key;
     key.MakeNewKey(true);
     testArgs.ForceSetArg("-con_signblockscript", SingleSignerScriptStrFromKey(key));
     // chainparams = CreateChainParams(CBaseChainParams::CUSTOM, testArgs);
