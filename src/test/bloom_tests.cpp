@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     mtx.vout[0].nValue = 5000000000;
     vchScript = ParseHex("4104e18f7afbe4721580e81e8414fc8c24d7cfacf254bb5c7b949450c3e997c2dc1242487a8169507b631eb3771f2b425483fb13102c4eb5d858eef260fe70fbfae0ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[0] = mtx;
+    block.vtx[0] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0x36e8f98c5f5733f88ca00dfa05afd7af5dc34dda802790daba6aa1afcb8c6096");
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     mtx.vout[0].nValue = 5000000000;
     vchScript = ParseHex("76a914f15d1921f52e4007b146dfa60f369ed2fc393ce288ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[1] = mtx;
+    block.vtx[1] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0x6db5acbf1994c2e3c4f78a6bde06c78ed9248be481eccfaf2b8c4588126c76fb");
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     mtx.vout[1].nValue = 1290000000;
     vchScript = ParseHex("76a914f0688ba1c0d1ce182c7af6741e02658c7d4dfcd388ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[2] = mtx;
+    block.vtx[2] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
     mtx.vin[0].prevout.hash = uint256S("0xfff2525b8931402dd09222c50775608f75787bd2b87e56995a7bdd30f79702c4");
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     mtx.vout[0].nValue = 8888000000;
     vchScript = ParseHex("410469ab4181eceb28985b9b4e895c13fa5e68d85761b7eee311db5addef76fa8621865134a221bd01f28ec9999ee3e021e60766e9d1f3458c115fb28650605f11c9ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[3] = mtx;
+    block.vtx[3] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0xfac2d53ed2f083c8dba090aaf88949c8e4d13306c52d5e6514c5918e752fafcd");
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     mtx.vout[1].nValue = 20000000;
     vchScript = ParseHex("76a9141befba0cdc1ad56529371864d9f6cb042faa06b588ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[4] = mtx;
+    block.vtx[4] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0xcb00f8a0573b18faa8c4f467b049f5d202bf1101d9ef2633bc611be70376a4b4");
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     mtx.vout[1].nValue = 1896000000;
     vchScript = ParseHex("76a914ea4720a7a52fc166c55ff2298e07baf70ae67e1b88ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[5] = mtx;
+    block.vtx[5] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(5);
     mtx.vin[0].prevout.hash = uint256S("0x9eb4ab14fb5480539ae42f02f9765170e04d203e4ab1ed60bb19d202d62cc686");
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     mtx.vout[0].nValue = 5000000;
     vchScript = ParseHex("76a9142b6ba7c9d796b75eef7942fc9288edd37c32f5c388ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[6] = mtx;
+    block.vtx[6] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0x8ded96ae2a609555df2390faa2f001b04e6e0ba8a60c69f9b432c9637157d766");
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     mtx.vout[1].nValue = 1000000;
     vchScript = ParseHex("76a914abee93376d6b37b5c2940655a6fcaf1c8e74237988ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[7] = mtx;
+    block.vtx[7] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0x71b3dbaca67e9f9189dad3617138c19725ab541ef0b49c05a94913e9f28e3f4e");
@@ -342,13 +342,13 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     mtx.vout[1].nValue = 5000000;
     vchScript = ParseHex("76a9142b6ba7c9d796b75eef7942fc9288edd37c32f5c388ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[8] = mtx;
+    block.vtx[8] = MakeTransactionRef(mtx);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
     CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
     // Match the last transaction
-    filter.insert(block.vtx[8].GetHash());
+    filter.insert(block.vtx[8]->GetHash());
 
     CMerkleBlock merkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
     pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[8].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[8]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 8);
 
     vector<uint256> vMatched;
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
         BOOST_CHECK(vMatched[i] == merkleBlock.vMatchedTxn[i].second);
 
     // Also match the 8th transaction
-    filter.insert(block.vtx[7].GetHash());
+    filter.insert(block.vtx[7]->GetHash());
     merkleBlock = CMerkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
 
     BOOST_CHECK(merkleBlock.vMatchedTxn[1] == pair);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[7].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[7]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 7);
 
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
     mtx.vout[0].nValue = 5000000000;
     vchScript = ParseHex("41046d8709a041d34357697dfcb30a9d05900a6294078012bf3bb09c6f9b525f1d16d5503d7905db1ada9501446ea00728668fc5719aa80be2fdfc8a858a4dbdd4fbac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[0] = mtx;
+    block.vtx[0] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
     mtx.vin[0].prevout.hash = uint256S("0x35288d269cee1941eaebb2ea85e32b42cdb2b04284a56d8b14dcc3f5c65d6055");
@@ -424,14 +424,14 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
     mtx.vout[1].nValue = 2400000000LL;
     vchScript = ParseHex("41044a656f065871a353f216ca26cef8dde2f03e8c16202d2e8ad769f02032cb86a5eb5e56842e92e19141d60a01928f8dd2c875a390f67c1f6c94cfc617c0ea45afac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[1] = mtx;
+    block.vtx[1] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
-    mtx.vin[0].prevout.hash = block.vtx[1].GetHash();
+    mtx.vin[0].prevout.hash = block.vtx[1]->GetHash();
     mtx.vin[0].prevout.n = 0;
     vchScript = ParseHex("47304402205d6058484157235b06028c30736c15613a28bdb768ee628094ca8b0030d4d6eb0220328789c9a2ec27ddaec0ad5ef58efded42e6ea17c2e1ce838f3d6913f5e95db601");
     mtx.vin[0].scriptSig = CScript(vchScript.begin(), vchScript.end());
-    mtx.vin[1].prevout.hash = block.vtx[1].GetHash();
+    mtx.vin[1].prevout.hash = block.vtx[1]->GetHash();
     mtx.vin[1].prevout.n = 1;
     vchScript = ParseHex("493046022100c45af050d3cea806cedd0ab22520c53ebe63b987b8954146cdca42487b84bdd6022100b9b027716a6b59e640da50a864d6dd8a0ef24c76ce62391fa3eabaf4d2886d2d01");
     mtx.vin[1].scriptSig = CScript(vchScript.begin(), vchScript.end());
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
     mtx.vout[1].nValue = 2400000000LL;
     vchScript = ParseHex("41046a0765b5865641ce08dd39690aade26dfbf5511430ca428a3089261361cef170e3929a68aee3d8d4848b0c5111b0a37b82b86ad559fd2a745b44d8e8d9dfdc0cac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[2] = mtx;
+    block.vtx[2] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
     mtx.vin[0].prevout.hash = uint256S("0x6b0f8a73a56c04b519f1883e8aafda643ba61a30bd1439969df21bea5f4e27e2");
@@ -460,13 +460,13 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
     mtx.vout[1].nValue = 2400000000LL;
     vchScript = ParseHex("41046a0765b5865641ce08dd39690aade26dfbf5511430ca428a3089261361cef170e3929a68aee3d8d4848b0c5111b0a37b82b86ad559fd2a745b44d8e8d9dfdc0cac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[3] = mtx;
+    block.vtx[3] = MakeTransactionRef(mtx);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
     CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
     // Match the first transaction
-    filter.insert(block.vtx[0].GetHash());
+    filter.insert(block.vtx[0]->GetHash());
 
     CMerkleBlock merkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
     pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[0].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[0]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 0);
 
     vector<uint256> vMatched;
@@ -496,13 +496,13 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
 
     BOOST_CHECK(pair == merkleBlock.vMatchedTxn[0]);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[1].second == block.vtx[1].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[1].second == block.vtx[1]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[1].first == 1);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[2].second == block.vtx[2].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[2].second == block.vtx[2]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[2].first == 2);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[3].second == block.vtx[3].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[3].second == block.vtx[3]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[3].first == 3);
 
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
     mtx.vout[0].nValue = 5000000000;
     vchScript = ParseHex("41046d8709a041d34357697dfcb30a9d05900a6294078012bf3bb09c6f9b525f1d16d5503d7905db1ada9501446ea00728668fc5719aa80be2fdfc8a858a4dbdd4fbac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[0] = mtx;
+    block.vtx[0] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
     mtx.vin[0].prevout.hash = uint256S("0x35288d269cee1941eaebb2ea85e32b42cdb2b04284a56d8b14dcc3f5c65d6055");
@@ -551,14 +551,14 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
     mtx.vout[1].nValue = 2400000000LL;
     vchScript = ParseHex("41044a656f065871a353f216ca26cef8dde2f03e8c16202d2e8ad769f02032cb86a5eb5e56842e92e19141d60a01928f8dd2c875a390f67c1f6c94cfc617c0ea45afac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[1] = mtx;
+    block.vtx[1] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
-    mtx.vin[0].prevout.hash = block.vtx[1].GetHash();
+    mtx.vin[0].prevout.hash = block.vtx[1]->GetHash();
     mtx.vin[0].prevout.n = 0;
     vchScript = ParseHex("47304402205d6058484157235b06028c30736c15613a28bdb768ee628094ca8b0030d4d6eb0220328789c9a2ec27ddaec0ad5ef58efded42e6ea17c2e1ce838f3d6913f5e95db601");
     mtx.vin[0].scriptSig = CScript(vchScript.begin(), vchScript.end());
-    mtx.vin[1].prevout.hash = block.vtx[1].GetHash();
+    mtx.vin[1].prevout.hash = block.vtx[1]->GetHash();
     mtx.vin[1].prevout.n = 1;
     vchScript = ParseHex("493046022100c45af050d3cea806cedd0ab22520c53ebe63b987b8954146cdca42487b84bdd6022100b9b027716a6b59e640da50a864d6dd8a0ef24c76ce62391fa3eabaf4d2886d2d01");
     mtx.vin[1].scriptSig = CScript(vchScript.begin(), vchScript.end());
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
     mtx.vout[1].nValue = 2400000000LL;
     vchScript = ParseHex("41046a0765b5865641ce08dd39690aade26dfbf5511430ca428a3089261361cef170e3929a68aee3d8d4848b0c5111b0a37b82b86ad559fd2a745b44d8e8d9dfdc0cac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[2] = mtx;
+    block.vtx[2] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
     mtx.vin[0].prevout.hash = uint256S("0x6b0f8a73a56c04b519f1883e8aafda643ba61a30bd1439969df21bea5f4e27e2");
@@ -587,13 +587,13 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
     mtx.vout[1].nValue = 2400000000LL;
     vchScript = ParseHex("41046a0765b5865641ce08dd39690aade26dfbf5511430ca428a3089261361cef170e3929a68aee3d8d4848b0c5111b0a37b82b86ad559fd2a745b44d8e8d9dfdc0cac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[3] = mtx;
+    block.vtx[3] = MakeTransactionRef(mtx);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
     CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_NONE);
     // Match the first transaction
-    filter.insert(block.vtx[0].GetHash());
+    filter.insert(block.vtx[0]->GetHash());
 
     CMerkleBlock merkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
     pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[0].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[0]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 0);
 
     vector<uint256> vMatched;
@@ -623,10 +623,10 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
 
     BOOST_CHECK(pair == merkleBlock.vMatchedTxn[0]);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[1].second == block.vtx[1].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[1].second == block.vtx[1]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[1].first == 1);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[2].second == block.vtx[3].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[2].second == block.vtx[3]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[2].first == 3);
 
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
@@ -657,20 +657,20 @@ BOOST_AUTO_TEST_CASE(merkle_block_3_and_serialize)
     mtx.vout[0].nValue = 5000000000;
     vchScript = ParseHex("4104ecd3229b0571c3be876feaac0442a9f13c5a572742927af1dc623353ecf8c202225f64868137a18cdd85cbbb4c74fbccfd4f49639cf1bdc94a5672bb15ad5d4cac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[0] = mtx;
+    block.vtx[0] = MakeTransactionRef(mtx);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
     CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
     // Match the only transaction
-    filter.insert(block.vtx[0].GetHash());
+    filter.insert(block.vtx[0]->GetHash());
 
     CMerkleBlock merkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[0].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[0]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 0);
 
     vector<uint256> vMatched;
@@ -714,7 +714,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
     mtx.vout[0].nValue = 5000000000;
     vchScript = ParseHex("4104eaafc2314def4ca98ac970241bcab022b9c1e1f4ea423a20f134c876f2c01ec0f0dd5b2e86e7168cefe0d81113c3807420ce13ad1357231a2252247d97a46a91ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[0] = mtx;
+    block.vtx[0] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0x437248e07f73b031bba6aacde3e9f3f70b12559298084f42d12798a2a620adbc");
@@ -728,7 +728,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
     mtx.vout[1].nValue = 500000000;
     vchScript = ParseHex("76a9141b8dd13b994bcfc787b32aeadf58ccb3615cbd5488ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[1] = mtx;
+    block.vtx[1] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(3);
     mtx.vin[0].prevout.hash = uint256S("0x0bcb16af267dee77ed8761662d31ee9d9a1bf1e4d268a9e7127407ebb3f9acfd");
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
     mtx.vout[0].nValue = 14500000000;
     vchScript = ParseHex("76a914c7b55141d097ea5df7a0ed330cf794376e53ec8d88ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[2] = mtx;
+    block.vtx[2] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(4);
     mtx.vin[0].prevout.hash = uint256S("0x4734748106a0724b8f1308dde8cd97d3c1f01b1eeeec92e7a36940aa14e2f05b");
@@ -770,7 +770,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
     mtx.vout[0].nValue = 20000000000;
     vchScript = ParseHex("76a914b6efd80d99179f4f4ff6f4dd0a007d018c385d2188ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[3] = mtx;
+    block.vtx[3] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0xc4d3eb542503e05643cd16f68d750ba5e55c54108e253a37f98ecef1b2374583");
@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
     mtx.vout[1].nValue = 5000000;
     vchScript = ParseHex("76a914a84e272933aaf87e1715d7786c51dfaeb5b65a6f88ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[4] = mtx;
+    block.vtx[4] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0xe73ae02709850d51c538a8fd89013ee299d906d9f317fe7d30eff6e6c881ac43");
@@ -798,7 +798,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
     mtx.vout[1].nValue = 1000000;
     vchScript = ParseHex("76a914648d04341d00d7968b3405c034adc38d4d8fb9bd88ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[5] = mtx;
+    block.vtx[5] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
     mtx.vin[0].prevout.hash = uint256S("0xf1e305f72f450a7d01af712e7c03fe0cc467059c00d2a8f4555cea017591cc48");
@@ -813,13 +813,13 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
     mtx.vout[0].nValue = 4000000;
     vchScript = ParseHex("76a9148edb68822f1ad580b043c7b3df2e400f8699eb4888ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[6] = mtx;
+    block.vtx[6] = MakeTransactionRef(mtx);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
     CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
     // Match the last transaction
-    filter.insert(block.vtx[6].GetHash());
+    filter.insert(block.vtx[6]->GetHash());
 
     CMerkleBlock merkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
@@ -827,7 +827,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
     pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[6].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[6]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 6);
 
     vector<uint256> vMatched;
@@ -838,13 +838,13 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
         BOOST_CHECK(vMatched[i] == merkleBlock.vMatchedTxn[i].second);
 
     // Also match the 4th transaction
-    filter.insert(block.vtx[3].GetHash());
+    filter.insert(block.vtx[3]->GetHash());
     merkleBlock = CMerkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 2);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[3].GetHash());
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == block.vtx[3]->GetHash());
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 3);
 
     BOOST_CHECK(merkleBlock.vMatchedTxn[1] == pair);
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     mtx.vout[0].nValue = 5000000000;
     vchScript = ParseHex("4104eaafc2314def4ca98ac970241bcab022b9c1e1f4ea423a20f134c876f2c01ec0f0dd5b2e86e7168cefe0d81113c3807420ce13ad1357231a2252247d97a46a91ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[0] = mtx;
+    block.vtx[0] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0x437248e07f73b031bba6aacde3e9f3f70b12559298084f42d12798a2a620adbc");
@@ -891,7 +891,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     mtx.vout[1].nValue = 500000000;
     vchScript = ParseHex("76a9141b8dd13b994bcfc787b32aeadf58ccb3615cbd5488ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[1] = mtx;
+    block.vtx[1] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(3);
     mtx.vin[0].prevout.hash = uint256S("0x0bcb16af267dee77ed8761662d31ee9d9a1bf1e4d268a9e7127407ebb3f9acfd");
@@ -910,7 +910,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     mtx.vout[0].nValue = 14500000000;
     vchScript = ParseHex("76a914c7b55141d097ea5df7a0ed330cf794376e53ec8d88ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[2] = mtx;
+    block.vtx[2] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(4);
     mtx.vin[0].prevout.hash = uint256S("0x4734748106a0724b8f1308dde8cd97d3c1f01b1eeeec92e7a36940aa14e2f05b");
@@ -933,7 +933,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     mtx.vout[0].nValue = 20000000000;
     vchScript = ParseHex("76a914b6efd80d99179f4f4ff6f4dd0a007d018c385d2188ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[3] = mtx;
+    block.vtx[3] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0xc4d3eb542503e05643cd16f68d750ba5e55c54108e253a37f98ecef1b2374583");
@@ -947,7 +947,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     mtx.vout[1].nValue = 5000000;
     vchScript = ParseHex("76a914a84e272933aaf87e1715d7786c51dfaeb5b65a6f88ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[4] = mtx;
+    block.vtx[4] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0xe73ae02709850d51c538a8fd89013ee299d906d9f317fe7d30eff6e6c881ac43");
@@ -961,7 +961,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     mtx.vout[1].nValue = 1000000;
     vchScript = ParseHex("76a914648d04341d00d7968b3405c034adc38d4d8fb9bd88ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[5] = mtx;
+    block.vtx[5] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
     mtx.vin[0].prevout.hash = uint256S("0xf1e305f72f450a7d01af712e7c03fe0cc467059c00d2a8f4555cea017591cc48");
@@ -976,7 +976,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     mtx.vout[0].nValue = 4000000;
     vchScript = ParseHex("76a9148edb68822f1ad580b043c7b3df2e400f8699eb4888ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[6] = mtx;
+    block.vtx[6] = MakeTransactionRef(mtx);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
@@ -990,9 +990,9 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     // We should match the generation outpoint
-    BOOST_CHECK(filter.contains(COutPoint(block.vtx[0].GetHash(), 0)));
+    BOOST_CHECK(filter.contains(COutPoint(block.vtx[0]->GetHash(), 0)));
     // ... but not the 4th transaction's output (its not pay-2-pubkey)
-    BOOST_CHECK(!filter.contains(COutPoint(block.vtx[3].GetHash(), 0)));
+    BOOST_CHECK(!filter.contains(COutPoint(block.vtx[3]->GetHash(), 0)));
 }
 
 BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
@@ -1017,7 +1017,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     mtx.vout[0].nValue = 5000000000;
     vchScript = ParseHex("4104eaafc2314def4ca98ac970241bcab022b9c1e1f4ea423a20f134c876f2c01ec0f0dd5b2e86e7168cefe0d81113c3807420ce13ad1357231a2252247d97a46a91ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[0] = mtx;
+    block.vtx[0] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0x437248e07f73b031bba6aacde3e9f3f70b12559298084f42d12798a2a620adbc");
@@ -1031,7 +1031,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     mtx.vout[1].nValue = 500000000;
     vchScript = ParseHex("76a9141b8dd13b994bcfc787b32aeadf58ccb3615cbd5488ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[1] = mtx;
+    block.vtx[1] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(3);
     mtx.vin[0].prevout.hash = uint256S("0x0bcb16af267dee77ed8761662d31ee9d9a1bf1e4d268a9e7127407ebb3f9acfd");
@@ -1050,7 +1050,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     mtx.vout[0].nValue = 14500000000;
     vchScript = ParseHex("76a914c7b55141d097ea5df7a0ed330cf794376e53ec8d88ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[2] = mtx;
+    block.vtx[2] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(4);
     mtx.vin[0].prevout.hash = uint256S("0x4734748106a0724b8f1308dde8cd97d3c1f01b1eeeec92e7a36940aa14e2f05b");
@@ -1073,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     mtx.vout[0].nValue = 20000000000;
     vchScript = ParseHex("76a914b6efd80d99179f4f4ff6f4dd0a007d018c385d2188ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[3] = mtx;
+    block.vtx[3] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0xc4d3eb542503e05643cd16f68d750ba5e55c54108e253a37f98ecef1b2374583");
@@ -1087,7 +1087,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     mtx.vout[1].nValue = 5000000;
     vchScript = ParseHex("76a914a84e272933aaf87e1715d7786c51dfaeb5b65a6f88ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[4] = mtx;
+    block.vtx[4] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(1);
     mtx.vin[0].prevout.hash = uint256S("0xe73ae02709850d51c538a8fd89013ee299d906d9f317fe7d30eff6e6c881ac43");
@@ -1101,7 +1101,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     mtx.vout[1].nValue = 1000000;
     vchScript = ParseHex("76a914648d04341d00d7968b3405c034adc38d4d8fb9bd88ac");
     mtx.vout[1].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[5] = mtx;
+    block.vtx[5] = MakeTransactionRef(mtx);
 
     mtx.vin.resize(2);
     mtx.vin[0].prevout.hash = uint256S("0xf1e305f72f450a7d01af712e7c03fe0cc467059c00d2a8f4555cea017591cc48");
@@ -1116,7 +1116,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     mtx.vout[0].nValue = 4000000;
     vchScript = ParseHex("76a9148edb68822f1ad580b043c7b3df2e400f8699eb4888ac");
     mtx.vout[0].scriptPubKey = CScript(vchScript.begin(), vchScript.end());
-    block.vtx[6] = mtx;
+    block.vtx[6] = MakeTransactionRef(mtx);
 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
@@ -1130,8 +1130,8 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
     // We shouldn't match any outpoints (UPDATE_NONE)
-    BOOST_CHECK(!filter.contains(COutPoint(block.vtx[0].GetHash(), 0)));
-    BOOST_CHECK(!filter.contains(COutPoint(block.vtx[3].GetHash(), 0)));
+    BOOST_CHECK(!filter.contains(COutPoint(block.vtx[0]->GetHash(), 0)));
+    BOOST_CHECK(!filter.contains(COutPoint(block.vtx[3]->GetHash(), 0)));
 }
 
 static std::vector<unsigned char> RandomData()
