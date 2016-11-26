@@ -47,7 +47,7 @@ namespace {
     }
 
     template<typename Stream, typename T> void add_to_hash(Stream& s, const T& obj) {
-        ::Serialize(s, obj, SER_GETHASH, 0);
+        ::Serialize(s, obj);
     }
 }
 
@@ -55,20 +55,21 @@ uint256 CBlockHeader::GetHash() const
 {
     CHashWriter writer(SER_GETHASH, 0);
     if (nHeight >= HARDFORK_HEIGHT) {
-        add_to_hash(writer, nTxsBytes);
-        add_to_hash(writer, nTxsCost);
-        add_to_hash(writer, nTxsSigops);
-        add_to_hash(writer, nTxsCount);
+        CHashWriter writer1(SER_GETHASH, 0);
+        CHashWriter writer2(SER_GETHASH, 0);
+        add_to_hash(writer1, nTxsBytes);
+        add_to_hash(writer1, nTxsCost);
+        add_to_hash(writer1, nTxsSigops);
+        add_to_hash(writer1, nTxsCount);
         {
             const uint16_t nDeploymentHardWithinMM = nDeploymentHard;
-            add_to_hash(writer, nDeploymentHardWithinMM);
+            add_to_hash(writer1, nDeploymentHardWithinMM);
         }
-        add_to_hash(writer, nDeploymentSoft);
-        add_to_hash(writer, hashMerkleRoot);
-        add_to_hash(writer, hashMerkleRootWitnesses);
+        add_to_hash(writer1, nDeploymentSoft);
+        add_to_hash(writer1, hashMerkleRoot);
+        add_to_hash(writer1, hashMerkleRootWitnesses);
 
-        const uint256 hashHC = writer.GetHash();
-        writer = CHashWriter(SER_GETHASH, 0);
+        const uint256 hashHC = writer1.GetHash();
 
         assert(vchNonceC3.size() >= 4);
         const uint32_t pos_nonce = (uint32_t(vchNonceC3[0]) << 0x18)
@@ -78,26 +79,25 @@ uint256 CBlockHeader::GetHash() const
         const uint32_t pos = vector_position_for_hc(pos_nonce, 1 << vhashCMTBranches.size());
         const uint256 hashCMR = ComputeMerkleRootFromBranch(hashHC, vhashCMTBranches, pos);
 
-        writer.write("\x77\x77\x77\x77\x01\0\0\0" "\0\0\0\0\0\0\0\0", 0x10);
-        writer.write("\0\0\0\0\0\0\0\0" "\0\0\0\0\0\0\0\0", 0x10);
-        writer.write("\0\0\0\0\0\xff\xff\xff" "\xff", 9);
+        writer2.write("\x77\x77\x77\x77\x01\0\0\0" "\0\0\0\0\0\0\0\0", 0x10);
+        writer2.write("\0\0\0\0\0\0\0\0" "\0\0\0\0\0\0\0\0", 0x10);
+        writer2.write("\0\0\0\0\0\xff\xff\xff" "\xff", 9);
         const CScript serHeight = CScript() << nHeight;
         const uint8_t nLenToken = (serHeight.size() + sizeof(hashCMR) + vchNonceC3.size());
-        ser_writedata8(writer, nLenToken - 3);
-        add_to_hash(writer, nLenToken);
-        add_to_hash(writer, CFlatData(serHeight));
+        ser_writedata8(writer2, nLenToken - 3);
+        add_to_hash(writer2, nLenToken);
+        add_to_hash(writer2, CFlatData(serHeight));
         {
             const uint8_t nDeploymentMMHard = nDeploymentHard >> 16;
-            add_to_hash(writer, nDeploymentMMHard);
+            add_to_hash(writer2, nDeploymentMMHard);
         }
-        add_to_hash(writer, hashCMR);
-        add_to_hash(writer, vchNonceC3);
-        add_to_hash(writer, CFlatData(vchNonceC3));
-        add_to_hash(writer, nLenToken);
-        writer.write("\x01\0\0\0\0\0\0\0" "\0\0\0\0\0\0", 0xE);
+        add_to_hash(writer2, hashCMR);
+        add_to_hash(writer2, vchNonceC3);
+        add_to_hash(writer2, CFlatData(vchNonceC3));
+        add_to_hash(writer2, nLenToken);
+        writer2.write("\x01\0\0\0\0\0\0\0" "\0\0\0\0\0\0", 0xE);
 
-        const uint256 hashHB = writer.GetHash();
-        writer = CHashWriter(SER_GETHASH, 0);
+        const uint256 hashHB = writer2.GetHash();
 
         assert(nNonceC2 >> 0x18);
         ser_writedata24(writer, nNonceC2);
