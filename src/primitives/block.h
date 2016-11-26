@@ -13,7 +13,7 @@
 static const uint32_t HARDFORK_HEIGHT = 4194304;  // 2088 Q1
 static const int SERIALIZE_BLOCK_LEGACY = 0x04000000;
 
-const int64_t GetBlockTime(uint32_t nBlockTTime, int64_t nPrevBlockTime);
+int64_t GetBlockTime(uint32_t nBlockTTime, int64_t nPrevBlockTime);
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work

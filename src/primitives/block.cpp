@@ -11,7 +11,7 @@
 #include "consensus/merkle.h"
 #include "crypto/common.h"
 
-const int64_t GetBlockTime(uint32_t nTTime, int64_t nPrevBlockTime)
+int64_t GetBlockTime(uint32_t nTTime, int64_t nPrevBlockTime)
 {
     const int32_t nPrevBlockHTime = (nPrevBlockTime >> 32);
     const uint32_t nPrevBlockTTime = (nPrevBlockTime & 0xffffffff);
