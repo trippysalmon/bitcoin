@@ -142,6 +142,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     CBlockIndex* pindexPrev = chainActive.Tip();
     nHeight = pindexPrev->nHeight + 1;
 
+    pblock->nHeight = nHeight;
+    pblock->vchNonceC3.push_back(0xaa);
+    pblock->vchNonceC3.push_back(0xbb);
+    pblock->vchNonceC3.push_back(0xcc);
+    pblock->vchNonceC3.push_back(0xdd);
+    pblock->nNonceC2a = 0xcdab;
+    pblock->nNonceC2b = 0xef;
     pblock->nDeploymentSoft = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
@@ -180,6 +187,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
+    pblock->nTxsBytes = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
+    pblock->nTxsCost = GetBlockWeight(*pblock);
+    pblock->hashMerkleRootWitnesses = BlockWitnessMerkleRoot(*pblock, NULL, true);
+    pblock->nTxsCount = pblock->vtx.size();
     pblocktemplate->vTxFees[0] = -nFees;
 
     uint64_t nSerializeSize = GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
@@ -606,5 +617,9 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+    pblock->nTxsBytes = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
+    pblock->nTxsCost = GetBlockWeight(*pblock);
+    pblock->hashMerkleRootWitnesses = BlockWitnessMerkleRoot(*pblock, NULL, true);
+    pblock->nTxsCount = pblock->vtx.size();
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 }

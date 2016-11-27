@@ -99,8 +99,10 @@ uint256 CBlockHeader::GetHash() const
 
         const uint256 hashHB = writer2.GetHash();
 
-        assert(nNonceC2 >> 0x18);
-        ser_writedata24(writer, nNonceC2);
+//        assert(!(nNonceC2 >> 0x18));
+//        ser_writedata24(writer, nNonceC2);
+        add_to_hash(writer, nNonceC2a);
+        add_to_hash(writer, nNonceC2b);
         writer.write("\x60", 1);
         add_to_hash(writer, hashPrevBlock);
         add_to_hash(writer, hashHB);
@@ -121,6 +123,7 @@ uint256 CBlockHeader::GetHash() const
 std::string CBlock::ToString() const
 {
     std::stringstream s;
+    uint32_t nNonceC2 = nNonceC2a + (nNonceC2b << 16);
     s << strprintf("CBlock(hash=%s, height=%u, deploySoft=0x%08x, deployHard=0x%06x, hashPrevBlock=%s, hashMerkleRoot=%s, hashMerkleRootWitness=%s, nTime=%u, nBits=%08x, nNonce=%u:%u:%s, vtx=%u, vbranches)\n",
         GetHash().ToString(),
         nHeight,

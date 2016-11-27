@@ -2432,12 +2432,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Start enforcing the DERSIG (BIP66) rule
-    if (pindex->nHeight >= chainparams.GetConsensus().BIP66Height) {
+    if (block.nHeight >= chainparams.GetConsensus().BIP66Height) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
     // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
-    if (pindex->nHeight >= chainparams.GetConsensus().BIP65Height) {
+    if (block.nHeight >= chainparams.GetConsensus().BIP65Height) {
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
@@ -3543,8 +3543,16 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
 
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    const uint32_t nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
     // Check proof of work
+    if (nHeight >= HARDFORK_HEIGHT) {
+        if (block.nHeight != nHeight)
+            return state.DoS(100, false, REJECT_INVALID, "bad-height", false, "incorrect height");
+        CScript expect = CScript() << nHeight;
+        if (block.vchNonceC3.size() < 4 || block.vchNonceC3.size() > (70 - expect.size()))
+            return state.DoS(100, false, REJECT_INVALID, "bad-class-3-nonce", false, "incorrect class-3 nonce size");
+    }
+
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
 
@@ -3570,7 +3578,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    const uint32_t nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
 
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     int nLockTimeFlags = 0;
@@ -3590,7 +3598,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (nHeight >= consensusParams.BIP34Height)
+    if (nHeight >= consensusParams.BIP34Height && nHeight < HARDFORK_HEIGHT)
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
@@ -3608,7 +3616,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
-    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE && nHeight < HARDFORK_HEIGHT) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != -1) {
             bool malleated = false;
@@ -3626,6 +3634,13 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
             fHaveWitness = true;
         }
     }
+    else if (nHeight >= HARDFORK_HEIGHT) {
+        bool malleated = false;
+        uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated, true);
+        if (hashWitness != block.hashMerkleRootWitnesses)
+            return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
+        fHaveWitness = true;
+    }
 
     // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
     if (!fHaveWitness) {
@@ -3642,9 +3657,15 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     // large by filling up the coinbase witness, which doesn't change
     // the block hash, so we couldn't mark the block as permanently
     // failed).
-    if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
+    if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT & nHeight < HARDFORK_HEIGHT) {
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
     }
+    else if (nHeight >= HARDFORK_HEIGHT && (GetBlockWeight(block) > (MAX_BLOCK_WEIGHT * 2) || GetBlockWeight(block) > block.nTxsCost))
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
+    if (nHeight >= HARDFORK_HEIGHT && ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > block.nTxsBytes)
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-size", false, strprintf("%s : size limit failed", __func__));
+    if (nHeight >= HARDFORK_HEIGHT && block.vtx.size() > block.nTxsCount)
+        return state.DoS(100, false, REJECT_INVALID, "bad-txs-count", false, strprintf("%s : txs count failed", __func__));
 
     return true;
 }

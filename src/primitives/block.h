@@ -10,7 +10,7 @@
 #include "serialize.h"
 #include "uint256.h"
 
-static const uint32_t HARDFORK_HEIGHT = 4194304;  // 2088 Q1
+static const uint32_t HARDFORK_HEIGHT = 200;  // 2088 Q1
 static const int SERIALIZE_BLOCK_LEGACY = 0x04000000;
 
 int64_t GetBlockTime(uint32_t nBlockTTime, int64_t nPrevBlockTime);
@@ -33,7 +33,8 @@ public:
     uint32_t nTTime;
     uint32_t nBits;
     uint32_t nNonce;
-    uint32_t nNonceC2;
+    uint16_t nNonceC2a;
+    uint8_t nNonceC2b;
     std::vector<uint8_t> vchNonceC3;
 
     // info about transactions
@@ -75,7 +76,8 @@ public:
             READWRITE(nTTime);
             READWRITE(nBits);
             READWRITE(nNonce);
-            READWRITE(nNonceC2);
+            READWRITE(nNonceC2a);
+            READWRITE(nNonceC2b);
             READWRITE(vchNonceC3);
             if (vchNonceC3.size() < 4 && nHeight >= HARDFORK_HEIGHT) {
                 throw std::ios_base::failure("CBlockHeader::SerializationOp: short class 3 nonce");
@@ -103,7 +105,8 @@ public:
         nTTime = 0;
         nBits = 0;
         nNonce = 0;
-        nNonceC2 = 0;
+        nNonceC2a = 0;
+        nNonceC2b = 0;
         nTxsBytes = 0;
         nTxsCost = 0;
         nTxsSigops = 0;
