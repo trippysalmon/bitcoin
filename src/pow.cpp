@@ -9,9 +9,11 @@
 #include "chain.h"
 #include "consensus/consensus.h"
 #include "primitives/block.h"
+#include "script/bitcoinconsensus.h"
 #include "uint256.h"
+#include "versionbits.h"
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, const uint64_t flags)
 {
     int nHeight = pindexLast->nHeight + 1;
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
@@ -47,7 +49,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Code courtesy of Art Forz
     int nInterval = params.DifficultyAdjustmentInterval();
     int blockstogoback = nInterval;
-    if (nHeight != nInterval && nHeight > params.nBIP99Height)
+    if (flags | bitcoinconsensus_HEADER_FLAGS_VERIFY_TIMEWARP && nHeight != nInterval)
         blockstogoback = nInterval + 1;
 
     // Go back by what we want to be 14 days worth of blocks
