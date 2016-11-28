@@ -7,6 +7,7 @@
 #define BITCOIN_MINER_H
 
 #include "primitives/block.h"
+#include "script/bitcoinconsensus.h"
 #include "txmempool.h"
 
 #include <stdint.h>
@@ -133,6 +134,8 @@ struct update_for_parent_inclusion
 /** Generate a new block, without valid proof-of-work */
 class BlockAssembler
 {
+protected:
+    const uint64_t flags; // Consensus flags for this block assembler
 private:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
@@ -162,7 +165,7 @@ private:
     bool blockFinished;
 
 public:
-    BlockAssembler(const CChainParams& chainparams);
+    BlockAssembler(const CChainParams& chainparams, const uint64_t flags=bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE);
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
 
@@ -207,6 +210,6 @@ private:
 
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, const uint64_t flags);
 
 #endif // BITCOIN_MINER_H

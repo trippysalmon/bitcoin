@@ -393,6 +393,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             + HelpExampleRpc("getblocktemplate", "")
          );
 
+    uint64_t flags = bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE;
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     LOCK(cs_main);
 
     std::string strMode = "template";
@@ -543,10 +545,9 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         pindexPrev = pindexPrevNew;
     }
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
-    const Consensus::Params& consensusParams = Params().GetConsensus();
 
     // Update nTime
-    UpdateTime(pblock, consensusParams, pindexPrev);
+    UpdateTime(pblock, consensusParams, pindexPrev, flags);
     pblock->nNonce = 0;
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
