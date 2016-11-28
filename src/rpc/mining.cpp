@@ -547,6 +547,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // Update nTime
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_TIMEWARP, versionbitscache) == THRESHOLD_ACTIVE)
+        flags |= bitcoinconsensus_HEADER_FLAGS_VERIFY_TIMEWARP;
     UpdateTime(pblock, consensusParams, pindexPrev, flags);
     pblock->nNonce = 0;
 

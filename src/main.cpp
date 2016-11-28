@@ -3540,6 +3540,8 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
 {
     uint64_t flags = bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE;
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_TIMEWARP, versionbitscache) == THRESHOLD_ACTIVE)
+        flags |= bitcoinconsensus_HEADER_FLAGS_VERIFY_TIMEWARP;
 
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
     // Check proof of work
