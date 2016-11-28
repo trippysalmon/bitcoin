@@ -3551,6 +3551,12 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     if (block.GetBlockTime() > nAdjustedTime + 2 * 60 * 60)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
+    if (block.nVersion < 0) {
+        const std::string msg = "Hardfork message that could be commited to the coinbase.";
+        const std::string generalMsg = " wants to do a hardfork, but your client won't follow that unvalid chain. They want to tell you:";
+        return state.Invalid(false, REJECT_OBSOLETE, strprintf("nVersion=0x%08x: %s %s ", block.nVersion, generalMsg, msg));
+    }
+
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
     if((block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
