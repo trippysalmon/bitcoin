@@ -224,6 +224,10 @@ int64_t GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& co
     if (fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == consensusParams.BIP34Hash)))
         flags |= bitcoinconsensus_TX_VERIFY_BIP30;
 
+    // Enforce rule that the coinbase starts with serialized block height
+    if (pindex->nHeight >= consensusParams.BIP34Height)
+        flags |= bitcoinconsensus_TX_COINBASE_VERIFY_BIP34;
+
     // Start enforcing the DERSIG (BIP66) rule
     if (pindex->nHeight >= consensusParams.BIP66Height) {
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG;
@@ -233,6 +237,10 @@ int64_t GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& co
     if (pindex->nHeight >= consensusParams.BIP65Height) {
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY;
     }
+
+    // Start enforcing BIP113 (Median Time Past) using versionbits logic.
+    if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE)
+        flags |= bitcoinconsensus_LOCKTIME_MEDIAN_TIME_PAST;
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
