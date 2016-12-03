@@ -204,6 +204,11 @@ int64_t GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& co
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
+    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
+    if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+        flags |= bitcoinconsensus_LOCKTIME_VERIFY_SEQUENCE | bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY;
+    }
+
     // Start enforcing WITNESS rules using versionbits logic.
     if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS;
