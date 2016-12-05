@@ -34,6 +34,18 @@ using namespace std;
 // Uncomment if you want to output updated JSON tests.
 // #define UPDATE_JSON_TESTS
 
+#define NON_CONSENSUS_SCRIPT_FLAGS (                                \
+    SCRIPT_VERIFY_STRICTENC |                                       \
+    SCRIPT_VERIFY_LOW_S |                                           \
+    SCRIPT_VERIFY_SIGPUSHONLY |                                     \
+    SCRIPT_VERIFY_MINIMALDATA |                                     \
+    SCRIPT_VERIFY_CLEANSTACK |                                      \
+    SCRIPT_VERIFY_MINIMALIF |                                       \
+    SCRIPT_VERIFY_NULLFAIL |                                        \
+    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE |                              \
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |                      \
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM )
+
 static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
 unsigned int ParseScriptFlags(string strFlags);
@@ -157,6 +169,26 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CSc
     return txSpend;
 }
 
+static uint64_t ConsensusFlagsFromScriptFlags(const uint64_t flags)
+{
+    uint64_t consensusFlags = bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE;
+
+    if (flags & SCRIPT_VERIFY_P2SH)
+        consensusFlags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH;
+    if (flags & SCRIPT_VERIFY_DERSIG)
+        consensusFlags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG;
+    if (flags & SCRIPT_VERIFY_NULLDUMMY)
+        consensusFlags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY;
+    if (flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
+        consensusFlags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY;
+    if (flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
+        consensusFlags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY;
+    if (flags & SCRIPT_VERIFY_WITNESS)
+        consensusFlags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS;
+
+    return consensusFlags;
+}
+
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, int flags, const std::string& message, int scriptError, CAmount nValue = 0)
 {
     bool expect = (scriptError == SCRIPT_ERR_OK);
@@ -173,8 +205,8 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
 #if defined(HAVE_CONSENSUS_LIB)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << tx2;
-    int libconsensus_flags = flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL;
-    if (libconsensus_flags == flags) {
+    if (!(flags & NON_CONSENSUS_SCRIPT_FLAGS)) {
+        const uint64_t libconsensus_flags = ConsensusFlagsFromScriptFlags(flags);
         if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
             BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), txCredit.vout[0].nValue, (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, NULL) == expect, message);
         } else {
