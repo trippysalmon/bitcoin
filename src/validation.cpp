@@ -2986,7 +2986,7 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
 }
 
 /** Store block on disk. If dbp is non-NULL, the file is known to already reside on disk */
-static bool AcceptBlock(const CBlock& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock)
+static bool AcceptBlock(const CBlock& block, CValidationState& state, const CChainParams& chainparams, const int64_t flags, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock)
 {
     if (fNewBlock) *fNewBlock = false;
     AssertLockHeld(cs_main);
@@ -3024,7 +3024,6 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
     }
     if (fNewBlock) *fNewBlock = true;
 
-    const int64_t flags = GetConsensusFlags(pindex, chainparams.GetConsensus(), versionbitscache);
     if (!CheckBlock(block, state, chainparams.GetConsensus(), GetAdjustedTime()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), flags, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
@@ -3043,12 +3042,12 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
         if (dbp != NULL)
             blockPos = *dbp;
         if (!FindBlockPos(state, blockPos, nBlockSize+8, nHeight, block.GetBlockTime(), dbp != NULL))
-            return error("AcceptBlock(): FindBlockPos failed");
+            return error("%s: FindBlockPos failed", __func__);
         if (dbp == NULL)
             if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
                 AbortNode(state, "Failed to write block");
         if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
-            return error("AcceptBlock(): ReceivedBlockTransactions failed");
+            return error("%s: ReceivedBlockTransactions failed", __func__);
     } catch (const std::runtime_error& e) {
         return AbortNode(state, std::string("System error: ") + e.what());
     }
@@ -3068,7 +3067,8 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         CBlockIndex *pindex = NULL;
         if (fNewBlock) *fNewBlock = false;
         CValidationState state;
-        bool ret = AcceptBlock(*pblock, state, chainparams, &pindex, fForceProcessing, NULL, fNewBlock);
+        const int64_t flags = GetConsensusFlags(pindex, chainparams.GetConsensus(), versionbitscache);
+        bool ret = AcceptBlock(*pblock, state, chainparams, flags, &pindex, fForceProcessing, NULL, fNewBlock);
         CheckBlockIndex(chainparams.GetConsensus());
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
@@ -3660,6 +3660,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
     // Map of disk positions for blocks with unknown parent (only used for reindex)
     static std::multimap<uint256, CDiskBlockPos> mapBlocksUnknownParent;
     int64_t nStart = GetTimeMillis();
+    const int64_t flags = bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE;
 
     int nLoaded = 0;
     try {
@@ -3714,7 +3715,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 if (mapBlockIndex.count(hash) == 0 || (mapBlockIndex[hash]->nStatus & BLOCK_HAVE_DATA) == 0) {
                     LOCK(cs_main);
                     CValidationState state;
-                    if (AcceptBlock(block, state, chainparams, NULL, true, dbp, NULL))
+                    if (AcceptBlock(block, state, chainparams, flags, NULL, true, dbp, NULL))
                         nLoaded++;
                     if (state.IsError())
                         break;
@@ -3747,7 +3748,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                                     head.ToString());
                             LOCK(cs_main);
                             CValidationState dummy;
-                            if (AcceptBlock(block, dummy, chainparams, NULL, true, &it->second, NULL))
+                            if (AcceptBlock(block, dummy, chainparams, flags, NULL, true, &it->second, NULL))
                             {
                                 nLoaded++;
                                 queue.push_back(block.GetHash());
