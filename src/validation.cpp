@@ -3655,12 +3655,11 @@ bool InitBlockIndex(const CChainParams& chainparams)
     return true;
 }
 
-bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskBlockPos *dbp)
+bool LoadExternalBlockFile(const CChainParams& chainparams, const int64_t flags, FILE* fileIn, CDiskBlockPos *dbp)
 {
     // Map of disk positions for blocks with unknown parent (only used for reindex)
     static std::multimap<uint256, CDiskBlockPos> mapBlocksUnknownParent;
     int64_t nStart = GetTimeMillis();
-    const int64_t flags = bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE;
 
     int nLoaded = 0;
     try {
