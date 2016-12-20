@@ -34,17 +34,13 @@ using namespace std;
 // Uncomment if you want to output updated JSON tests.
 // #define UPDATE_JSON_TESTS
 
-#define NON_CONSENSUS_SCRIPT_FLAGS (                                \
-    SCRIPT_VERIFY_STRICTENC |                                       \
-    SCRIPT_VERIFY_LOW_S |                                           \
-    SCRIPT_VERIFY_SIGPUSHONLY |                                     \
-    SCRIPT_VERIFY_MINIMALDATA |                                     \
-    SCRIPT_VERIFY_CLEANSTACK |                                      \
-    SCRIPT_VERIFY_MINIMALIF |                                       \
-    SCRIPT_VERIFY_NULLFAIL |                                        \
-    SCRIPT_VERIFY_WITNESS_PUBKEYTYPE |                              \
-    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |                      \
-    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM )
+#define ALL_CONSENSUS_SCRIPT_FLAGS (            \
+    SCRIPT_VERIFY_P2SH |                        \
+    SCRIPT_VERIFY_DERSIG |                      \
+    SCRIPT_VERIFY_NULLDUMMY |                   \
+    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |         \
+    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |         \
+    SCRIPT_VERIFY_WITNESS )
 
 static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
@@ -205,7 +201,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
 #if defined(HAVE_CONSENSUS_LIB)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << tx2;
-    if (!(flags & NON_CONSENSUS_SCRIPT_FLAGS)) {
+    if (!(flags & ~(ALL_CONSENSUS_SCRIPT_FLAGS))) {
         const uint64_t libconsensus_flags = ConsensusFlagsFromScriptFlags(flags);
         if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
             BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), txCredit.vout[0].nValue, (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, NULL) == expect, message);
