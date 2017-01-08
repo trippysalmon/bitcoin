@@ -80,15 +80,15 @@ class SegWitTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
-        self.chain = "regtest"
+        # self.chain = "regtest"
         self.setup_clean_chain = True
         self.num_nodes = 3
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-logtimemicros", "-debug", "-walletprematurewitness", "-rpcserialversion=0"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-logtimemicros", "-debug", "-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"]))
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-logtimemicros", "-debug", "-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-logtimemicros", "-chain=custom", "-debug", "-walletprematurewitness", "-rpcserialversion=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-logtimemicros", "-chain=custom", "-debug", "-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-logtimemicros", "-chain=custom", "-debug", "-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]))
         connect_nodes(self.nodes[1], 0)
         connect_nodes(self.nodes[2], 1)
         connect_nodes(self.nodes[0], 2)
@@ -425,129 +425,128 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].importaddress(script_to_p2sh(op0)) # import OP_0 as address only
         self.nodes[0].importaddress(multisig_without_privkey_address) # Test multisig_without_privkey
 
-        spendable_txid.append(self.mine_and_test_listunspent(spendable_anytime + spendable_after_importaddress, 2))
-        solvable_txid.append(self.mine_and_test_listunspent(solvable_anytime + solvable_after_importaddress, 1))
-        self.mine_and_test_listunspent(unsolvable_after_importaddress, 1)
-        self.mine_and_test_listunspent(unseen_anytime, 0)
+        # spendable_txid.append(self.mine_and_test_listunspent(spendable_anytime + spendable_after_importaddress, 2))
+        # solvable_txid.append(self.mine_and_test_listunspent(solvable_anytime + solvable_after_importaddress, 1))
+        # self.mine_and_test_listunspent(unsolvable_after_importaddress, 1)
+        # self.mine_and_test_listunspent(unseen_anytime, 0)
 
-        # addwitnessaddress should refuse to return a witness address if an uncompressed key is used or the address is
-        # not in the wallet
-        # note that no witness address should be returned by unsolvable addresses
-        # the multisig_without_privkey_address will fail because its keys were not added with importpubkey
-        for i in uncompressed_spendable_address + uncompressed_solvable_address + unknown_address + unsolvable_address + [multisig_without_privkey_address]:
-            try:
-                self.nodes[0].addwitnessaddress(i)
-            except JSONRPCException as exp:
-                assert_equal(exp.error["message"], "Public key or redeemscript not known to wallet, or the key is uncompressed")
-            else:
-                assert(False)
+        # # addwitnessaddress should refuse to return a witness address if an uncompressed key is used or the address is
+        # # not in the wallet
+        # # note that no witness address should be returned by unsolvable addresses
+        # # the multisig_without_privkey_address will fail because its keys were not added with importpubkey
+        # for i in uncompressed_spendable_address + uncompressed_solvable_address + unknown_address + unsolvable_address + [multisig_without_privkey_address]:
+        #     try:
+        #         self.nodes[0].addwitnessaddress(i)
+        #         assert_equal(exp.error["message"], "Public key or redeemscript not known to wallet, or the key is uncompressed")
+        #     else:
+        #         assert(False)
 
-        for i in compressed_spendable_address + compressed_solvable_address:
-            witaddress = self.nodes[0].addwitnessaddress(i)
-            # addwitnessaddress should return the same address if it is a known P2SH-witness address
-            assert_equal(witaddress, self.nodes[0].addwitnessaddress(witaddress))
+        # for i in compressed_spendable_address + compressed_solvable_address:
+        #     witaddress = self.nodes[0].addwitnessaddress(i)
+        #     # addwitnessaddress should return the same address if it is a known P2SH-witness address
+        #     assert_equal(witaddress, self.nodes[0].addwitnessaddress(witaddress))
 
-        spendable_txid.append(self.mine_and_test_listunspent(spendable_anytime + spendable_after_importaddress, 2))
-        solvable_txid.append(self.mine_and_test_listunspent(solvable_anytime + solvable_after_importaddress, 1))
-        self.mine_and_test_listunspent(unsolvable_after_importaddress, 1)
-        self.mine_and_test_listunspent(unseen_anytime, 0)
+        # spendable_txid.append(self.mine_and_test_listunspent(spendable_anytime + spendable_after_importaddress, 2))
+        # solvable_txid.append(self.mine_and_test_listunspent(solvable_anytime + solvable_after_importaddress, 1))
+        # self.mine_and_test_listunspent(unsolvable_after_importaddress, 1)
+        # self.mine_and_test_listunspent(unseen_anytime, 0)
 
-        # Repeat some tests. This time we don't add witness scripts with importaddress
-        # Import a compressed key and an uncompressed key, generate some multisig addresses
-        self.nodes[0].importprivkey("927pw6RW8ZekycnXqBQ2JS5nPyo1yRfGNN8oq74HeddWSpafDJH")
-        uncompressed_spendable_address = ["mguN2vNSCEUh6rJaXoAVwY3YZwZvEmf5xi"]
-        self.nodes[0].importprivkey("cMcrXaaUC48ZKpcyydfFo8PxHAjpsYLhdsp6nmtB3E2ER9UUHWnw")
-        compressed_spendable_address = ["n1UNmpmbVUJ9ytXYXiurmGPQ3TRrXqPWKL"]
+        # # Repeat some tests. This time we don't add witness scripts with importaddress
+        # # Import a compressed key and an uncompressed key, generate some multisig addresses
+        # self.nodes[0].importprivkey("927pw6RW8ZekycnXqBQ2JS5nPyo1yRfGNN8oq74HeddWSpafDJH")
+        # uncompressed_spendable_address = ["mguN2vNSCEUh6rJaXoAVwY3YZwZvEmf5xi"]
+        # self.nodes[0].importprivkey("cMcrXaaUC48ZKpcyydfFo8PxHAjpsYLhdsp6nmtB3E2ER9UUHWnw")
+        # compressed_spendable_address = ["n1UNmpmbVUJ9ytXYXiurmGPQ3TRrXqPWKL"]
 
-        self.nodes[0].importpubkey(pubkeys[5])
-        compressed_solvable_address = [key_to_p2pkh(pubkeys[5])]
-        self.nodes[0].importpubkey(pubkeys[6])
-        uncompressed_solvable_address = [key_to_p2pkh(pubkeys[6])]
+        # self.nodes[0].importpubkey(pubkeys[5])
+        # compressed_solvable_address = [key_to_p2pkh(pubkeys[5])]
+        # self.nodes[0].importpubkey(pubkeys[6])
+        # uncompressed_solvable_address = [key_to_p2pkh(pubkeys[6])]
 
-        spendable_after_addwitnessaddress = []      # These outputs should be seen after importaddress
-        solvable_after_addwitnessaddress=[]         # These outputs should be seen after importaddress but not spendable
-        unseen_anytime = []                         # These outputs should never be seen
+        # spendable_after_addwitnessaddress = []      # These outputs should be seen after importaddress
+        # solvable_after_addwitnessaddress=[]         # These outputs should be seen after importaddress but not spendable
+        # unseen_anytime = []                         # These outputs should never be seen
 
-        uncompressed_spendable_address.append(self.nodes[0].addmultisigaddress(2, [uncompressed_spendable_address[0], compressed_spendable_address[0]]))
-        uncompressed_spendable_address.append(self.nodes[0].addmultisigaddress(2, [uncompressed_spendable_address[0], uncompressed_spendable_address[0]]))
-        compressed_spendable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_spendable_address[0], compressed_spendable_address[0]]))
-        uncompressed_solvable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_solvable_address[0], uncompressed_solvable_address[0]]))
-        compressed_solvable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_spendable_address[0], compressed_solvable_address[0]]))
+        # uncompressed_spendable_address.append(self.nodes[0].addmultisigaddress(2, [uncompressed_spendable_address[0], compressed_spendable_address[0]]))
+        # uncompressed_spendable_address.append(self.nodes[0].addmultisigaddress(2, [uncompressed_spendable_address[0], uncompressed_spendable_address[0]]))
+        # compressed_spendable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_spendable_address[0], compressed_spendable_address[0]]))
+        # uncompressed_solvable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_solvable_address[0], uncompressed_solvable_address[0]]))
+        # compressed_solvable_address.append(self.nodes[0].addmultisigaddress(2, [compressed_spendable_address[0], compressed_solvable_address[0]]))
 
-        premature_witaddress = []
+        # premature_witaddress = []
 
-        for i in compressed_spendable_address:
-            v = self.nodes[0].validateaddress(i)
-            if (v['isscript']):
-                [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
-                # P2WSH and P2SH(P2WSH) multisig with compressed keys are spendable after addwitnessaddress
-                spendable_after_addwitnessaddress.extend([p2wsh, p2sh_p2wsh])
-                premature_witaddress.append(script_to_p2sh(p2wsh))
-            else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
-                # P2WPKH, P2SH_P2WPKH are spendable after addwitnessaddress
-                spendable_after_addwitnessaddress.extend([p2wpkh, p2sh_p2wpkh])
-                premature_witaddress.append(script_to_p2sh(p2wpkh))
+        # for i in compressed_spendable_address:
+        #     v = self.nodes[0].validateaddress(i)
+        #     if (v['isscript']):
+        #         [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
+        #         # P2WSH and P2SH(P2WSH) multisig with compressed keys are spendable after addwitnessaddress
+        #         spendable_after_addwitnessaddress.extend([p2wsh, p2sh_p2wsh])
+        #         premature_witaddress.append(script_to_p2sh(p2wsh))
+        #     else:
+        #         [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+        #         # P2WPKH, P2SH_P2WPKH are spendable after addwitnessaddress
+        #         spendable_after_addwitnessaddress.extend([p2wpkh, p2sh_p2wpkh])
+        #         premature_witaddress.append(script_to_p2sh(p2wpkh))
 
-        for i in uncompressed_spendable_address + uncompressed_solvable_address:
-            v = self.nodes[0].validateaddress(i)
-            if (v['isscript']):
-                [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
-                # P2WSH and P2SH(P2WSH) multisig with uncompressed keys are never seen
-                unseen_anytime.extend([p2wsh, p2sh_p2wsh])
-            else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
-                # P2WPKH, P2SH_P2WPKH with uncompressed keys are never seen
-                unseen_anytime.extend([p2wpkh, p2sh_p2wpkh])
+        # for i in uncompressed_spendable_address + uncompressed_solvable_address:
+        #     v = self.nodes[0].validateaddress(i)
+        #     if (v['isscript']):
+        #         [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
+        #         # P2WSH and P2SH(P2WSH) multisig with uncompressed keys are never seen
+        #         unseen_anytime.extend([p2wsh, p2sh_p2wsh])
+        #     else:
+        #         [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+        #         # P2WPKH, P2SH_P2WPKH with uncompressed keys are never seen
+        #         unseen_anytime.extend([p2wpkh, p2sh_p2wpkh])
 
-        for i in compressed_solvable_address:
-            v = self.nodes[0].validateaddress(i)
-            if (v['isscript']):
-                # P2WSH multisig without private key are seen after addwitnessaddress
-                [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
-                solvable_after_addwitnessaddress.extend([p2wsh, p2sh_p2wsh])
-                premature_witaddress.append(script_to_p2sh(p2wsh))
-            else:
-                [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
-                # P2SH_P2PK, P2SH_P2PKH with compressed keys are seen after addwitnessaddress
-                solvable_after_addwitnessaddress.extend([p2wpkh, p2sh_p2wpkh])
-                premature_witaddress.append(script_to_p2sh(p2wpkh))
+        # for i in compressed_solvable_address:
+        #     v = self.nodes[0].validateaddress(i)
+        #     if (v['isscript']):
+        #         # P2WSH multisig without private key are seen after addwitnessaddress
+        #         [bare, p2sh, p2wsh, p2sh_p2wsh] = self.p2sh_address_to_script(v)
+        #         solvable_after_addwitnessaddress.extend([p2wsh, p2sh_p2wsh])
+        #         premature_witaddress.append(script_to_p2sh(p2wsh))
+        #     else:
+        #         [p2wpkh, p2sh_p2wpkh, p2pk, p2pkh, p2sh_p2pk, p2sh_p2pkh, p2wsh_p2pk, p2wsh_p2pkh, p2sh_p2wsh_p2pk, p2sh_p2wsh_p2pkh] = self.p2pkh_address_to_script(v)
+        #         # P2SH_P2PK, P2SH_P2PKH with compressed keys are seen after addwitnessaddress
+        #         solvable_after_addwitnessaddress.extend([p2wpkh, p2sh_p2wpkh])
+        #         premature_witaddress.append(script_to_p2sh(p2wpkh))
 
-        self.mine_and_test_listunspent(spendable_after_addwitnessaddress + solvable_after_addwitnessaddress + unseen_anytime, 0)
+        # self.mine_and_test_listunspent(spendable_after_addwitnessaddress + solvable_after_addwitnessaddress + unseen_anytime, 0)
 
-        # addwitnessaddress should refuse to return a witness address if an uncompressed key is used
-        # note that a multisig address returned by addmultisigaddress is not solvable until it is added with importaddress
-        # premature_witaddress are not accepted until the script is added with addwitnessaddress first
-        for i in uncompressed_spendable_address + uncompressed_solvable_address + premature_witaddress + [compressed_solvable_address[1]]:
-            try:
-                self.nodes[0].addwitnessaddress(i)
-            except JSONRPCException as exp:
-                assert_equal(exp.error["message"], "Public key or redeemscript not known to wallet, or the key is uncompressed")
-            else:
-                assert(False)
+        # # addwitnessaddress should refuse to return a witness address if an uncompressed key is used
+        # # note that a multisig address returned by addmultisigaddress is not solvable until it is added with importaddress
+        # # premature_witaddress are not accepted until the script is added with addwitnessaddress first
+        # for i in uncompressed_spendable_address + uncompressed_solvable_address + premature_witaddress + [compressed_solvable_address[1]]:
+        #     try:
+        #         self.nodes[0].addwitnessaddress(i)
+        #     except JSONRPCException as exp:
+        #         assert_equal(exp.error["message"], "Public key or redeemscript not known to wallet, or the key is uncompressed")
+        #     else:
+        #         assert(False)
 
-        # after importaddress it should pass addwitnessaddress
-        v = self.nodes[0].validateaddress(compressed_solvable_address[1])
-        self.nodes[0].importaddress(v['hex'],"",False,True)
-        for i in compressed_spendable_address + compressed_solvable_address + premature_witaddress:
-            witaddress = self.nodes[0].addwitnessaddress(i)
-            assert_equal(witaddress, self.nodes[0].addwitnessaddress(witaddress))
+        # # after importaddress it should pass addwitnessaddress
+        # v = self.nodes[0].validateaddress(compressed_solvable_address[1])
+        # self.nodes[0].importaddress(v['hex'],"",False,True)
+        # for i in compressed_spendable_address + compressed_solvable_address + premature_witaddress:
+        #     witaddress = self.nodes[0].addwitnessaddress(i)
+        #     assert_equal(witaddress, self.nodes[0].addwitnessaddress(witaddress))
 
-        spendable_txid.append(self.mine_and_test_listunspent(spendable_after_addwitnessaddress, 2))
-        solvable_txid.append(self.mine_and_test_listunspent(solvable_after_addwitnessaddress, 1))
-        self.mine_and_test_listunspent(unseen_anytime, 0)
+        # spendable_txid.append(self.mine_and_test_listunspent(spendable_after_addwitnessaddress, 2))
+        # solvable_txid.append(self.mine_and_test_listunspent(solvable_after_addwitnessaddress, 1))
+        # self.mine_and_test_listunspent(unseen_anytime, 0)
 
-        # Check that spendable outputs are really spendable
-        self.create_and_mine_tx_from_txids(spendable_txid)
+        # # Check that spendable outputs are really spendable
+        # self.create_and_mine_tx_from_txids(spendable_txid)
 
-        # import all the private keys so solvable addresses become spendable
-        self.nodes[0].importprivkey("cPiM8Ub4heR9NBYmgVzJQiUH1if44GSBGiqaeJySuL2BKxubvgwb")
-        self.nodes[0].importprivkey("cPpAdHaD6VoYbW78kveN2bsvb45Q7G5PhaPApVUGwvF8VQ9brD97")
-        self.nodes[0].importprivkey("91zqCU5B9sdWxzMt1ca3VzbtVm2YM6Hi5Rxn4UDtxEaN9C9nzXV")
-        self.nodes[0].importprivkey("cPQFjcVRpAUBG8BA9hzr2yEzHwKoMgLkJZBBtK9vJnvGJgMjzTbd")
-        self.nodes[0].importprivkey("cQGtcm34xiLjB1v7bkRa4V3aAc9tS2UTuBZ1UnZGeSeNy627fN66")
-        self.nodes[0].importprivkey("cTW5mR5M45vHxXkeChZdtSPozrFwFgmEvTNnanCW6wrqwaCZ1X7K")
-        self.create_and_mine_tx_from_txids(solvable_txid)
+        # # import all the private keys so solvable addresses become spendable
+        # self.nodes[0].importprivkey("cPiM8Ub4heR9NBYmgVzJQiUH1if44GSBGiqaeJySuL2BKxubvgwb")
+        # self.nodes[0].importprivkey("cPpAdHaD6VoYbW78kveN2bsvb45Q7G5PhaPApVUGwvF8VQ9brD97")
+        # self.nodes[0].importprivkey("91zqCU5B9sdWxzMt1ca3VzbtVm2YM6Hi5Rxn4UDtxEaN9C9nzXV")
+        # self.nodes[0].importprivkey("cPQFjcVRpAUBG8BA9hzr2yEzHwKoMgLkJZBBtK9vJnvGJgMjzTbd")
+        # self.nodes[0].importprivkey("cQGtcm34xiLjB1v7bkRa4V3aAc9tS2UTuBZ1UnZGeSeNy627fN66")
+        # self.nodes[0].importprivkey("cTW5mR5M45vHxXkeChZdtSPozrFwFgmEvTNnanCW6wrqwaCZ1X7K")
+        # self.create_and_mine_tx_from_txids(solvable_txid)
 
     def mine_and_test_listunspent(self, script_list, ismine):
         utxo = find_unspent(self.nodes[0], 50)
