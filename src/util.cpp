@@ -435,11 +435,6 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     mapArgs[strArg] = strValue;
 }
 
-void ParseParameters(int argc, const char* const argv[])
-{
-    argsGlobal.ParseParameters(argc, argv);
-}
-
 void ReadConfigFile(const std::string& confPath)
 {
     argsGlobal.ReadConfigFile(confPath);

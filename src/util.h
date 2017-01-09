@@ -191,7 +191,6 @@ void ForceSetArg(const std::string& strArg, const std::string& strValue);
 extern ArgsManager argsGlobal;
 
 // wrappers using the global ArgsManager:
-void ParseParameters(int argc, const char*const argv[]);
 void ReadConfigFile(const std::string& confPath);
 bool IsArgSet(const std::string& strArg);
 std::string GetArg(const std::string& strArg, const std::string& strDefault);

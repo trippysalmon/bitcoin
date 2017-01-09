@@ -72,7 +72,7 @@ bool AppInit(int argc, char* argv[])
     // Parameters
     //
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
-    ParseParameters(argc, argv);
+    argsGlobal.ParseParameters(argc, argv);
 
     // Process help and version before taking care about datadir
     if (IsArgSet("-?") || IsArgSet("-h") ||  IsArgSet("-help") || IsArgSet("-version"))
