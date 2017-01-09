@@ -465,11 +465,6 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue)
     return argsGlobal.SoftSetBoolArg(strArg, fValue);
 }
 
-void ForceSetArg(const std::string& strArg, const std::string& strValue)
-{
-    return argsGlobal.ForceSetArg(strArg, strValue);
-}
-
 
 static const int screenWidth = 79;
 static const int optIndent = 2;
