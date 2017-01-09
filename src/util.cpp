@@ -435,11 +435,6 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     mapArgs[strArg] = strValue;
 }
 
-void ReadConfigFile(const std::string& confPath)
-{
-    argsGlobal.ReadConfigFile(confPath);
-}
-
 bool IsArgSet(const std::string& strArg)
 {
     return argsGlobal.IsArgSet(strArg);
