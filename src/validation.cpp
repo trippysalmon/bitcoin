@@ -1421,6 +1421,9 @@ public:
 
     int64_t BeginTime(const Consensus::Params& params) const { return 0; }
     int64_t EndTime(const Consensus::Params& params) const { return std::numeric_limits<int64_t>::max(); }
+    // TODO show warnings when things are deployed without miner signaling too
+    // BIP9 always shown warnings with unknown deployments becoming active
+    bool LockInOnTimeout(const Consensus::Params& params) const { return false; }
     int Period(const Consensus::Params& params) const { return params.nMinerConfirmationWindow; }
     int Threshold(const Consensus::Params& params) const { return params.nRuleChangeActivationThreshold; }
 
