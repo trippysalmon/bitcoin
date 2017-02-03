@@ -25,6 +25,7 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
                                    "This is intended for regression testing tools and app development.");
         strUsage += HelpMessageGroup(_("Custom chain selection options (only for -chain=custom):"));
         strUsage += HelpMessageOpt("-chainpetname=<name>", _("Alternative name for custom chain (default: custom). This changes the genesis block."));
+        strUsage += HelpMessageOpt("-con_signblockscript=<hexScript>", _("Specify the scriptPubKey for block signing: (default: OP_TRUE))"));
     }
 }
 
