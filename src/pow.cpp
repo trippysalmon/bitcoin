@@ -102,3 +102,9 @@ bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, u
     }
     return CheckProofOfWork(pblock->GetHash(), pblock->nBits, params);
 }
+
+bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock)
+{
+    uint64_t nTries = 10000;
+    return MaybeGenerateProof(params, pblock, nTries);
+}
