@@ -23,5 +23,6 @@ bool CheckProofOfWork(CValidationState& state, uint256 hash, unsigned int nBits,
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params);
 bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, uint64_t& nTries);
+bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock);
 
 #endif // BITCOIN_POW_H
