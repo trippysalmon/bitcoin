@@ -198,6 +198,7 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+    CScript blockScript;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
@@ -226,6 +227,7 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        blockScript = CScript();
     }
 
     CBlockIndex()
@@ -242,6 +244,7 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        blockScript    = block.blockScript;
     }
 
     CDiskBlockPos GetBlockPos() const {
