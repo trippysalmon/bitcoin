@@ -105,3 +105,13 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
     // Check proof of work matches claimed amount
     return CheckProofOfWork(state, block.GetHash(), block.nBits, params);
 }
+
+bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, uint64_t& nTries)
+{
+    static const int nInnerLoopCount = 0x10000;
+    while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, params)) {
+        ++pblock->nNonce;
+        --nTries;
+    }
+    return CheckProofOfWork(pblock->GetHash(), pblock->nBits, params);
+}
