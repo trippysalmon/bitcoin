@@ -9,7 +9,10 @@
 #include "chain.h"
 #include "consensus/validation.h"
 #include "primitives/block.h"
+#include "script/generic.hpp"
 #include "uint256.h"
+
+#define BLOCK_SIGN_SCRIPT_FLAGS (SCRIPT_VERIFY_NONE) // TODO signblocks: complete
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
@@ -103,12 +106,19 @@ static bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::
 
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params)
 {
+    if (params.blocksignScript != CScript()) {
+        return GenericVerifyScript(block.blockScript, params.blocksignScript, BLOCK_SIGN_SCRIPT_FLAGS, block);
+    }
     // Check proof of work matches claimed amount
     return CheckProofOfWork(state, block.GetHash(), block.nBits, params);
 }
 
 bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, uint64_t& nTries)
 {
+    if (params.blocksignScript != CScript()) {
+        return false;
+    }
+
     static const int nInnerLoopCount = 0x10000;
     while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, params)) {
         ++pblock->nNonce;
