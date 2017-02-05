@@ -76,7 +76,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 }
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-static bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
+static bool CheckProofOfWork(const Consensus::Params& params, uint256 hash, unsigned int nBits, CValidationState& state)
 {
     bool fNegative;
     bool fOverflow;
@@ -86,32 +86,31 @@ static bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-        return false;
+        return state.DoS(50, false, REJECT_INVALID, "high-hash-range", false, "proof of work failed");
 
     // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget)
-        return false;
+        return state.DoS(50, false, REJECT_INVALID, "high-hash-target", false, "proof of work failed");
 
     return true;
 }
 
 bool CheckProof(const Consensus::Params& params, const uint256& blockHash, const CBlockHeader& block, CValidationState& state)
 {
-    if (!CheckProofOfWork(blockHash, block.nBits, params))
-        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
-    return true;
+    return CheckProofOfWork(params, blockHash, block.nBits, state);
 }
 
 bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, uint64_t& nTries)
 {
+    CValidationState state;
     static const int nInnerLoopCount = 0x10000;
     uint256 blockHash = pblock->GetHash();
-    while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(blockHash, pblock->nBits, params)) {
+    while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(params, blockHash, pblock->nBits, state)) {
         ++pblock->nNonce;
         blockHash = pblock->GetHash();
         --nTries;
     }
-    return CheckProofOfWork(blockHash, pblock->nBits, params);
+    return CheckProof(params, blockHash, *pblock, state);
 }
 
 bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock)
