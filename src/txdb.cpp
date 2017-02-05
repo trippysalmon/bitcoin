@@ -6,6 +6,7 @@
 #include "txdb.h"
 
 #include "chainparams.h"
+#include "consensus/validation.h"
 #include "hash.h"
 #include "pow.h"
 #include "uint256.h"
@@ -176,6 +177,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
 
     // Load mapBlockIndex
+    CValidationState state;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, uint256> key;
@@ -197,9 +199,10 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
-                    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
-
+                CBlockHeader block = pindexNew->GetBlockHeader();
+                if (!CheckBlockHeader(block, state, Params().GetConsensus())) {
+                    return error("%s: CheckProof: %s, %s", __func__, pindexNew->GetBlockHash().ToString(), pindexNew->ToString());
+                }
                 pcursor->Next();
             } else {
                 return error("LoadBlockIndex() : failed to read value");
