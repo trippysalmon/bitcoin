@@ -75,7 +75,8 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(CValidationState& state, uint256 hash, unsigned int nBits, const Consensus::Params& params)
+/** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
+static bool CheckProofOfWork(CValidationState& state, uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
     bool fNegative;
     bool fOverflow;
@@ -94,7 +95,7 @@ bool CheckProofOfWork(CValidationState& state, uint256 hash, unsigned int nBits,
     return true;
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
+static bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
     CValidationState state;
     return CheckProofOfWork(state, hash, nBits, params);
