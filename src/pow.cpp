@@ -10,7 +10,10 @@
 #include "consensus/validation.h"
 #include "keystore.h"
 #include "primitives/block.h"
+#include "script/generic.hpp"
 #include "uint256.h"
+
+#define BLOCK_SIGN_SCRIPT_FLAGS (SCRIPT_VERIFY_NONE) // TODO signblocks: complete
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
@@ -98,18 +101,36 @@ static bool CheckProofOfWork(const Consensus::Params& params, uint256 hash, unsi
 
 bool CheckProof(const Consensus::Params& params, const uint256& blockHash, const CBlockHeader& block, CValidationState& state)
 {
-    return CheckProofOfWork(params, blockHash, block.nBits, state);
+    if (params.blocksignScript != CScript()) {
+        if (!GenericVerifyScript(block.blockScript, params.blocksignScript, BLOCK_SIGN_SCRIPT_FLAGS, block)) {
+            return state.DoS(50, false, REJECT_INVALID, "invalid-block-script", false, "proof of script failed");
+        }
+    }
+    // Check proof of work matches claimed bits
+    if (!CheckProofOfWork(params, blockHash, block.nBits, state))
+        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+    return true;
 }
 
 bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, const CKeyStore* pkeystore, uint64_t& nTries)
 {
     CValidationState state;
-    static const int nInnerLoopCount = 0x10000;
     uint256 blockHash = pblock->GetHash();
-    while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(params, blockHash, pblock->nBits, state)) {
-        ++pblock->nNonce;
-        blockHash = pblock->GetHash();
-        --nTries;
+    if (params.blocksignScript == CScript()) {
+        static const int nInnerLoopCount = 0x10000;
+        while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(params, blockHash, pblock->nBits, state)) {
+            ++pblock->nNonce;
+            --nTries;
+            blockHash = pblock->GetHash();
+        }
+    } else {
+        nTries = 0; // Only one try for blocksigning
+        if (pkeystore) { // Don't do anything if there's no keystore
+            SignatureData solution(pblock->blockScript);
+            if (GenericSignScript(*pkeystore, *pblock, params.blocksignScript, solution)) {
+                pblock->blockScript = solution.scriptSig;
+            }
+        }
     }
     return CheckProof(params, blockHash, *pblock, state);
 }
@@ -121,7 +142,10 @@ bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock)
     return MaybeGenerateProof(params, pblock, &dummyKeystore, nTries);
 }
 
-void ResetProof(CBlockHeader* pblock)
+void ResetProof(const Consensus::Params& params, CBlockHeader* pblock)
 {
-    pblock->nNonce = 0;
+    if (params.blocksignScript == CScript())
+        pblock->nNonce = 0;
+    else
+        pblock->blockScript = CScript();
 }
