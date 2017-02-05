@@ -99,3 +99,9 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     CValidationState state;
     return CheckProofOfWork(state, hash, nBits, params);
 }
+
+bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params)
+{
+    // Check proof of work matches claimed amount
+    return CheckProofOfWork(state, block.GetHash(), block.nBits, params);
+}
