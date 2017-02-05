@@ -21,6 +21,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(CValidationState& state, uint256 hash, unsigned int nBits, const Consensus::Params& params);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
+bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params);
 bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, uint64_t& nTries);
 bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock);
 
