@@ -23,6 +23,6 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
 bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, const CKeyStore* pkeystore, uint64_t& nTries);
 /** Only for testing pow chains, uses a an empty CKeyStore. */ 
 bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock);
-void ResetProof(CBlockHeader* pblock);
+void ResetProof(const Consensus::Params& params, CBlockHeader* pblock);
 
 #endif // BITCOIN_POW_H

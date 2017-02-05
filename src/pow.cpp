@@ -10,7 +10,10 @@
 #include "consensus/validation.h"
 #include "keystore.h"
 #include "primitives/block.h"
+#include "script/generic.hpp"
 #include "uint256.h"
+
+#define BLOCK_SIGN_SCRIPT_FLAGS (SCRIPT_VERIFY_NONE) // TODO signblocks: complete
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
@@ -98,6 +101,9 @@ static bool CheckProofOfWork(CValidationState& state, uint256 hash, unsigned int
 
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params)
 {
+    if (params.blocksignScript != CScript()) {
+        return GenericVerifyScript(block.blockScript, params.blocksignScript, BLOCK_SIGN_SCRIPT_FLAGS, block);
+    }
     // Check proof of work matches claimed amount
     return CheckProofOfWork(state, block.GetHash(), block.nBits, params);
 }
@@ -105,12 +111,22 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
 bool MaybeGenerateProof(const Consensus::Params& params, CBlockHeader* pblock, const CKeyStore* pkeystore, uint64_t& nTries)
 {
     CValidationState state;
-    static const int nInnerLoopCount = 0x10000;
-    while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(state, pblock->GetHash(), pblock->nBits, params)) {
-        ++pblock->nNonce;
-        --nTries;
+    if (params.blocksignScript == CScript()) {
+        static const int nInnerLoopCount = 0x10000;
+        while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(state, pblock->GetHash(), pblock->nBits, params)) {
+            ++pblock->nNonce;
+            --nTries;
+        }
+    } else {
+        nTries = 0; // Only one try for blocksigning
+        if (pkeystore) { // Don't do anything if there's no keystore
+            SignatureData solution(pblock->blockScript);
+            if (GenericSignScript(*pkeystore, *pblock, params.blocksignScript, solution)) {
+                pblock->blockScript = solution.scriptSig;
+            }
+        }
     }
-    return CheckProofOfWork(state, pblock->GetHash(), pblock->nBits, params);
+    return CheckBlockHeader(*pblock, state, params);
 }
 
 bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock)
@@ -120,7 +136,10 @@ bool GenerateProof(const Consensus::Params& params, CBlockHeader* pblock)
     return MaybeGenerateProof(params, pblock, &dummyKeystore, nTries);
 }
 
-void ResetProof(CBlockHeader* pblock)
+void ResetProof(const Consensus::Params& params, CBlockHeader* pblock)
 {
-    pblock->nNonce = 0;
+    if (params.blocksignScript == CScript())
+        pblock->nNonce = 0;
+    else
+        pblock->blockScript = CScript();
 }
