@@ -21,6 +21,9 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif
 
 #include <memory>
 #include <stdint.h>
@@ -98,6 +101,11 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
 
 UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
 {
+    CKeyStore* blockSignKeystore = NULL;
+#ifdef ENABLE_WALLET
+    blockSignKeystore = pwalletMain;
+#endif
+
     int nHeightStart = 0;
     int nHeightEnd = 0;
     int nHeight = 0;
@@ -120,7 +128,7 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        if (!MaybeGenerateProof(Params().GetConsensus(), pblock, nMaxTries)) {
+        if (!MaybeGenerateProof(Params().GetConsensus(), pblock, blockSignKeystore, nMaxTries)) {
             if (nMaxTries == 0)
                 break;
             else
