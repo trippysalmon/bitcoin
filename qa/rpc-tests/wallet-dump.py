@@ -56,6 +56,7 @@ class WalletDumpTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
+        self.chain = "regtest"
         self.setup_clean_chain = False
         self.num_nodes = 1
         self.extra_args = [["-keypool=90"]]
