@@ -16,6 +16,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
+        self.chain = "regtest"
         self.num_nodes = 1
         self.setup_clean_chain = False
 

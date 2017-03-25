@@ -106,6 +106,7 @@ RESCAN_WINDOW = 2 * 60 * 60
 class ImportRescanTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
+        self.chain = "regtest"
         self.num_nodes = 1 + len(IMPORT_NODES)
 
     def setup_network(self):

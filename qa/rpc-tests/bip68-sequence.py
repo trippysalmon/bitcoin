@@ -24,6 +24,7 @@ NOT_FINAL_ERROR = "64: non-BIP68-final"
 class BIP68Test(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
+        self.chain = "regtest"
         self.num_nodes = 2
         self.setup_clean_chain = False
 
