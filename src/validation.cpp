@@ -2825,15 +2825,6 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
     return true;
 }
 
-bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW)
-{
-    // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
-
-    return true;
-}
-
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
@@ -2841,10 +2832,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     if (block.fChecked)
         return true;
 
-    // Check that the header is valid (particularly PoW).  This is mostly
+    // Check proof of work matches claimed amount. This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
-        return false;
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -3097,8 +3088,10 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, chainparams.GetConsensus()))
-            return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+        if (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) {
+            state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+            return error("%s: CheckProofOfWork: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+        }
 
         // Get prev block index
         CBlockIndex* pindexPrev = NULL;
