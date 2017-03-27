@@ -12,6 +12,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "validation.h" // For f8DecimalsGlobal
 
 #include <univalue.h>
 
@@ -153,12 +154,12 @@ UniValue ValueFromAmountDecimals(const CAmount& amount, const bool f8Decimals)
 
 CAmount AmountFromValue(const UniValue& value)
 {
-    return AmountFromValueDecimals(value, true);
+    return AmountFromValueDecimals(value, f8DecimalsGlobal);
 }
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
-    return ValueFromAmountDecimals(amount, true);
+    return ValueFromAmountDecimals(amount, f8DecimalsGlobal);
 }
 
 uint256 ParseHashV(const UniValue& v, string strName)
