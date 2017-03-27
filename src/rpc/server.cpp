@@ -7,6 +7,7 @@
 
 #include "base58.h"
 #include "init.h"
+#include "main.h" // For f8DecimalsGlobal
 #include "random.h"
 #include "sync.h"
 #include "ui_interface.h"
@@ -147,12 +148,12 @@ UniValue ValueFromAmountDecimals(const CAmount& amount, const bool f8Decimals)
 
 CAmount AmountFromValue(const UniValue& value)
 {
-    return AmountFromValueDecimals(value, true);
+    return AmountFromValueDecimals(value, f8DecimalsGlobal);
 }
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
-    return ValueFromAmountDecimals(amount, true);
+    return ValueFromAmountDecimals(amount, f8DecimalsGlobal);
 }
 
 uint256 ParseHashV(const UniValue& v, string strName)
