@@ -137,7 +137,7 @@ static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 /** Default for -mempoolreplacement */
 static const bool DEFAULT_ENABLE_REPLACEMENT = true;
 /** Default for -rpcamountdecimals */
-static const bool DEFAULT_8DECIMALS_GLOBAL = true;
+static const bool DEFAULT_8DECIMALS_GLOBAL = false;
 /** Default for using fee filter */
 static const bool DEFAULT_FEEFILTER = true;
 
