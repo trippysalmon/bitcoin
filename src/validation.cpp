@@ -1148,9 +1148,10 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
 
     // Check the header
     const uint256 blockHash = block.GetHash();
-    if (!CheckProofOfWork(blockHash, block.nBits, consensusParams)
+    CValidationState state;
+    if (!CheckProof(consensusParams, blockHash, block, state)
         && blockHash != consensusParams.hashGenesisBlock)
-        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+        return error("%s: CheckProof: Errors in block header at %s", __func__, pos.ToString());
 
     return true;
 }
@@ -2827,15 +2828,6 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
     return true;
 }
 
-bool CheckBlockHeader(const Consensus::Params& consensusParams, const uint256& blockHash, const CBlockHeader& block, CValidationState& state)
-{
-    // Check proof of work matches claimed amount
-    if (!CheckProofOfWork(blockHash, block.nBits, consensusParams))
-        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
-
-    return true;
-}
-
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
@@ -2844,9 +2836,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         return true;
     const uint256 blockHash = block.GetHash();
 
-    // Check that the header is valid (particularly PoW).  This is mostly
+    // Check proof of work matches claimed amount. This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (fCheckPOW && !CheckBlockHeader(consensusParams, blockHash, block, state))
+    if (fCheckPOW && !CheckProof(consensusParams, blockHash, block, state))
         return false;
 
     // Check the merkle root.
@@ -3100,7 +3092,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return true;
         }
 
-        if (!CheckBlockHeader(chainparams.GetConsensus(), hash, block, state))
+        if (!CheckProof(chainparams.GetConsensus(), hash, block, state))
             return error("%s: Consensus::CheckProof: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // Get prev block index

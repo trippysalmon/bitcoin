@@ -7,6 +7,7 @@
 
 #include "arith_uint256.h"
 #include "chain.h"
+#include "consensus/validation.h"
 #include "primitives/block.h"
 #include "uint256.h"
 
@@ -90,6 +91,13 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     if (UintToArith256(hash) > bnTarget)
         return false;
 
+    return true;
+}
+
+bool CheckProof(const Consensus::Params& params, const uint256& blockHash, const CBlockHeader& block, CValidationState& state)
+{
+    if (!CheckProofOfWork(blockHash, block.nBits, params))
+        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
     return true;
 }
 

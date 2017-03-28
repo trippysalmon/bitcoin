@@ -6,6 +6,7 @@
 #include "txdb.h"
 
 #include "chainparams.h"
+#include "consensus/validation.h"
 #include "hash.h"
 #include "pow.h"
 #include "uint256.h"
@@ -198,10 +199,12 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
+                CValidationState state;
                 const uint256 blockHash = pindexNew->GetBlockHash();
-                if (!CheckProofOfWork(blockHash, pindexNew->nBits, consensusParams) &&
-                    blockHash != consensusParams.hashGenesisBlock) {
-                    return error("%s: CheckProofOfWork: %s, %s", __func__, blockHash.ToString(), pindexNew->ToString());
+                CBlockHeader block = pindexNew->GetBlockHeader(); // FIX inefficient
+                if (!CheckProof(consensusParams, blockHash, block, state) &&
+                    consensusParams.hashGenesisBlock != blockHash) {
+                    return error("%s: CheckProof: %s, %s", __func__, blockHash.ToString(), pindexNew->ToString());
                 }
                 pcursor->Next();
             } else {
