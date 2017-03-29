@@ -9,6 +9,7 @@
 #include <string>
 
 class ArgsManager;
+class CChainParams;
 class CScheduler;
 class CWallet;
 
@@ -49,7 +50,7 @@ bool AppInitSanityChecks();
  * @note This should only be done after daemonization.
  * @pre Parameters should be parsed and config file should be read, AppInitSanityChecks should have been called.
  */
-bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler);
+bool AppInitMain(const CChainParams& chainparams, ArgsManager& args, boost::thread_group& threadGroup, CScheduler& scheduler);
 
 /** The help message mode determines what help message to show */
 enum HelpMessageMode {
