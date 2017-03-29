@@ -280,7 +280,7 @@ void BitcoinCore::initialize()
             Q_EMIT initializeResult(false);
             return;
         }
-        if (!AppInitParameterInteraction())
+        if (!AppInitParameterInteraction(argsGlobal))
         {
             Q_EMIT initializeResult(false);
             return;

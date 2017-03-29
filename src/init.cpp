@@ -873,9 +873,8 @@ bool AppInitBasicSetup()
     return true;
 }
 
-bool AppInitParameterInteraction()
+bool AppInitParameterInteraction(ArgsManager& args)
 {
-    ArgsManager& args = argsGlobal;
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 2: parameter interactions
 
@@ -888,9 +887,7 @@ bool AppInitParameterInteraction()
     }
 
     // Make sure enough file descriptors are available
-    int nBind = std::max(
-                (argsGlobal.IsArgSet("-bind") ? argsGlobal.ArgsAt("-bind").size() : 0) +
-                (argsGlobal.IsArgSet("-whitebind") ? argsGlobal.ArgsAt("-whitebind").size() : 0), size_t(1));
+    int nBind = std::max(size_t(1), args.ArgsAt("-bind").size() + args.ArgsAt("-whitebind").size());
     nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
 
@@ -905,9 +902,9 @@ bool AppInitParameterInteraction()
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
-    if (argsGlobal.IsArgSet("-debug")) {
+    if (args.IsArgSet("-debug")) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
-        const std::vector<std::string>& categories = argsGlobal.ArgsAt("-debug");
+        const std::vector<std::string>& categories = args.ArgsAt("-debug");
 
         if (find(categories.begin(), categories.end(), std::string("0")) == categories.end()) {
             for (const auto& cat : categories) {
@@ -922,7 +919,7 @@ bool AppInitParameterInteraction()
     }
 
     // Now remove the logging categories which were explicitly excluded
-        for (const std::string& cat : argsGlobal.ArgsAt("-debugexclude")) {
+        for (const std::string& cat : args.ArgsAt("-debugexclude")) {
             uint32_t flag = 0;
             if (!GetLogCategory(&flag, &cat)) {
                 InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
@@ -932,41 +929,41 @@ bool AppInitParameterInteraction()
         }
 
     // Check for -debugnet
-    if (GetBoolArg("-debugnet", false))
+    if (args.GetBoolArg("-debugnet", false))
         InitWarning(_("Unsupported argument -debugnet ignored, use -debug=net."));
     // Check for -socks - as this is a privacy risk to continue, exit here
     if (args.IsArgSet("-socks"))
         return InitError(_("Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported."));
     // Check for -tor - as this is a privacy risk to continue, exit here
-    if (GetBoolArg("-tor", false))
+    if (args.GetBoolArg("-tor", false))
         return InitError(_("Unsupported argument -tor found, use -onion."));
 
-    if (GetBoolArg("-benchmark", false))
+    if (args.GetBoolArg("-benchmark", false))
         InitWarning(_("Unsupported argument -benchmark ignored, use -debug=bench."));
 
-    if (GetBoolArg("-whitelistalwaysrelay", false))
+    if (args.GetBoolArg("-whitelistalwaysrelay", false))
         InitWarning(_("Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay."));
 
     if (args.IsArgSet("-blockminsize"))
         InitWarning("Unsupported argument -blockminsize ignored.");
 
     // Checkmempool and checkblockindex default to true in regtest mode
-    int ratio = std::min<int>(std::max<int>(GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
+    int ratio = std::min<int>(std::max<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {
         mempool.setSanityCheck(1.0 / ratio);
     }
-    fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
-    fCheckpointsEnabled = GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
+    fCheckBlockIndex = args.GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
+    fCheckpointsEnabled = args.GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
 
-    hashAssumeValid = uint256S(GetArg("-assumevalid", chainparams.GetConsensus().defaultAssumeValid.GetHex()));
+    hashAssumeValid = uint256S(args.GetArg("-assumevalid", chainparams.GetConsensus().defaultAssumeValid.GetHex()));
     if (!hashAssumeValid.IsNull())
         LogPrintf("Assuming ancestors of block %s have valid signatures.\n", hashAssumeValid.GetHex());
     else
         LogPrintf("Validating signatures for all blocks.\n");
 
     // mempool limits
-    int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    int64_t nMempoolSizeMin = GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
+    int64_t nMempoolSizeMax = args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    int64_t nMempoolSizeMin = args.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
         return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
@@ -974,13 +971,13 @@ bool AppInitParameterInteraction()
     if (args.IsArgSet("-incrementalrelayfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(GetArg("-incrementalrelayfee", ""), n))
-            return InitError(AmountErrMsg("incrementalrelayfee", GetArg("-incrementalrelayfee", "")));
+        if (!ParseMoney(args.GetArg("-incrementalrelayfee", ""), n))
+            return InitError(AmountErrMsg("incrementalrelayfee", args.GetArg("-incrementalrelayfee", "")));
         incrementalRelayFee = CFeeRate(n);
     }
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
-    nScriptCheckThreads = GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
+    nScriptCheckThreads = args.GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
     if (nScriptCheckThreads <= 0)
         nScriptCheckThreads += GetNumCores();
     if (nScriptCheckThreads <= 1)
@@ -989,7 +986,7 @@ bool AppInitParameterInteraction()
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
 
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
-    int64_t nPruneArg = GetArg("-prune", 0);
+    int64_t nPruneArg = args.GetArg("-prune", 0);
     if (nPruneArg < 0) {
         return InitError(_("Prune cannot be configured with a negative value."));
     }
@@ -1011,7 +1008,7 @@ bool AppInitParameterInteraction()
     RegisterWalletRPCCommands(tableRPC);
 #endif
 
-    nConnectTimeout = GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
+    nConnectTimeout = args.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0)
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
@@ -1024,8 +1021,8 @@ bool AppInitParameterInteraction()
     if (args.IsArgSet("-minrelaytxfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(GetArg("-minrelaytxfee", ""), n)) {
-            return InitError(AmountErrMsg("minrelaytxfee", GetArg("-minrelaytxfee", "")));
+        if (!ParseMoney(args.GetArg("-minrelaytxfee", ""), n)) {
+            return InitError(AmountErrMsg("minrelaytxfee", args.GetArg("-minrelaytxfee", "")));
         }
         // High fee check is done afterward in CWallet::ParameterInteraction()
         ::minRelayTxFee = CFeeRate(n);
@@ -1040,8 +1037,8 @@ bool AppInitParameterInteraction()
     if (args.IsArgSet("-blockmintxfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(GetArg("-blockmintxfee", ""), n))
-            return InitError(AmountErrMsg("blockmintxfee", GetArg("-blockmintxfee", "")));
+        if (!ParseMoney(args.GetArg("-blockmintxfee", ""), n))
+            return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
     }
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old
@@ -1049,54 +1046,54 @@ bool AppInitParameterInteraction()
     if (args.IsArgSet("-dustrelayfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(GetArg("-dustrelayfee", ""), n) || 0 == n)
+        if (!ParseMoney(args.GetArg("-dustrelayfee", ""), n) || 0 == n)
             return InitError(AmountErrMsg("dustrelayfee", GetArg("-dustrelayfee", "")));
         dustRelayFee = CFeeRate(n);
     }
 
-    fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
+    fRequireStandard = !args.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (chainparams.RequireStandard() && !fRequireStandard)
         return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
-    nBytesPerSigOp = GetArg("-bytespersigop", nBytesPerSigOp);
+    nBytesPerSigOp = args.GetArg("-bytespersigop", nBytesPerSigOp);
 
 #ifdef ENABLE_WALLET
-    if (!CWallet::ParameterInteraction(argsGlobal))
+    if (!CWallet::ParameterInteraction(args))
         return false;
 #endif
 
-    fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
-    fAcceptDatacarrier = GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
-    nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
+    fIsBareMultisigStd = args.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
+    fAcceptDatacarrier = args.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
+    nMaxDatacarrierBytes = args.GetArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // Option to startup with mocktime set (used for regression testing):
-    SetMockTime(GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
+    SetMockTime(args.GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
 
-    if (GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
+    if (args.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
 
-    if (GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
+    if (args.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
         return InitError("rpcserialversion must be non-negative.");
 
-    if (GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) > 1)
+    if (args.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) > 1)
         return InitError("unknown rpcserialversion requested.");
 
-    nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
+    nMaxTipAge = args.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
-    fEnableReplacement = GetBoolArg("-mempoolreplacement", DEFAULT_ENABLE_REPLACEMENT);
+    fEnableReplacement = args.GetBoolArg("-mempoolreplacement", DEFAULT_ENABLE_REPLACEMENT);
     if ((!fEnableReplacement) && args.IsArgSet("-mempoolreplacement")) {
         // Minimal effort at forwards compatibility
-        std::string strReplacementModeList = GetArg("-mempoolreplacement", "");  // default is impossible
+        std::string strReplacementModeList = args.GetArg("-mempoolreplacement", "");  // default is impossible
         std::vector<std::string> vstrReplacementModes;
         boost::split(vstrReplacementModes, strReplacementModeList, boost::is_any_of(","));
         fEnableReplacement = (std::find(vstrReplacementModes.begin(), vstrReplacementModes.end(), "fee") != vstrReplacementModes.end());
     }
 
-    if (argsGlobal.IsArgSet("-bip9params")) {
+    if (args.IsArgSet("-bip9params")) {
         // Allow overriding BIP9 parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("BIP9 parameters may only be overridden on regtest.");
         }
-        for (const std::string& strDeployment : argsGlobal.ArgsAt("-bip9params")) {
+        for (const std::string& strDeployment : args.ArgsAt("-bip9params")) {
             std::vector<std::string> vDeploymentParams;
             boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
             if (vDeploymentParams.size() != 3) {

@@ -139,7 +139,7 @@ bool AppInit(int argc, char* argv[])
             // InitError will have been called with detailed error, which ends up on console
             exit(EXIT_FAILURE);
         }
-        if (!AppInitParameterInteraction())
+        if (!AppInitParameterInteraction(argsGlobal))
         {
             // InitError will have been called with detailed error, which ends up on console
             exit(EXIT_FAILURE);
