@@ -8,6 +8,7 @@
 
 #include <string>
 
+class ArgsManager;
 class CScheduler;
 class CWallet;
 
@@ -24,7 +25,7 @@ void Shutdown();
 //!Initialize the logging infrastructure
 void InitLogging();
 //!Parameter interaction: change current parameters depending on various rules
-void InitParameterInteraction();
+void InitParameterInteraction(ArgsManager& args);
 
 /** Initialize bitcoin core: Basic context setup.
  *  @note This can be done before daemonization.

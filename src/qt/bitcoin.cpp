@@ -419,7 +419,7 @@ void BitcoinApplication::startThread()
 void BitcoinApplication::parameterSetup()
 {
     InitLogging();
-    InitParameterInteraction();
+    InitParameterInteraction(argsGlobal);
 }
 
 void BitcoinApplication::requestInitialize()

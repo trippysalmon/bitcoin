@@ -721,65 +721,65 @@ bool AppInitServers(boost::thread_group& threadGroup)
 }
 
 // Parameter interaction based on rules
-void InitParameterInteraction()
+void InitParameterInteraction(ArgsManager& args)
 {
     // when specifying an explicit binding address, you want to listen on it
     // even when -connect or -proxy is specified
-    if (IsArgSet("-bind")) {
-        if (SoftSetBoolArg("-listen", true))
+    if (args.IsArgSet("-bind")) {
+        if (args.SoftSetBoolArg("-listen", true))
             LogPrintf("%s: parameter interaction: -bind set -> setting -listen=1\n", __func__);
     }
-    if (IsArgSet("-whitebind")) {
-        if (SoftSetBoolArg("-listen", true))
+    if (args.IsArgSet("-whitebind")) {
+        if (args.SoftSetBoolArg("-listen", true))
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
-    if (argsGlobal.IsArgSet("-connect") && argsGlobal.ArgsAt("-connect").size() > 0) {
+    if (args.IsArgSet("-connect") && args.ArgsAt("-connect").size() > 0) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
-        if (SoftSetBoolArg("-dnsseed", false))
+        if (args.SoftSetBoolArg("-dnsseed", false))
             LogPrintf("%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
-        if (SoftSetBoolArg("-listen", false))
+        if (args.SoftSetBoolArg("-listen", false))
             LogPrintf("%s: parameter interaction: -connect set -> setting -listen=0\n", __func__);
     }
 
-    if (IsArgSet("-proxy")) {
+    if (args.IsArgSet("-proxy")) {
         // to protect privacy, do not listen by default if a default proxy server is specified
-        if (SoftSetBoolArg("-listen", false))
+        if (args.SoftSetBoolArg("-listen", false))
             LogPrintf("%s: parameter interaction: -proxy set -> setting -listen=0\n", __func__);
         // to protect privacy, do not use UPNP when a proxy is set. The user may still specify -listen=1
         // to listen locally, so don't rely on this happening through -listen below.
-        if (SoftSetBoolArg("-upnp", false))
+        if (args.SoftSetBoolArg("-upnp", false))
             LogPrintf("%s: parameter interaction: -proxy set -> setting -upnp=0\n", __func__);
         // to protect privacy, do not discover addresses by default
-        if (SoftSetBoolArg("-discover", false))
+        if (args.SoftSetBoolArg("-discover", false))
             LogPrintf("%s: parameter interaction: -proxy set -> setting -discover=0\n", __func__);
     }
 
-    if (!GetBoolArg("-listen", DEFAULT_LISTEN)) {
+    if (!args.GetBoolArg("-listen", DEFAULT_LISTEN)) {
         // do not map ports or try to retrieve public IP when not listening (pointless)
-        if (SoftSetBoolArg("-upnp", false))
+        if (args.SoftSetBoolArg("-upnp", false))
             LogPrintf("%s: parameter interaction: -listen=0 -> setting -upnp=0\n", __func__);
-        if (SoftSetBoolArg("-discover", false))
+        if (args.SoftSetBoolArg("-discover", false))
             LogPrintf("%s: parameter interaction: -listen=0 -> setting -discover=0\n", __func__);
-        if (SoftSetBoolArg("-listenonion", false))
+        if (args.SoftSetBoolArg("-listenonion", false))
             LogPrintf("%s: parameter interaction: -listen=0 -> setting -listenonion=0\n", __func__);
     }
 
-    if (IsArgSet("-externalip")) {
+    if (args.IsArgSet("-externalip")) {
         // if an explicit public IP is specified, do not try to find others
-        if (SoftSetBoolArg("-discover", false))
+        if (args.SoftSetBoolArg("-discover", false))
             LogPrintf("%s: parameter interaction: -externalip set -> setting -discover=0\n", __func__);
     }
 
     // disable whitelistrelay in blocksonly mode
-    if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
-        if (SoftSetBoolArg("-whitelistrelay", false))
+    if (args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
+        if (args.SoftSetBoolArg("-whitelistrelay", false))
             LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -whitelistrelay=0\n", __func__);
     }
 
     // Forcing relay from whitelisted hosts implies we will accept relays from them in the first place.
-    if (GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) {
-        if (SoftSetBoolArg("-whitelistrelay", true))
+    if (args.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) {
+        if (args.SoftSetBoolArg("-whitelistrelay", true))
             LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
 }

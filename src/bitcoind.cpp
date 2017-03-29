@@ -132,7 +132,7 @@ bool AppInit(int argc, char* argv[])
         SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
         InitLogging();
-        InitParameterInteraction();
+        InitParameterInteraction(argsGlobal);
         if (!AppInitBasicSetup())
         {
             // InitError will have been called with detailed error, which ends up on console
