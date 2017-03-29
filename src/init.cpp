@@ -707,7 +707,7 @@ bool AppInitServers(boost::thread_group& threadGroup)
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     RPCServer::OnPreCommand(&OnRPCPreCommand);
-    if (!InitHTTPServer())
+    if (!InitHTTPServer(argsGlobal))
         return false;
     if (!StartRPC())
         return false;

@@ -15,13 +15,14 @@ static const int DEFAULT_HTTP_SERVER_TIMEOUT=30;
 
 struct evhttp_request;
 struct event_base;
+class ArgsManager;
 class CService;
 class HTTPRequest;
 
 /** Initialize HTTP server.
  * Call this before RegisterHTTPHandler or EventBase().
  */
-bool InitHTTPServer();
+bool InitHTTPServer(ArgsManager& args);
 /** Start HTTP server.
  * This is separate from InitHTTPServer to give users race-condition-free time
  * to register their handlers between InitHTTPServer and StartHTTPServer.

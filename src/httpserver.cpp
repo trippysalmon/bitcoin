@@ -306,20 +306,20 @@ static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
 }
 
 /** Bind HTTP server to specified addresses */
-static bool HTTPBindAddresses(struct evhttp* http)
+static bool HTTPBindAddresses(ArgsManager& args, struct evhttp* http)
 {
-    int defaultPort = GetArg("-rpcport", BaseParams().RPCPort());
+    int defaultPort = args.GetArg("-rpcport", BaseParams().RPCPort());
     std::vector<std::pair<std::string, uint16_t> > endpoints;
 
     // Determine what addresses to bind to
-    if (!argsGlobal.IsArgSet("-rpcallowip")) { // Default to loopback if not allowing external IPs
+    if (!args.IsArgSet("-rpcallowip")) { // Default to loopback if not allowing external IPs
         endpoints.push_back(std::make_pair("::1", defaultPort));
         endpoints.push_back(std::make_pair("127.0.0.1", defaultPort));
-        if (argsGlobal.IsArgSet("-rpcbind")) {
+        if (args.IsArgSet("-rpcbind")) {
             LogPrintf("WARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
         }
-    } else if (argsGlobal.IsArgSet("-rpcbind")) { // Specific bind address
-        for (const std::string& strRPCBind : argsGlobal.ArgsAt("-rpcbind")) {
+    } else if (args.IsArgSet("-rpcbind")) { // Specific bind address
+        for (const std::string& strRPCBind : args.ArgsAt("-rpcbind")) {
             int port = defaultPort;
             std::string host;
             SplitHostPort(strRPCBind, port, host);
@@ -363,7 +363,7 @@ static void libevent_log_cb(int severity, const char *msg)
         LogPrint(BCLog::LIBEVENT, "libevent: %s\n", msg);
 }
 
-bool InitHTTPServer()
+bool InitHTTPServer(ArgsManager& args)
 {
     struct evhttp* http = 0;
     struct event_base* base = 0;
@@ -371,7 +371,7 @@ bool InitHTTPServer()
     if (!InitHTTPAllowList())
         return false;
 
-    if (GetBoolArg("-rpcssl", false)) {
+    if (args.GetBoolArg("-rpcssl", false)) {
         uiInterface.ThreadSafeMessageBox(
             "SSL mode for RPC (-rpcssl) is no longer supported.",
             "", CClientUIInterface::MSG_ERROR);
@@ -409,12 +409,12 @@ bool InitHTTPServer()
         return false;
     }
 
-    evhttp_set_timeout(http, GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
+    evhttp_set_timeout(http, args.GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
     evhttp_set_max_headers_size(http, MAX_HEADERS_SIZE);
     evhttp_set_max_body_size(http, MAX_SIZE);
     evhttp_set_gencb(http, http_request_cb, NULL);
 
-    if (!HTTPBindAddresses(http)) {
+    if (!HTTPBindAddresses(args, http)) {
         LogPrintf("Unable to bind any endpoint for RPC server\n");
         evhttp_free(http);
         event_base_free(base);
@@ -422,7 +422,7 @@ bool InitHTTPServer()
     }
 
     LogPrint(BCLog::HTTP, "Initialized HTTP server\n");
-    int workQueueDepth = std::max((long)GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
+    int workQueueDepth = std::max((long)args.GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
     LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
 
     workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
