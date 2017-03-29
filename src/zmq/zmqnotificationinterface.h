@@ -9,6 +9,7 @@
 #include <string>
 #include <map>
 
+class ArgsManager;
 class CBlockIndex;
 class CZMQAbstractNotifier;
 
@@ -17,7 +18,7 @@ class CZMQNotificationInterface : public CValidationInterface
 public:
     virtual ~CZMQNotificationInterface();
 
-    static CZMQNotificationInterface* Create();
+    static CZMQNotificationInterface* Create(ArgsManager& args);
 
 protected:
     bool Initialize();

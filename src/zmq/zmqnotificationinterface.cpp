@@ -29,7 +29,7 @@ CZMQNotificationInterface::~CZMQNotificationInterface()
     }
 }
 
-CZMQNotificationInterface* CZMQNotificationInterface::Create()
+CZMQNotificationInterface* CZMQNotificationInterface::Create(ArgsManager& args)
 {
     CZMQNotificationInterface* notificationInterface = NULL;
     std::map<std::string, CZMQNotifierFactory> factories;
@@ -43,10 +43,10 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     for (std::map<std::string, CZMQNotifierFactory>::const_iterator i=factories.begin(); i!=factories.end(); ++i)
     {
         std::string arg("-zmq" + i->first);
-        if (argsGlobal.IsArgSet(arg))
+        if (args.IsArgSet(arg))
         {
             CZMQNotifierFactory factory = i->second;
-            std::string address = GetArg(arg, "");
+            std::string address = args.GetArg(arg, "");
             CZMQAbstractNotifier *notifier = factory();
             notifier->SetType(i->first);
             notifier->SetAddress(address);

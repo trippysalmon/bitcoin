@@ -1367,7 +1367,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             connman.AddOneShot(strDest);
 
 #if ENABLE_ZMQ
-    pzmqNotificationInterface = CZMQNotificationInterface::Create();
+    pzmqNotificationInterface = CZMQNotificationInterface::Create(argsGlobal);
 
     if (pzmqNotificationInterface) {
         RegisterValidationInterface(pzmqNotificationInterface);
