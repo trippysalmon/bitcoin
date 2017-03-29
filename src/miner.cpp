@@ -76,7 +76,7 @@ BlockAssembler::BlockAssembler(const CChainParams& params, const Options& option
     fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE - 1000);
 }
 
-static BlockAssembler::Options DefaultOptions(const CChainParams& params)
+static BlockAssembler::Options DefaultOptions(const CChainParams& params, ArgsManager& args)
 {
     // Block resource limits
     // If neither -blockmaxsize or -blockmaxweight is given, limit to DEFAULT_BLOCK_MAX_*
@@ -86,20 +86,20 @@ static BlockAssembler::Options DefaultOptions(const CChainParams& params)
     options.nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
     options.nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
     bool fWeightSet = false;
-    if (IsArgSet("-blockmaxweight")) {
-        options.nBlockMaxWeight = GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
+    if (args.IsArgSet("-blockmaxweight")) {
+        options.nBlockMaxWeight = args.GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
         options.nBlockMaxSize = MAX_BLOCK_SERIALIZED_SIZE;
         fWeightSet = true;
     }
-    if (IsArgSet("-blockmaxsize")) {
-        options.nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+    if (args.IsArgSet("-blockmaxsize")) {
+        options.nBlockMaxSize = args.GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
         if (!fWeightSet) {
             options.nBlockMaxWeight = options.nBlockMaxSize * WITNESS_SCALE_FACTOR;
         }
     }
-    if (IsArgSet("-blockmintxfee")) {
+    if (args.IsArgSet("-blockmintxfee")) {
         CAmount n = 0;
-        ParseMoney(GetArg("-blockmintxfee", ""), n);
+        ParseMoney(args.GetArg("-blockmintxfee", ""), n);
         options.blockMinFeeRate = CFeeRate(n);
     } else {
         options.blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
@@ -107,7 +107,7 @@ static BlockAssembler::Options DefaultOptions(const CChainParams& params)
     return options;
 }
 
-BlockAssembler::BlockAssembler(const CChainParams& params) : BlockAssembler(params, DefaultOptions(params)) {}
+BlockAssembler::BlockAssembler(const CChainParams& params, ArgsManager& args) : BlockAssembler(params, DefaultOptions(params, args)) {}
 
 void BlockAssembler::resetBlock()
 {

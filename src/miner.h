@@ -14,6 +14,7 @@
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 
+class ArgsManager;
 class CBlockIndex;
 class CChainParams;
 class CReserveKey;
@@ -166,7 +167,7 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    BlockAssembler(const CChainParams& params);
+    BlockAssembler(const CChainParams& params, ArgsManager& args);
     BlockAssembler(const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
