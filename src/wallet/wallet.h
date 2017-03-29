@@ -68,6 +68,7 @@ static const bool DEFAULT_USE_HD_WALLET = true;
 
 extern const char * DEFAULT_WALLET_DAT;
 
+class ArgsManager;
 class CBlockIndex;
 class CCoinControl;
 class COutput;
@@ -1041,7 +1042,7 @@ public:
     void postInitProcess(CScheduler& scheduler);
 
     /* Wallets parameter interaction */
-    static bool ParameterInteraction();
+    static bool ParameterInteraction(ArgsManager& args);
 
     bool BackupWallet(const std::string& strDest);
 

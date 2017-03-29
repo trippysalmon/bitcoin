@@ -1061,7 +1061,7 @@ bool AppInitParameterInteraction()
     nBytesPerSigOp = GetArg("-bytespersigop", nBytesPerSigOp);
 
 #ifdef ENABLE_WALLET
-    if (!CWallet::ParameterInteraction())
+    if (!CWallet::ParameterInteraction(argsGlobal))
         return false;
 #endif
 
