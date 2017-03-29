@@ -734,7 +734,7 @@ void InitParameterInteraction(ArgsManager& args)
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
-    if (args.IsArgSet("-connect") && args.ArgsAt("-connect").size() > 0) {
+    if (args.ArgsAt("-connect").size() > 0) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
         if (args.SoftSetBoolArg("-dnsseed", false))
             LogPrintf("%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
@@ -921,7 +921,6 @@ bool AppInitParameterInteraction()
     }
 
     // Now remove the logging categories which were explicitly excluded
-    if (argsGlobal.IsArgSet("-debugexclude")) {
         for (const std::string& cat : argsGlobal.ArgsAt("-debugexclude")) {
             uint32_t flag = 0;
             if (!GetLogCategory(&flag, &cat)) {
@@ -930,7 +929,6 @@ bool AppInitParameterInteraction()
             }
             logCategories &= ~flag;
         }
-    }
 
     // Check for -debugnet
     if (GetBoolArg("-debugnet", false))
@@ -1245,14 +1243,12 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
-    if (argsGlobal.IsArgSet("-uacomment")) {
         for (const std::string& cmt : argsGlobal.ArgsAt("-uacomment"))
         {
             if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
                 return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
             uacomments.push_back(cmt);
         }
-    }
     strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
         return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
@@ -1274,7 +1270,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    if (argsGlobal.IsArgSet("-whitelist")) {
         for (const std::string& net : argsGlobal.ArgsAt("-whitelist")) {
             CSubNet subnet;
             LookupSubNet(net.c_str(), subnet);
@@ -1282,7 +1277,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 return InitError(strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net));
             connman.AddWhitelistedRange(subnet);
         }
-    }
 
     // Check for host lookup allowed before parsing any network related parameters
     fNameLookup = GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
@@ -1336,15 +1330,12 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (fListen) {
         bool fBound = false;
-        if (argsGlobal.IsArgSet("-bind")) {
             for (const std::string& strBind : argsGlobal.ArgsAt("-bind")) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
                     return InitError(ResolveErrMsg("bind", strBind));
                 fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
             }
-        }
-        if (argsGlobal.IsArgSet("-whitebind")) {
             for (const std::string& strBind : argsGlobal.ArgsAt("-whitebind")) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, 0, false))
@@ -1353,7 +1344,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     return InitError(strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind));
                 fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
             }
-        }
         if (!argsGlobal.IsArgSet("-bind") && !argsGlobal.IsArgSet("-whitebind")) {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
@@ -1364,7 +1354,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
     }
 
-    if (argsGlobal.IsArgSet("-externalip")) {
         for (const std::string& strAddr : argsGlobal.ArgsAt("-externalip")) {
             CService addrLocal;
             if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
@@ -1372,12 +1361,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             else
                 return InitError(ResolveErrMsg("externalip", strAddr));
         }
-    }
 
-    if (argsGlobal.IsArgSet("-seednode")) {
         for (const std::string& strDest : argsGlobal.ArgsAt("-seednode"))
             connman.AddOneShot(strDest);
-    }
 
 #if ENABLE_ZMQ
     pzmqNotificationInterface = CZMQNotificationInterface::Create();
@@ -1601,11 +1587,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
 
     std::vector<fs::path> vImportFiles;
-    if (argsGlobal.IsArgSet("-loadblock"))
-    {
         for (const std::string& strFile : argsGlobal.ArgsAt("-loadblock"))
             vImportFiles.push_back(strFile);
-    }
 
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
 

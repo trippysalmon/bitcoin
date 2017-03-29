@@ -1666,7 +1666,7 @@ void CConnman::ProcessOneShot()
 void CConnman::ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (argsGlobal.IsArgSet("-connect") && argsGlobal.ArgsAt("-connect").size() > 0)
+    if (argsGlobal.ArgsAt("-connect").size() > 0)
     {
         for (int64_t nLoop = 0;; nLoop++)
         {

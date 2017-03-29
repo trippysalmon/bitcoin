@@ -196,7 +196,6 @@ static bool InitHTTPAllowList()
     LookupHost("::1", localv6, false);
     rpc_allow_subnets.push_back(CSubNet(localv4, 8));      // always allow IPv4 local subnet
     rpc_allow_subnets.push_back(CSubNet(localv6));         // always allow IPv6 localhost
-    if (argsGlobal.IsArgSet("-rpcallowip")) {
         for (const std::string& strAllow : argsGlobal.ArgsAt("-rpcallowip")) {
             CSubNet subnet;
             LookupSubNet(strAllow.c_str(), subnet);
@@ -208,7 +207,6 @@ static bool InitHTTPAllowList()
             }
             rpc_allow_subnets.push_back(subnet);
         }
-    }
     std::string strAllowed;
     for (const CSubNet& subnet : rpc_allow_subnets)
         strAllowed += subnet.ToString() + " ";
