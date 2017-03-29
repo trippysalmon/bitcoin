@@ -243,7 +243,6 @@ bool IsArgSet(const std::string& strArg);
 std::string GetArg(const std::string& strArg, const std::string& strDefault);
 int64_t GetArg(const std::string& strArg, int64_t nDefault);
 bool GetBoolArg(const std::string& strArg, bool fDefault);
-bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 /**
  * Format a string to be used as group of options in help messages
