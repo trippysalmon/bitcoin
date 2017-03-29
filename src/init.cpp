@@ -875,6 +875,7 @@ bool AppInitBasicSetup()
 
 bool AppInitParameterInteraction()
 {
+    ArgsManager& args = argsGlobal;
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 2: parameter interactions
 
@@ -934,7 +935,7 @@ bool AppInitParameterInteraction()
     if (GetBoolArg("-debugnet", false))
         InitWarning(_("Unsupported argument -debugnet ignored, use -debug=net."));
     // Check for -socks - as this is a privacy risk to continue, exit here
-    if (IsArgSet("-socks"))
+    if (args.IsArgSet("-socks"))
         return InitError(_("Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported."));
     // Check for -tor - as this is a privacy risk to continue, exit here
     if (GetBoolArg("-tor", false))
@@ -946,7 +947,7 @@ bool AppInitParameterInteraction()
     if (GetBoolArg("-whitelistalwaysrelay", false))
         InitWarning(_("Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay."));
 
-    if (IsArgSet("-blockminsize"))
+    if (args.IsArgSet("-blockminsize"))
         InitWarning("Unsupported argument -blockminsize ignored.");
 
     // Checkmempool and checkblockindex default to true in regtest mode
@@ -970,7 +971,7 @@ bool AppInitParameterInteraction()
         return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
-    if (IsArgSet("-incrementalrelayfee"))
+    if (args.IsArgSet("-incrementalrelayfee"))
     {
         CAmount n = 0;
         if (!ParseMoney(GetArg("-incrementalrelayfee", ""), n))
@@ -1020,7 +1021,7 @@ bool AppInitParameterInteraction()
     // a transaction spammer can cheaply fill blocks using
     // 0-fee transactions. It should be set above the real
     // cost to you of processing a transaction.
-    if (IsArgSet("-minrelaytxfee"))
+    if (args.IsArgSet("-minrelaytxfee"))
     {
         CAmount n = 0;
         if (!ParseMoney(GetArg("-minrelaytxfee", ""), n)) {
@@ -1036,7 +1037,7 @@ bool AppInitParameterInteraction()
 
     // Sanity check argument for min fee for including tx in block
     // TODO: Harmonize which arguments need sanity checking and where that happens
-    if (IsArgSet("-blockmintxfee"))
+    if (args.IsArgSet("-blockmintxfee"))
     {
         CAmount n = 0;
         if (!ParseMoney(GetArg("-blockmintxfee", ""), n))
@@ -1045,7 +1046,7 @@ bool AppInitParameterInteraction()
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old
     // implementations may inadvertently create non-standard transactions
-    if (IsArgSet("-dustrelayfee"))
+    if (args.IsArgSet("-dustrelayfee"))
     {
         CAmount n = 0;
         if (!ParseMoney(GetArg("-dustrelayfee", ""), n) || 0 == n)
@@ -1082,7 +1083,7 @@ bool AppInitParameterInteraction()
     nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
     fEnableReplacement = GetBoolArg("-mempoolreplacement", DEFAULT_ENABLE_REPLACEMENT);
-    if ((!fEnableReplacement) && IsArgSet("-mempoolreplacement")) {
+    if ((!fEnableReplacement) && args.IsArgSet("-mempoolreplacement")) {
         // Minimal effort at forwards compatibility
         std::string strReplacementModeList = GetArg("-mempoolreplacement", "");  // default is impossible
         std::vector<std::string> vstrReplacementModes;
@@ -1375,7 +1376,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
 
-    if (IsArgSet("-maxuploadtarget")) {
+    if (argsGlobal.IsArgSet("-maxuploadtarget")) {
         nMaxOutboundLimit = GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024;
     }
 
@@ -1583,7 +1584,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         fHaveGenesis = true;
     }
 
-    if (IsArgSet("-blocknotify"))
+    if (argsGlobal.IsArgSet("-blocknotify"))
         uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
 
     std::vector<fs::path> vImportFiles;

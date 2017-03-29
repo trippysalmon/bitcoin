@@ -474,11 +474,6 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     mapMultiArgs[strArg].push_back(strValue);
 }
 
-bool IsArgSet(const std::string& strArg)
-{
-    return argsGlobal.IsArgSet(strArg);
-}
-
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
     return argsGlobal.GetArg(strArg, strDefault);
@@ -575,7 +570,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (!path.empty())
         return path;
 
-    if (IsArgSet("-datadir")) {
+    if (argsGlobal.IsArgSet("-datadir")) {
         path = fs::system_complete(GetArg("-datadir", ""));
         if (!fs::is_directory(path)) {
             path = "";

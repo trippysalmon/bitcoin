@@ -43,7 +43,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     for (std::map<std::string, CZMQNotifierFactory>::const_iterator i=factories.begin(); i!=factories.end(); ++i)
     {
         std::string arg("-zmq" + i->first);
-        if (IsArgSet(arg))
+        if (argsGlobal.IsArgSet(arg))
         {
             CZMQNotifierFactory factory = i->second;
             std::string address = GetArg(arg, "");

@@ -239,7 +239,6 @@ void ForceSetArg(const std::string& strArg, const std::string& strValue);
 extern ArgsManager argsGlobal;
 
 // wrappers using the global ArgsManager:
-bool IsArgSet(const std::string& strArg);
 std::string GetArg(const std::string& strArg, const std::string& strDefault);
 int64_t GetArg(const std::string& strArg, int64_t nDefault);
 bool GetBoolArg(const std::string& strArg, bool fDefault);
