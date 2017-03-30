@@ -39,7 +39,8 @@ static int AppInitRawTx(int argc, char* argv[])
     //
     // Parameters
     //
-    argsGlobal.ParseParameters(argc, argv);
+    ArgsManager& args = argsGlobal;
+    args.ParseParameters(argc, argv);
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
@@ -49,9 +50,9 @@ static int AppInitRawTx(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    fCreateBlank = GetBoolArg("-create", false);
+    fCreateBlank = args.GetBoolArg("-create", false);
 
-    if (argc<2 || IsArgSet("-?") || IsArgSet("-h") || IsArgSet("-help"))
+    if (argc < 2 || args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help"))
     {
         // First part of help message is specific to this utility
         std::string strUsage = strprintf(_("%s bitcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +

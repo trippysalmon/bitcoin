@@ -76,10 +76,11 @@ static int AppInitRPC(int argc, char* argv[])
     //
     // Parameters
     //
-    argsGlobal.ParseParameters(argc, argv);
-    if (argc<2 || IsArgSet("-?") || IsArgSet("-h") || IsArgSet("-help") || IsArgSet("-version")) {
+    ArgsManager& args = argsGlobal;
+    args.ParseParameters(argc, argv);
+    if (argc < 2 || args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help") || args.IsArgSet("-version")) {
         std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
-        if (!IsArgSet("-version")) {
+        if (!args.IsArgSet("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  bitcoin-cli [options] <command> [params]  " + strprintf(_("Send command to %s"), _(PACKAGE_NAME)) + "\n" +
                   "  bitcoin-cli [options] -named <command> [name=value] ... " + strprintf(_("Send command to %s (with named arguments)"), _(PACKAGE_NAME)) + "\n" +
@@ -97,11 +98,11 @@ static int AppInitRPC(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
     if (!fs::is_directory(GetDataDir(false))) {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
+        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
     try {
-        argsGlobal.ReadConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+        args.ReadConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
     } catch (const std::exception& e) {
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return EXIT_FAILURE;
@@ -113,7 +114,7 @@ static int AppInitRPC(int argc, char* argv[])
         fprintf(stderr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
-    if (GetBoolArg("-rpcssl", false))
+    if (args.GetBoolArg("-rpcssl", false))
     {
         fprintf(stderr, "Error: SSL mode for RPC (-rpcssl) is no longer supported.\n");
         return EXIT_FAILURE;

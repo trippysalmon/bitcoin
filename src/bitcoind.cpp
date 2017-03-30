@@ -72,14 +72,15 @@ bool AppInit(int argc, char* argv[])
     // Parameters
     //
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
-    argsGlobal.ParseParameters(argc, argv);
+    ArgsManager& args = argsGlobal;
+    args.ParseParameters(argc, argv);
 
     // Process help and version before taking care about datadir
-    if (IsArgSet("-?") || IsArgSet("-h") ||  IsArgSet("-help") || IsArgSet("-version"))
+    if (args.IsArgSet("-?") || args.IsArgSet("-h") ||  args.IsArgSet("-help") || args.IsArgSet("-version"))
     {
         std::string strUsage = strprintf(_("%s Daemon"), _(PACKAGE_NAME)) + " " + _("version") + " " + FormatFullVersion() + "\n";
 
-        if (IsArgSet("-version"))
+        if (args.IsArgSet("-version"))
         {
             strUsage += FormatParagraph(LicenseInfo());
         }
@@ -104,7 +105,7 @@ bool AppInit(int argc, char* argv[])
         }
         try
         {
-            argsGlobal.ReadConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+            args.ReadConfigFile(args.GetArg("-conf", BITCOIN_CONF_FILENAME));
         } catch (const std::exception& e) {
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;
@@ -129,10 +130,10 @@ bool AppInit(int argc, char* argv[])
             exit(EXIT_FAILURE);
         }
         // -server defaults to true for bitcoind but not for the GUI so do this here
-        argsGlobal.SoftSetBoolArg("-server", true);
+        args.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
         InitLogging();
-        InitParameterInteraction(argsGlobal);
+        InitParameterInteraction(args);
         if (!AppInitBasicSetup())
         {
             // InitError will have been called with detailed error, which ends up on console
@@ -148,7 +149,7 @@ bool AppInit(int argc, char* argv[])
             // InitError will have been called with detailed error, which ends up on console
             exit(EXIT_FAILURE);
         }
-        if (GetBoolArg("-daemon", false))
+        if (args.GetBoolArg("-daemon", false))
         {
 #if HAVE_DECL_DAEMON
             fprintf(stdout, "Bitcoin server starting\n");
