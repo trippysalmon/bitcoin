@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "base58.h"

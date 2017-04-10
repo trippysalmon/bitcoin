@@ -38,6 +38,8 @@
 
 #include <math.h>
 
+#include <boost/foreach.hpp>
+
 // Dump addresses to peers.dat and banlist.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
 

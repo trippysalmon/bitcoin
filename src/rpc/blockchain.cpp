@@ -26,6 +26,7 @@
 
 #include <univalue.h>
 
+#include <boost/foreach.hpp>
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
 
 #include <mutex>

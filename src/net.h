@@ -32,8 +32,6 @@
 #include <arpa/inet.h>
 #endif
 
-#include <boost/foreach.hpp>
-
 class CScheduler;
 class CNode;
 

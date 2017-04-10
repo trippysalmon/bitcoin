@@ -15,6 +15,7 @@
 #include <vector>
 #include <map>
 
+#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 bool ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const COutPoint& out);

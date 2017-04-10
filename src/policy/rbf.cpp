@@ -4,6 +4,8 @@
 
 #include "policy/rbf.h"
 
+#include <boost/foreach.hpp>
+
 bool SignalsOptInRBF(const CTransaction &tx)
 {
     BOOST_FOREACH(const CTxIn &txin, tx.vin) {

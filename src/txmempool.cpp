@@ -18,6 +18,8 @@
 #include "utiltime.h"
 #include "version.h"
 
+#include <boost/foreach.hpp>
+
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp):

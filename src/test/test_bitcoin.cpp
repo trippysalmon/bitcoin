@@ -25,6 +25,7 @@
 
 #include <memory>
 
+#include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
 FastRandomContext insecure_rand_ctx(true);

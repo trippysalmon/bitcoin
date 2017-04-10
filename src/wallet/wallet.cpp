@@ -32,6 +32,7 @@
 #include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
 CWallet* pwalletMain = NULL;

@@ -21,6 +21,8 @@
 #include <stdint.h>
 #include <string>
 
+#include <boost/foreach.hpp>
+
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
     AssertLockHeld(cs_main);

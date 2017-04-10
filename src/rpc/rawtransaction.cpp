@@ -31,6 +31,7 @@
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/foreach.hpp>
 
 #include <univalue.h>
 

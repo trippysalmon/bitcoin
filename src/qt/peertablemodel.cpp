@@ -11,6 +11,8 @@
 #include "validation.h" // for cs_main
 #include "sync.h"
 
+#include <boost/foreach.hpp>
+
 #include <QDebug>
 #include <QList>
 #include <QTimer>
