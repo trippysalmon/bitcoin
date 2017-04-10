@@ -8,7 +8,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 
-#include "validation.h" // for cs_main
+#include "global/server.h" // for cs_main
 #include "sync.h"
 
 #include <boost/foreach.hpp>

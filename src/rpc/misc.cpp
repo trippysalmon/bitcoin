@@ -7,6 +7,7 @@
 #include "chain.h"
 #include "clientversion.h"
 #include "init.h"
+#include "global/server.h"
 #include "validation.h"
 #include "net.h"
 #include "netbase.h"

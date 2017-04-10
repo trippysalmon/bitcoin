@@ -9,6 +9,7 @@
 #include "consensus/validation.h"
 #include "fs.h"
 #include "key.h"
+#include "global/server.h"
 #include "validation.h"
 #include "miner.h"
 #include "net_processing.h"

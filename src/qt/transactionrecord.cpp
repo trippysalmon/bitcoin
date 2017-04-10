@@ -6,6 +6,7 @@
 
 #include "base58.h"
 #include "consensus/consensus.h"
+#include "global/server.h"
 #include "validation.h"
 #include "timedata.h"
 #include "wallet/wallet.h"

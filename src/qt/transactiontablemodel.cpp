@@ -14,6 +14,7 @@
 #include "walletmodel.h"
 
 #include "core_io.h"
+#include "global/server.h"
 #include "validation.h"
 #include "sync.h"
 #include "uint256.h"

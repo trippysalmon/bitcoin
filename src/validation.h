@@ -13,7 +13,6 @@
 #include "amount.h"
 #include "coins.h"
 #include "fs.h"
-#include "global/server.h"
 #include "protocol.h" // For CMessageHeader::MessageStartChars
 #include "script/script_error.h"
 #include "versionbits.h"

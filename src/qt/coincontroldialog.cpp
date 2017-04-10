@@ -16,7 +16,7 @@
 #include "wallet/coincontrol.h"
 #include "init.h"
 #include "policy/policy.h"
-#include "validation.h" // For mempool
+#include "global/server.h" // For mempool
 #include "wallet/wallet.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'

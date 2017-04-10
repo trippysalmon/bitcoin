@@ -10,7 +10,7 @@
 #include "qt/transactiontablemodel.h"
 #include "qt/walletmodel.h"
 #include "test/test_bitcoin.h"
-#include "validation.h"
+#include "global/server.h"
 #include "wallet/wallet.h"
 
 #include <QAbstractButton>

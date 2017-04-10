@@ -20,6 +20,7 @@
 #include "httpserver.h"
 #include "httprpc.h"
 #include "key.h"
+#include "global/server.h"
 #include "validation.h"
 #include "miner.h"
 #include "netbase.h"

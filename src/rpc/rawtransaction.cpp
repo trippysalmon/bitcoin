@@ -10,6 +10,7 @@
 #include "core_io.h"
 #include "init.h"
 #include "keystore.h"
+#include "global/server.h"
 #include "validation.h"
 #include "merkleblock.h"
 #include "net.h"

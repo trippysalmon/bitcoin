@@ -6,6 +6,7 @@
 
 #include "chain.h"
 #include "chainparams.h"
+#include "global/server.h"
 #include "validation.h"
 #include "uint256.h"
 

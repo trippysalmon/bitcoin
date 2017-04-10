@@ -18,7 +18,7 @@
 #include "base58.h"
 #include "chainparams.h"
 #include "wallet/coincontrol.h"
-#include "validation.h" // mempool and minRelayTxFee
+#include "global/server.h" // mempool and minRelayTxFee
 #include "ui_interface.h"
 #include "txmempool.h"
 #include "wallet/wallet.h"

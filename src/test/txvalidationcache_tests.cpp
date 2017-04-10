@@ -4,6 +4,7 @@
 
 #include "consensus/validation.h"
 #include "key.h"
+#include "global/server.h"
 #include "validation.h"
 #include "miner.h"
 #include "pubkey.h"

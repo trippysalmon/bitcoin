@@ -5,6 +5,7 @@
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
+#include "global/server.h"
 #include "validation.h"
 #include "policy/policy.h"
 #include "script/script.h"

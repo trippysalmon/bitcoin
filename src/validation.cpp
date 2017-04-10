@@ -14,6 +14,7 @@
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
 #include "fs.h"
+#include "global/server.h"
 #include "hash.h"
 #include "init.h"
 #include "policy/fees.h"

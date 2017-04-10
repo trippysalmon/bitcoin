@@ -7,7 +7,8 @@
 #include "wallet/wallet.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
-#include "validation.h" //for mempool access
+#include "global/server.h" //for mempool and maxTxFee
+#include "validation.h" //for FormatStateMessage
 #include "txmempool.h"
 #include "utilmoneystr.h"
 #include "util.h"

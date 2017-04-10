@@ -14,6 +14,7 @@
 #include "fs.h"
 #include "key.h"
 #include "keystore.h"
+#include "global/server.h"
 #include "validation.h"
 #include "net.h"
 #include "policy/policy.h"

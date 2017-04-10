@@ -7,6 +7,7 @@
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
+#include "global/server.h"
 #include "validation.h"
 #include "miner.h"
 #include "policy/policy.h"

@@ -12,6 +12,7 @@
 #include "consensus/validation.h"
 #include "hash.h"
 #include "init.h"
+#include "global/server.h"
 #include "validation.h"
 #include "merkleblock.h"
 #include "net.h"

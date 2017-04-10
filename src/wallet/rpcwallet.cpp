@@ -10,6 +10,7 @@
 #include "core_io.h"
 #include "init.h"
 #include "wallet/coincontrol.h"
+#include "global/server.h"
 #include "validation.h"
 #include "net.h"
 #include "policy/policy.h"
