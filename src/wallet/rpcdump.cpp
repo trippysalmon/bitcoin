@@ -7,7 +7,7 @@
 #include "global/server.h"
 #include "rpc/server.h"
 #include "init.h"
-#include "validation.h"
+#include "validation.h" // FIX comment to see things explode
 #include "script/script.h"
 #include "script/standard.h"
 #include "sync.h"
