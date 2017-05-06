@@ -248,26 +248,6 @@ void ForceSetArg(const std::string& strArg, const std::string& strValue);
 extern ArgsManager gArgs;
 
 // wrappers using the global ArgsManager:
-static inline void ParseParameters(int argc, const char*const argv[])
-{
-    gArgs.ParseParameters(argc, argv);
-}
-
-static inline void ReadConfigFile(const std::string& confPath)
-{
-    gArgs.ReadConfigFile(confPath);
-}
-
-static inline bool SoftSetArg(const std::string& strArg, const std::string& strValue)
-{
-    return gArgs.SoftSetArg(strArg, strValue);
-}
-
-static inline void ForceSetArg(const std::string& strArg, const std::string& strValue)
-{
-    gArgs.ForceSetArg(strArg, strValue);
-}
-
 static inline bool IsArgSet(const std::string& strArg)
 {
     return gArgs.IsArgSet(strArg);
