@@ -1567,7 +1567,7 @@ static int64_t nTimeTotal = 0;
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false)
+                  CCoinsViewCache& view, const CChainParams& chainparams, const unsigned int flags, bool fJustCheck = false)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -1620,8 +1620,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint(BCLog::BENCH, "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
-
-    const unsigned int flags = GetConsensusFlags(pindex, chainparams.GetConsensus(), versionbitscache);
 
     if (flags & bitcoinconsensus_TX_VERIFY_BIP30) {
         for (const auto& tx : block.vtx) {
@@ -2099,8 +2097,9 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     int64_t nTime3;
     LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
     {
+        const unsigned int flags = GetConsensusFlags(pindexNew, chainparams.GetConsensus(), versionbitscache);
         CCoinsViewCache view(pcoinsTip);
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, flags);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -3119,7 +3118,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), flags, pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
-    if (!ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
+    if (!ConnectBlock(block, state, &indexDummy, viewNew, chainparams, flags, true))
         return false;
     assert(state.IsValid());
 
@@ -3544,10 +3543,11 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             boost::this_thread::interruption_point();
             uiInterface.ShowProgress(_("Verifying blocks..."), std::max(1, std::min(99, 100 - (int)(((double)(chainActive.Height() - pindex->nHeight)) / (double)nCheckDepth * 50))));
             pindex = chainActive.Next(pindex);
+            const unsigned int flags = GetConsensusFlags(pindex, chainparams.GetConsensus(), versionbitscache);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-            if (!ConnectBlock(block, state, pindex, coins, chainparams))
+            if (!ConnectBlock(block, state, pindex, coins, chainparams, flags))
                 return error("VerifyDB(): *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         }
     }
