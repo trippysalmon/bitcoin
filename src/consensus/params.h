@@ -17,6 +17,11 @@ enum DeploymentPos
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
     DEPLOYMENT_SEGWIT, // Deployment of BIP141, BIP143, and BIP147.
+    /**
+     * Same as DEPLOYMENT_SEGWIT if it times out but with new non-overlaping dates
+     * on the same bit and with bip8 instead of bip9.
+     */
+    DEPLOYMENT_SEGWIT_BIP149,
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
