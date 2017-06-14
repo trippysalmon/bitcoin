@@ -1430,12 +1430,7 @@ void ThreadScriptCheck() {
     scriptcheckqueue.Thread();
 }
 
-/**
- * Get all the current active consensus flags for the given chain of headers.
- * It encapsulates activations older than versionbits and bip9.
- * @TODO incomplete, not all consensus flags yet.
- */
-static unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache)
+unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache)
 {
     // BIP16 didn't become active until Apr 1 2012
     int64_t nBIP16SwitchTime = 1333238400;

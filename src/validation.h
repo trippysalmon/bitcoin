@@ -483,4 +483,15 @@ void DumpMempool();
 /** Load the mempool from disk. */
 bool LoadMempool();
 
+// TODO main/validation is still too big and the shortest path is
+// still to get critical consensus code out of the biggest most
+// coupled module
+
+/**
+ * Get all the current active consensus flags for the given chain of headers.
+ * It encapsulates activations older than versionbits and bip9.
+ * @TODO incomplete, not all consensus flags yet.
+ */
+unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams, VersionBitsCache& versionbitscache);
+
 #endif // BITCOIN_VALIDATION_H
