@@ -24,6 +24,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "hash.h"
+#include "validation.h"
 
 #include <stdint.h>
 
@@ -1042,7 +1043,8 @@ UniValue verifychain(const JSONRPCRequest& request)
     if (request.params.size() > 1)
         nCheckDepth = request.params[1].get_int();
 
-    return CVerifyDB().VerifyDB(Params(), pcoinsTip, nCheckLevel, nCheckDepth);
+    const unsigned int consensus_flags = GetConsensusFlags(pcoinsTip, Params().GetConsensus(), versionbitscache);
+    return CVerifyDB().VerifyDB(Params(), consensus_flags, pcoinsTip, nCheckLevel, nCheckDepth);
 }
 
 /** Implementation of IsSuperMajority with better feedback */

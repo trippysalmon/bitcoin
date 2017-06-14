@@ -1515,8 +1515,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     }
                 }
 
-                if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview, GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                              GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
+                const unsigned int consensus_flags = GetConsensusFlags(pcoinsdbview, Params().GetConsensus(), versionbitscache);
+                if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview,
+                    GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                    GetArg("-checkblocks", DEFAULT_CHECKBLOCKS),
+                    consensus_flags)) {
                     strLoadError = _("Corrupted block database detected");
                     break;
                 }
