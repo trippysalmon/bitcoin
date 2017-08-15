@@ -10,21 +10,25 @@
 
 #include <assert.h>
 
-const std::string CBaseChainParams::MAIN = "main";
-const std::string CBaseChainParams::TESTNET = "test";
-const std::string CBaseChainParams::REGTEST = "regtest";
+#include <boost/algorithm/string.hpp>
+
+static const std::vector<std::string> RESERVED_CHAIN_NAMES = {"main", "test", "regtest"};
+
+const std::string CBaseChainParams::MAIN = RESERVED_CHAIN_NAMES[0];
+const std::string CBaseChainParams::TESTNET = RESERVED_CHAIN_NAMES[1];
+const std::string CBaseChainParams::REGTEST = RESERVED_CHAIN_NAMES[2];
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
     strUsage += HelpMessageGroup(_("Chain selection options:"));
-    strUsage += HelpMessageOpt("-chain=<chain>", _("Use the chain <chain> (default: main). Reserved values: main, test, regtest"));
+    strUsage += HelpMessageOpt("-chain=<chain>", strprintf(_("Use the chain <chain> (default: %s). Reserved values: %s"), CBaseChainParams::MAIN, boost::join(RESERVED_CHAIN_NAMES, ",")));
     strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
     if (debugHelp) {
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
                                    "This is intended for regression testing tools and app development.");
-        strUsage += HelpMessageGroup(_("Custom chain selection options (only for -chain=<custom> other than main, test or regtest):"));
+        strUsage += HelpMessageGroup(strprintf(_("Custom chain selection options (only for -chain=<custom> other than %s) are taken from <datadir>/chain.conf (most options are not documented, see src/chainparams.cpp):"), boost::join(RESERVED_CHAIN_NAMES, ",")));
         strUsage += HelpMessageOpt("-con_nsubsidyhalvinginterval=<int>", _("Custom subsidy halving interval."));
-        strUsage += HelpMessageOpt("-chainconf=<file>", strprintf(_("Specify configuration file for chain parameters (default: %s). All custom chain arguments except this one must be configured using this file."), CHAINPARAMS_DEFAULT_CONF_FILE));
+        strUsage += HelpMessageOpt("-chainconf=<file>", _("Specify configuration file for chain parameters (default: <datadir>/chain.conf). All custom chain arguments except this one must be configured using this file."));
     }
 }
 
