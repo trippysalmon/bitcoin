@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
+#include "chainparamsbase.h"
 #include "consensus/merkle.h"
 
 #include "tinyformat.h"
@@ -435,7 +436,7 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     ArgsManager args;
-    args.ReadConfigFile(gArgs.GetArg("-chainconf", CHAINPARAMS_DEFAULT_CONF_FILE));
+    args.ReadConfigFile(gArgs.GetArg("-chainconf", BaseParams().DataDir() + "/chain.conf"));
     globalChainParams = CreateChainParams(network, args);
 }
 
