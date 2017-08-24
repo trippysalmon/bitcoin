@@ -243,9 +243,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
     // Tally transaction fees
     tx_fees = nValueIn - value_out;
-    if (tx_fees < 0) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
-    }
     if (!MoneyRange(tx_fees)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     }
