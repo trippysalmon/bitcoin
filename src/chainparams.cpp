@@ -436,7 +436,7 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     ArgsManager args;
-    args.ReadConfigFile(gArgs.GetArg("-chainconf", BaseParams().DataDir() + "/chain.conf"));
+    args.ReadConfigFile(BaseParams().DataDir() + "/chain.conf");
     globalChainParams = CreateChainParams(network, args);
 }
 
