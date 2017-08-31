@@ -28,7 +28,6 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
                                    "This is intended for regression testing tools and app development.");
         strUsage += HelpMessageGroup(strprintf(_("Custom chain selection options (only for -chain=<custom> other than %s) are taken from <datadir>/chain.conf (most options are not documented, see src/chainparams.cpp):"), boost::join(RESERVED_CHAIN_NAMES, ",")));
         strUsage += HelpMessageOpt("-con_nsubsidyhalvinginterval=<int>", _("Custom subsidy halving interval."));
-        strUsage += HelpMessageOpt("-chainconf=<file>", _("Specify configuration file for chain parameters (default: <datadir>/chain.conf). All custom chain arguments except this one must be configured using this file."));
     }
 }
 
