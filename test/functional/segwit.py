@@ -70,7 +70,7 @@ def getutxo(txid):
 
 def find_unspent(node, min_value):
     for utxo in node.listunspent():
-        if utxo['amount'] >= min_value:
+        if utxo['amount'] >= min_value and utxo['spendable']:
             return utxo
 
 class SegWitTest(BitcoinTestFramework):
